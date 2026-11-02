@@ -1,0 +1,12 @@
+{
+  "descripcion": "Fuentes localizadas y verificadas para cursos específicos. Para otros cursos, incorporar fuentes acreditadas y pertinentes al temario; no copiar bibliografía de Informática a especialidades distintas.",
+  "por_curso": {
+    "INFORMÁTICA BÁSICA": {
+      "cibergrafica": [
+        "Microsoft. (s. f.). Explorador de archivos en Windows. Soporte técnico de Microsoft. https://support.microsoft.com/es-es/windows/experience/fileexplorer/file-explorer-in-windows",
+        "Microsoft. (s. f.). Ayuda y formación de Excel. Soporte técnico de Microsoft. https://support.microsoft.com/es-es/office/analizar-y-dar-formato-en-excel-11a632c1-197e-454f-a515-374a4aa2b3dd",
+        "Microsoft. (s. f.). Entrenar a los usuarios en Office y Microsoft 365. Soporte técnico de Microsoft. https://support.microsoft.com/es-es/office/o365-itpro/train-your-users-on-office-and-microsoft-365"
+      ]
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "descripcion": "Fuentes localizadas y verificadas para cursos específicos. Para otros cursos, incorporar fuentes acreditadas y pertinentes al temario; no copiar bibliografía de Informática a especialidades distintas.",
+  "por_curso": {
+    "INFORMÁTICA BÁSICA": {
+      "cibergrafica": [
+        "Microsoft. (s. f.). Explorador de archivos en Windows. Soporte técnico de Microsoft. https://support.microsoft.com/es-es/windows/experience/fileexplorer/file-explorer-in-windows",
+        "Microsoft. (s. f.). Ayuda y formación de Excel. Soporte técnico de Microsoft. https://support.microsoft.com/es-es/office/analizar-y-dar-formato-en-excel-11a632c1-197e-454f-a515-374a4aa2b3dd",
+        "Microsoft. (s. f.). Entrenar a los usuarios en Office y Microsoft 365. Soporte técnico de Microsoft. https://support.microsoft.com/es-es/office/o365-itpro/train-your-users-on-office-and-microsoft-365"
+      ],
+      "bibliografica": [
+        "Beekman, G. (2005). Introducción a la informática (6.ª ed.). Pearson Educación. ISBN 9788483222775."
+      ],
+      "hemerografica": [
+        "Salazar Peña, J. C. (2021). AlfaBtiCs para la mejora de habilidades y conocimientos digitales. Revista Digital Universitaria, 22(2). https://doi.org/10.22201/cuaieed.16076079e.2021.22.2.7"
+      ]
+    },
+    "ADMINISTRACIÓN DE RECURSOS FINANCIEROS": {
+      "bibliografica": [
+        "Gitman, L. J., & Zutter, C. J. (2012). Principios de administración financiera (12.ª ed.). Pearson Educación. ISBN 9786073209830."
+      ],
+      "hemerografica": [
+        "Caro, N. P., Guardiola, M., & Ortiz, P. (2018). Árboles de clasificación como herramienta para predecir dificultades financieras en empresas latinoamericanas a través de sus razones contables. Contaduría y Administración, 63(1). https://doi.org/10.22201/fca.24488410e.2018.1148"
+      ],
+      "cibergrafica": [
+        "Banco de México. (s. f.). Sistema de Información Económica (SIE). https://www.banxico.org.mx/SieInternet/",
+        "Comisión Nacional para la Protección y Defensa de los Usuarios de Servicios Financieros. (s. f.). Educación Financiera. https://www.gob.mx/condusef/documentos/educacion-financiera-32376?idiom=es"
+      ]
+    }
+  }
+}

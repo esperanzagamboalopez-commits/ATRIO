@@ -1,0 +1,21 @@
+{
+  "formacion": "PARA EL TRABAJO",
+  "modalidad": "PRESENCIAL",
+  "usuario": "PÚBLICO EN GENERAL",
+  "sede_predeterminada": "CECATI",
+  "sede_por_aula": {
+    "ACM": "INSTALACIONES DEL SECTOR"
+  },
+  "campo_por_especialidad": {
+    "INFORMÁTICA": "Tecnologías de la Información",
+    "SOPORTE A INSTALACIONES ELÉCTRICAS Y MOTORES ELÉCTRICOS": "Electricidad",
+    "ELECTRICIDAD": "Electricidad",
+    "MÁQUINAS - HERRAMIENTA": "Metalmecánica",
+    "SOLDADURA Y PAILERÍA": "Metalmecánica",
+    "REFRIGERACIÓN Y AIRE ACONDICIONADO": "Equipos y Sistemas",
+    "ADMINISTRACIÓN": "Administración",
+    "ARTES GRÁFICAS": "Sistemas de Impresión",
+    "USO DE LA LENGUA INGLESA EN DIVERSOS CONTEXTOS": "Comunicación"
+  },
+  "normalizacion": ""
+}

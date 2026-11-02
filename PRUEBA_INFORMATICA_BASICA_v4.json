@@ -1,0 +1,156 @@
+{
+  "justificacion": "La creciente utilización de aplicaciones digitales en actividades escolares, administrativas y de servicios exige capacidades básicas para manejar computadoras, documentos y archivos. La falta de conocimientos informáticos puede dificultar el acceso al empleo y la resolución autónoma de tareas cotidianas.\n\nEl curso desarrolla progresivamente el uso seguro del equipo, la organización de archivos, la elaboración de documentos y la captura y cálculo de información. Se privilegian ejercicios situados en problemas cotidianos y de oficina con acompañamiento y retroalimentación.\n\nAl concluir, el participante contará con productos verificables que podrá reutilizar en su entorno personal, académico o laboral, reconociendo buenas prácticas de seguridad y responsabilidad en el uso de tecnologías digitales.",
+  "objetivo_general": "Operar equipos de cómputo y herramientas informáticas básicas mediante procedimientos seguros de administración de archivos, elaboración de documentos, hojas de cálculo y comunicación digital, para resolver actividades habituales del entorno personal y laboral.",
+  "competencia": "Opera equipos de cómputo y aplicaciones informáticas básicas con criterios de funcionalidad, seguridad, organización y comunicación digital, para producir documentos, procesar información sencilla y colaborar en actividades personales o de oficina.",
+  "resultados_aprendizaje": [
+    "Identificar componentes del equipo y organizar archivos y carpetas siguiendo una estructura definida.",
+    "Elaborar documentos de texto con formato uniforme, tablas y elementos gráficos adecuados al propósito.",
+    "Construir hojas de cálculo con datos, fórmulas y gráficos simples para resolver un caso práctico.",
+    "Gestionar correos y archivos en la nube aplicando contraseñas seguras y criterios de privacidad."
+  ],
+  "saberes_teoricos": "Componentes físicos y periféricos de una computadora.\nFunciones del sistema operativo.\nArchivos, carpetas y extensiones de archivo.\nFormato y estructura de documentos.\nCeldas, rangos y referencias en hojas de cálculo.\nFórmulas y funciones aritméticas básicas.\nCorreo electrónico y almacenamiento en la nube.\nRiesgos comunes: phishing, software malicioso y contraseñas débiles.",
+  "saberes_procedimentales": "Enciende y apaga adecuadamente el equipo y los periféricos.\nCrea una estructura de carpetas para organizar evidencias.\nCopia, renombra y respalda documentos.\nAplica formato e incorpora tablas a un documento.\nCaptura y valida datos en una hoja de cálculo.\nCalcula totales y promedios con funciones.\nEnvía mensajes con adjuntos y comparte archivos con permisos.\nReconoce mensajes sospechosos y protege credenciales.",
+  "saberes_axiologicos": "Respeta turnos, equipos e instalaciones.\nColabora con sus compañeros en prácticas guiadas.\nProtege información personal y de terceros.\nOrganiza sus evidencias con responsabilidad.\nReconoce errores y corrige su trabajo.\nCumple indicaciones de seguridad y ergonomía.\nUtiliza contenidos digitales respetando autoría.\nMuestra disposición para el aprendizaje autónomo.",
+  "habilidades_docente": {
+    "conocimientos": "Uso de sistemas operativos y herramientas de oficina.\nGestión de archivos y seguridad digital básica.\nEvaluación de competencias con evidencias prácticas.",
+    "habilidades": "Demostración paso a paso en laboratorio de cómputo.\nDiseño de prácticas graduadas y contextualizadas.\nRetroalimentación concreta sobre productos y desempeño.",
+    "actitudes": "Comunicación clara y respetuosa.\nPaciencia ante diversos niveles de experiencia.\nCompromiso con la inclusión y actualización tecnológica."
+  },
+  "unidades": [
+    {
+      "titulo": "UNIDAD 1. HARDWARE, SOFTWARE Y SISTEMA OPERATIVO",
+      "temas": [
+        "1.1 Componentes del equipo y periféricos de entrada y salida",
+        "1.2 Escritorio, ventanas, menú de inicio y configuraciones básicas",
+        "1.3 Creación, organización y respaldo de archivos y carpetas",
+        "1.4 Ergonomía y cuidado de equipos en el laboratorio"
+      ],
+      "estrategia": "Demostración guiada y solución de problemas de organización de información",
+      "actividades": {
+        "teorizacion_docente": "Identifica en un equipo real los periféricos disponibles y demuestra cómo iniciar sesión, abrir el explorador, crear carpetas y cerrar el sistema sin perder archivos. Explica riesgos de desconectar dispositivos durante una operación.",
+        "teorizacion_estudiante": "Sigue una guía de reconocimiento y registra en una ficha las funciones de teclado, ratón, monitor y almacenamiento; reproduce el recorrido por ventanas y carpetas del sistema operativo y plantea preguntas sobre cada función observada.",
+        "ejercitacion_docente": "Entrega un caso de organización digital de expedientes de un pequeño negocio; modela la estructura mínima, supervisa la creación de carpetas y comprueba nombres, respaldos y ubicación de archivos sin resolver el trabajo del participante.",
+        "ejercitacion_estudiante": "Crea carpetas por año, cliente y tipo de documento; copia y renombra archivos de muestra, realiza un respaldo y localiza un documento solicitado en menos de tres pasos utilizando la estructura diseñada.",
+        "reflexion_docente": "Compara con el grupo dos estructuras de carpetas y solicita justificar cuál facilita la localización y protección de información. Retroalimenta errores detectados en nombres duplicados, rutas y manejo de almacenamiento externo.",
+        "reflexion_estudiante": "Revisa su carpeta de evidencias con una lista de comprobación, localiza un archivo al azar, corrige los nombres inconsistentes y explica al grupo qué procedimientos de respaldo utilizaría en su centro de trabajo."
+      },
+      "evaluacion": {
+        "momento": "Formativa",
+        "tipo": "Heteroevaluación",
+        "instrumento": "Guía de observación y lista de cotejo",
+        "evidencia": "Estructura de carpetas funcional y archivo de respaldo",
+        "criterios": [
+          "Crea carpetas jerárquicas con nombres coherentes y sin duplicados",
+          "Localiza y renombra archivos sin afectar el contenido",
+          "Realiza un respaldo que permite recuperar los documentos"
+        ]
+      },
+      "mediacion_horas": 3,
+      "practica_horas": 11
+    },
+    {
+      "titulo": "UNIDAD 2. PROCESAMIENTO DE TEXTOS",
+      "temas": [
+        "2.1 Interfaz, apertura y guardado de documentos",
+        "2.2 Formato de párrafo, fuente, sangrías y listas",
+        "2.3 Tablas, encabezados, imágenes y elementos de diseño",
+        "2.4 Revisión ortográfica, exportación PDF e impresión"
+      ],
+      "estrategia": "Aprendizaje basado en proyectos administrativos de redacción",
+      "actividades": {
+        "teorizacion_docente": "Muestra un oficio breve con errores de formato y demuestra cómo definir márgenes, aplicar estilos, insertar tabla y revisar ortografía en el procesador de texto disponible en el laboratorio. Explica criterios básicos de legibilidad.",
+        "teorizacion_estudiante": "Analiza el oficio de ejemplo, identifica encabezado, destinatario, cuerpo, despedida y datos de firma; anota los pasos para aplicar interlineado, sangrías y estilos antes de construir su propio documento.",
+        "ejercitacion_docente": "Proporciona un supuesto de solicitud de material al área administrativa, con destinatario y artículos específicos; asesora la incorporación de una tabla y la exportación a PDF, revisando márgenes, estructura y coherencia del mensaje.",
+        "ejercitacion_estudiante": "Elabora un oficio de solicitud con encabezado, fecha, destinatario, cuerpo, tabla de materiales y firma textual; guarda el archivo editable y genera un PDF para comprobar que conserva la distribución al imprimir.",
+        "reflexion_docente": "Proyecta dos versiones de un documento sin mostrar nombres y dirige una comparación de legibilidad y corrección. Facilita retroalimentación sobre tablas desbordadas, errores ortográficos y uso indiscriminado de fuentes.",
+        "reflexion_estudiante": "Aplica una lista de cotejo a su oficio, corrige detalles de ortografía y espaciado, verifica el PDF exportado y fundamenta qué cambios facilitaron la lectura y el uso institucional del documento."
+      },
+      "evaluacion": {
+        "momento": "Formativa",
+        "tipo": "Coevaluación guiada y heteroevaluación",
+        "instrumento": "Rúbrica analítica de producto",
+        "evidencia": "Oficio editable y archivo PDF de salida",
+        "criterios": [
+          "Incluye las partes indispensables del oficio y datos consistentes",
+          "Aplica márgenes, estilos, tablas y formato de forma legible",
+          "Exporta PDF completo sin cortes ni alteración de tablas"
+        ]
+      },
+      "mediacion_horas": 3,
+      "practica_horas": 11
+    },
+    {
+      "titulo": "UNIDAD 3. HOJAS DE CÁLCULO BÁSICAS",
+      "temas": [
+        "3.1 Libros, hojas, celdas y tipos de datos",
+        "3.2 Captura de registros y referencias de celdas",
+        "3.3 Fórmulas y funciones SUMA, PROMEDIO, MAX y MIN",
+        "3.4 Formato de datos y gráficos sencillos"
+      ],
+      "estrategia": "Resolución de problemas de control de gastos e inventarios",
+      "actividades": {
+        "teorizacion_docente": "Presenta un presupuesto familiar con ingresos y egresos, señala los tipos de datos y demuestra el uso de fórmulas con referencias relativas y funciones SUMA y PROMEDIO. Explica la diferencia entre escribir valores y calcularlos.",
+        "teorizacion_estudiante": "Observa cómo se construye un registro mensual y reproduce operaciones con datos de muestra. Identifica celdas de entrada y celdas calculadas, explicando qué sucederá al modificar los valores originales.",
+        "ejercitacion_docente": "Proporciona un caso de control de materiales de oficina con cantidades, costos y movimientos; supervisa que cada estudiante capture datos válidos, programe cálculos y elija un gráfico pertinente para resumir el gasto.",
+        "ejercitacion_estudiante": "Diseña una hoja de presupuesto de materiales, introduce registros verificables, utiliza multiplicaciones y funciones para totales y promedios y construye un gráfico que permita comparar categorías sin modificar los datos fuente.",
+        "reflexion_docente": "Pide intercambiar libros de cálculo para detectar referencias rotas y resultados inconsistentes. Muestra cómo verificar cálculos con operaciones manuales y ofrece retroalimentación específica sobre errores de fórmulas.",
+        "reflexion_estudiante": "Comprueba tres cálculos contra resultados manuales, corrige celdas con errores, ajusta etiquetas y gráfico y explica cuáles decisiones mejoraron la interpretación de los datos para una persona administrativa."
+      },
+      "evaluacion": {
+        "momento": "Formativa",
+        "tipo": "Heteroevaluación",
+        "instrumento": "Lista de cotejo y guía de observación",
+        "evidencia": "Libro de cálculo con datos, operaciones y gráfico",
+        "criterios": [
+          "Captura cantidades y precios sin alterar encabezados ni formatos",
+          "Calcula resultados correctos con fórmulas y funciones del curso",
+          "El gráfico seleccionado corresponde a los datos y tiene etiquetas legibles"
+        ]
+      },
+      "mediacion_horas": 3,
+      "practica_horas": 11
+    },
+    {
+      "titulo": "UNIDAD 4. INTERNET, CORREO Y SEGURIDAD DIGITAL",
+      "temas": [
+        "4.1 Navegadores y evaluación crítica de páginas web",
+        "4.2 Correo electrónico y adjuntos",
+        "4.3 Carpetas en la nube, acceso y permisos de intercambio",
+        "4.4 Contraseñas robustas, autenticación y detección de phishing"
+      ],
+      "estrategia": "Simulación de comunicación y colaboración digital segura",
+      "actividades": {
+        "teorizacion_docente": "Explica mediante un entorno de demostración las partes de un correo laboral y cómo reconocer vínculos sospechosos. Muestra cómo adjuntar archivos y configurar permisos de acceso sin divulgar información personal.",
+        "teorizacion_estudiante": "Compara ejemplos de mensajes legítimos y engañosos, identifica remitente, propósito, datos solicitados y señales de phishing. Registra qué condiciones permiten compartir un documento de forma segura.",
+        "ejercitacion_docente": "Organiza un caso simulado de entrega de reporte a un coordinador, proporcionando direcciones ficticias y archivos de prueba; supervisa la preparación del mensaje y comprueba permisos de lectura antes de autorizar el envío.",
+        "ejercitacion_estudiante": "Redacta un correo breve con asunto claro, adjunta su documento de práctica y comparte mediante una carpeta de ensayo con permisos de solo lectura. Revisa el destinatario y evita utilizar contraseñas personales reales.",
+        "reflexion_docente": "Expone escenarios de acceso no autorizado y pide al grupo decidir si corresponde modificar permisos, reportar un correo o comprobar el remitente. Retroalimenta las decisiones según criterios básicos de confidencialidad.",
+        "reflexion_estudiante": "Evalúa su mensaje y carpeta de práctica mediante una rúbrica, identifica qué datos deben protegerse, modifica un permiso excesivo y argumenta por qué desconfía de enlaces que solicitan credenciales."
+      },
+      "evaluacion": {
+        "momento": "Formativa",
+        "tipo": "Heteroevaluación",
+        "instrumento": "Rúbrica y guía de observación",
+        "evidencia": "Correo de prueba con adjunto y carpeta compartida con permisos controlados",
+        "criterios": [
+          "Redacta mensaje formal con asunto, destinatario y archivo adjunto correctos",
+          "Comparte un documento sin permitir modificaciones no autorizadas",
+          "Detecta signos comunes de phishing y evita introducir credenciales en enlaces dudosos"
+        ]
+      },
+      "mediacion_horas": 3,
+      "practica_horas": 11
+    }
+  ],
+  "apertura_docente": "Presenta el propósito del curso, horarios y resultados esperados; establece acuerdos sobre el cuidado del laboratorio y aplica un diagnóstico breve de manejo de teclado, mouse y archivos. Observa dificultades frecuentes para ajustar las demostraciones.",
+  "apertura_estudiante": "Expresa expectativas, identifica condiciones para el uso seguro del equipo y resuelve el diagnóstico inicial mediante un ejercicio de encendido, navegación y localización de archivos. Participa en los acuerdos de convivencia y uso responsable del laboratorio.",
+  "cierre_docente": "Recibe el producto integrador, verifica mediante rúbrica la organización de archivos, calidad del documento, exactitud de cálculos y seguridad al compartir. Retroalimenta resultados individuales y facilita una reflexión sobre aplicaciones laborales del curso.",
+  "cierre_estudiante": "Presenta una carpeta de evidencias que incluye documento de texto, hoja de cálculo y ejercicio de comunicación digital. Explica decisiones técnicas, demuestra una tarea seleccionada, corrige observaciones y registra oportunidades de mejora.",
+  "criterios_evaluacion": [
+    "Organización y nomenclatura coherente de archivos y carpetas con acceso funcional.",
+    "Documento editable sin errores graves, con formatos y tabla adecuados al caso.",
+    "Hoja de cálculo con fórmulas correctas y gráfico congruente con los datos.",
+    "Intercambio de archivos con permisos adecuados y medidas básicas de protección."
+  ],
+  "actividades_extracurriculares": "Participación, cuando corresponda al calendario del plantel, en actividades cívicas institucionales y pausas activas de ergonomía y cuidado de la salud visual."
+}
