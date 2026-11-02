@@ -1,0 +1,13 @@
+Hola Esperanza,
+
+Este ZIP contiene la plantilla corregida para que tu panel ATRIO luzca como el diseño original.
+
+PASOS PARA INTEGRARLO:
+1. En tu proyecto de Google Cloud Shell / Flask, abre la carpeta "templates".
+2. Identifica cuál es el archivo HTML que actualmente muestra tu pantalla de inicio (probablemente se llame 'index.html', 'dashboard.html' o similar).
+3. Abre ese archivo.
+4. Abre el archivo 'index_corregido.html' que viene en este ZIP y copia TODO su contenido.
+5. Reemplaza el código de tu archivo original pegando el código corregido.
+6. Guarda los cambios.
+
+*Nota:* Si tienes un menú lateral negro en tu sistema actual, es probable que solo necesites copiar la parte que está dentro de <div class="atrio-panel"> ... </div> y pegarla dentro del contenedor derecho de tu plantilla actual, manteniendo tu menú lateral intacto.

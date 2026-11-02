@@ -1,0 +1,15 @@
+[server]
+enableCORS = true
+enableXsrfProtection = true
+corsAllowedOrigins = ["https://8081-cs-a6934fc2-511c-4b04-8b98-5d22b65014c7.cs-us-east1-pkhd.cloudshell.dev"]
+[browser]
+serverAddress = "8081-cs-a6934fc2-511c-4b04-8b98-5d22b65014c7.cs-us-east1-pkhd.cloudshell.dev"
+serverPort = 443
+
+[theme]
+base = "light"
+primaryColor = "#8d405e"
+backgroundColor = "#f6f1e9"
+secondaryBackgroundColor = "#fffdfa"
+textColor = "#252022"
+font = "sans serif"

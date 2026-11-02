@@ -1,0 +1,8 @@
+30/10/2026
+7 pruebas pytest aprobadas (última ejecución: 1.92 s).
+Seis pantallas Streamlit abiertas sin excepciones; alternancia de modo oscuro y buscador abrir curso comprobados.
+Sintaxis Python y script de inicio válidas.
+Generación Word real probada sin red con contenido sintético; 28 tablas y plantilla fuente sin modificación.
+No se efectuó llamada real a Gemini ni interacción con MCE.
+No se realizó inspección visual de navegador ni revisión de maquetación final en Word.
+No se incluyen estados ni documentos sintéticos de prueba en la carpeta datos distribuida.

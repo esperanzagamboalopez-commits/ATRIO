@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ATRIO - Inicio</title>
+    <style>
+      /* Variables de color basadas en tu diseño base */
+      :root {
+        --atrio-bg: #F5F1E7;
+        --atrio-text: #2B2624;
+        --atrio-pink: #EDA8C5;
+        --atrio-card: #FFFFFF;
+        --atrio-border: #DCD6CD;
+        --atrio-blue: #3B82F6;
+      }
+
+      body {
+        background-color: var(--atrio-bg);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      /* Contenedor principal que evita que se estire al 100% */
+      .atrio-panel {
+        width: 100%;
+        max-width: 650px; 
+        background-color: var(--atrio-bg);
+        color: var(--atrio-text);
+        font-family: 'Georgia', serif;
+        padding: 30px 20px;
+      }
+
+      /* Banner rosa con Flexbox */
+      .banner-rosa {
+        background-color: var(--atrio-pink);
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      .banner-rosa h1 {
+        font-family: 'Georgia', serif;
+        font-size: 32px;
+        margin: 8px 0;
+        line-height: 1.1;
+      }
+
+      /* Cuadrícula de 3 columnas para las métricas principales */
+      .metricas-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      /* Tarjetas blancas con borde sutil */
+      .card-metrica {
+        background: var(--atrio-card);
+        border: 1px solid var(--atrio-border);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: left;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .card-metrica .titulo {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: bold;
+        color: #555;
+      }
+
+      .card-metrica .numero {
+        font-size: 38px;
+        font-family: 'Georgia', serif;
+        color: var(--atrio-text);
+        margin: 10px 0;
+      }
+
+      /* Contenedor estructurado para las barras de progreso */
+      .card-progreso {
+        background: var(--atrio-card);
+        border: 1px solid var(--atrio-border);
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 15px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .progreso-header {
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      .barra-fondo {
+        background: #EAE6DF;
+        height: 4px;
+        border-radius: 2px;
+        width: 100%;
+        margin-bottom: 12px;
+      }
+
+      .barra-llena {
+        background: var(--atrio-blue);
+        height: 100%;
+        border-radius: 2px;
+      }
+
+      .progreso-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #666;
+      }
+    </style>
+</head>
+<body>
+    <div class="atrio-panel">
+      <!-- Banner -->
+      <div class="banner-rosa">
+        <div>
+          <div style="font-size: 10px; font-weight: bold; letter-spacing: 1px;">JEFATURA DE CAPACITACIÓN</div>
+          <h1>Buenas noches,<br>Esperanza.</h1>
+          <div style="font-size: 12px; margin-top: 15px;">Tu gestión, bajo tu dirección.<br>CECATI N.° 31 · Ciclo escolar 2026-2027</div>
+        </div>
+      </div>
+
+      <!-- Métricas Principales -->
+      <div class="metricas-grid">
+        <div class="card-metrica">
+          <div class="titulo">Total de cursos</div>
+          <div class="numero">{{ total_grupos }}</div> 
+        </div>
+        <div class="card-metrica">
+          <div class="titulo">Ya terminaron</div>
+          <div class="numero">{{ terminados }}</div>
+        </div>
+        <div class="card-metrica">
+          <div class="titulo">Faltan por terminar</div>
+          <div class="numero">{{ faltan }}</div>
+        </div>
+      </div>
+
+      <!-- Barras de Progreso (Extensión) -->
+      <div class="card-progreso">
+        <div class="progreso-header">
+          <span>■ Extensión</span>
+          <span>128 cursos</span>
+        </div>
+        <div class="barra-fondo">
+          <div class="barra-llena" style="width: {{ porcentaje_extension }}%;"></div>
+        </div>
+        <div class="progreso-footer">
+          <span>Terminados: 12</span>
+          <span>9.4% del total</span>
+          <span>Faltan: 116</span>
+        </div>
+      </div>
+      
+      <!-- Barras de Progreso (Regular) -->
+      <div class="card-progreso">
+        <div class="progreso-header">
+          <span>■ Regular</span>
+          <span>44 cursos</span>
+        </div>
+        <div class="barra-fondo">
+          <div class="barra-llena" style="width: {{ porcentaje_regular }}%;"></div>
+        </div>
+        <div class="progreso-footer">
+          <span>Terminados: 8</span>
+          <span>18.1% del total</span>
+          <span>Faltan: 36</span>
+        </div>
+      </div>
+
+      <!-- Barras de Progreso (Repositorio) -->
+      <div class="card-progreso">
+        <div class="progreso-header">
+          <span>■ Repositorio</span>
+          <span>8 cursos</span>
+        </div>
+        <div class="barra-fondo">
+          <div class="barra-llena" style="width: {{ porcentaje_repositorio }}%;"></div>
+        </div>
+        <div class="progreso-footer">
+          <span>Terminados: 0</span>
+          <span>0% del total</span>
+          <span>Faltan: 8</span>
+        </div>
+      </div>
+
+    </div>
+</body>
+</html>

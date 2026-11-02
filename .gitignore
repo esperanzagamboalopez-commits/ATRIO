@@ -1,0 +1,38 @@
+# ============ DATOS SENSIBLES - NUNCA SUBIR ============
+datos/
+*.sqlite3
+*.sqlite
+*.db
+*.dbf
+*.zip
+*.xlsx
+*.xls
+*.docx
+*.pdf
+*.pptx
+
+# ============ RESPALDOS Y VERSIONES ============
+respaldos_codigo/
+datos_versiones/
+*.lock
+MANIFIESTO_SHA256.json
+
+# ============ PYTHON ============
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# ============ ENTORNO LOCAL ============
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+
+# ============ STREAMLIT (secretos) ============
+.streamlit/secrets.toml

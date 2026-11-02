@@ -1,0 +1,108 @@
+ATRIO OPERATIVO 01 · PRIMER ALCANCE EJECUTABLE
+CECATI N.º 31 · 30/10/2026
+
+ESTE ES UN PROGRAMA STREAMLIT PARA CLOUD SHELL, NO OTRA MUESTRA DEL CHAT.
+Trabaja en una carpeta nueva. No reemplaza tu instalación anterior.
+
+1. CÓMO ABRIRLO
+Descarga ATRIO_OPERATIVO_01.zip en tu computadora.
+En Cloud Shell usa el menú de tres puntos de la terminal > Subir archivo.
+Sube el ZIP a tu carpeta de inicio.
+Pega estos comandos:
+
+mkdir -p ~/PEAS
+unzip -n ~/ATRIO_OPERATIVO_01.zip -d ~/PEAS
+cd ~/PEAS/ATRIO_OPERATIVO_01
+bash INICIAR.sh
+
+La primera vez crea su entorno e instala las dependencias. Espera el mensaje de Streamlit.
+Abre Vista previa web > Cambiar puerto > 8081 > Cambiar y obtener vista previa.
+Mantén la terminal ejecutándose. Para detener: Ctrl+C en esa terminal.
+Para volver a abrir otro día:
+
+cd ~/PEAS/ATRIO_OPERATIVO_01
+bash INICIAR.sh
+
+Si 8081 está ocupado, puedes iniciar en otro puerto:
+ATRIO_PORT=8082 bash INICIAR.sh
+Y elegir 8082 en la vista previa.
+No es necesario detener ni borrar tus versiones antiguas para instalar este paquete.
+
+2. PRIMER RECORRIDO ANTES DE GENERAR
+A. Ajustes: revisar programación incluida (180 grupos del archivo actualizado).
+B. Ajustes: revisar fechas excluidas. La lista se recuperó del proyecto anterior y NO se declara oficial por estar incluida. Comprobarla contra tu calendario y guardar confirmación.
+C. Ajustes: revisar autoridades y participantes previstos del grupo.
+D. Ajustes: completar padrón docente. Se recuperaron cinco perfiles; la app permite añadir los faltantes por nombre de la hoja.
+E. Ajustes: introducir clave Gemini en el campo de contraseña y seleccionar modelo habilitado para tu cuenta. Usar la configuración de la sesión. No enviar la clave por chat.
+También admite variable de entorno GEMINI_API_KEY; no se incluye ni guarda una clave en el paquete.
+
+3. GENERAR UN PEA DE EXTENSIÓN
+Abrir Preparar PEA. Elegir docente y grupo de cualquier periodo, incluidos julio/agosto/septiembre.
+Leer fechas, horas, horario y revisión de calendario. Confirmar participantes previstos: pueden diferir de inscritos SISAE.
+Elegir Gemini, o cargar JSON académico estructurado existente. No se crea contenido ficticio para cubrir campos faltantes.
+Confirmar revisión de datos y pulsar Generar y guardar borrador Word.
+El programa valida estructura académica y horas; conserva las horas oficiales aunque el calendario tenga diferencias.
+Si falla, muestra el motivo y no marca Generado.
+Si funciona, guarda una versión independiente y muestra Generado pendiente de revisión. Descarga Word, revísalo y registra revisión de esa versión.
+El programa nunca marca autorizado por el simple hecho de generar o revisar.
+No inserta firmas manuscritas automáticamente.
+La generación IA puede tardar y consumir cuota de tu proveedor. Si cierras/interrumpes antes de terminar, revisa el resultado antes de repetir.
+
+4. MCE: EXTENSIÓN Y REGULARES
+Abrir Seguimiento y MCE. Elegir el grupo.
+Regular dice PEA no aplica. Preparar los datos de alta sin generar un Word de extensión.
+Para extensión se recupera contenido de una versión revisada cuya programación no cambió. Si falta, puedes completar datos manualmente, revisándolos contra el PEA correcto.
+La exportación usa los 20 encabezados que proporcionaste. Confirmar especialidad, normativa, código, sede, participantes y CERESO; esos valores no se inventan.
+Preparar y descargar Excel.
+NO se ha verificado importación de Excel directa en MCE. Usa este archivo como apoyo para captura/copiar datos hasta revisar el mecanismo real.
+No sube automáticamente a MCE. Cuando realices el envío, registra Subido. Después registra la respuesta observada/autorizada y nota. Guardar estado no envía datos externos.
+No se automatizan todavía captura de alumnos, validación, firma o descarga de constancias.
+
+5. REPOSITORIO
+Se muestra junto con todos los cursos. Permite asociar y guardar el PDF original del grupo, sin modificar contenido.
+La adaptación automática de ese PDF aún no se implementa. No utilizar un original de otro curso por semejanza.
+Puedes preparar Excel MCE rellenando los campos revisados. El registro del original no marca PEA generado ni autorizado.
+
+6. AJUSTES Y RECURSOS
+Programación XLSX: valida datos, conserva versión anterior e importa grupos.
+Padrón XLSX: exige hoja DOCENTES y formato original; también permite editar un perfil desde pantalla.
+Plantilla Word: exige la estructura institucional compatible de 28 tablas. No acepta otra membreta como plantilla PEA.
+Días inhábiles: lista JSON de fechas AAAA-MM-DD; edición directa una fecha por línea. Reconfirmar después de cambios.
+Calendario PDF y hoja membretada DOCX: se conservan y versionan; todavía no se extraen fechas automáticamente ni se aplican a oficios.
+ZIP SISAE: valida tablas principales, conserva respaldo anterior y muestra conteos en diagnóstico. No actualiza ni escribe SISAE. La conciliación automática de todos los grupos aún está pendiente.
+La lista de grupos usa UUID. Al reimportar se reconoce coincidencia exacta o mismo nombre/hoja/fila; nuevos o ambiguos quedan en avisos. No asumir que reordenar todas las filas conserva automáticamente todos los vínculos. Conservar programación y verificar cambios de importación.
+
+7. GUARDADO, ALERTAS Y APARIENCIA
+Datos y estados se guardan en datos/atrio.sqlite3. Documentos bajo datos/salidas y recursos anteriores bajo datos/versiones.
+Cerrar navegador o reiniciar la app conserva datos en esa carpeta. Borrar la carpeta o perder el entorno requiere respaldo descargado.
+Cada PEA tiene contenido JSON, datos de generación, huellas de recursos y control del motor. El original de Word permanece intacto.
+Modo oscuro y colores del encabezado se guardan en Ajustes.
+La burbuja permanece mientras haya Sin PEA, No subido u Observado confirmados. Un estado sin verificar no se cuenta como atraso confirmado.
+La burbuja no es un recordatorio de celular ni una notificación con la app cerrada.
+El buscador lateral encuentra cursos/docentes y muestra acciones coincidentes. Abrir curso lleva a preparar PEA. No reproduce aún el buscador desplegable exacto del laboratorio aprobado.
+La referencia de plazo por defecto es 11 días naturales antes del término, según última indicación. Puede elegirse inicio o término y días; ratificar criterio antes de depender de sus fechas.
+Uso individual: la configuración de la clave IA se mantiene en memoria del servidor durante su proceso. Este paquete no tiene cuentas multiusuario ni gestión de permisos.
+
+8. RESPALDAR ANTES DE ACTUALIZAR
+Abrir Respaldos, preparar y descargar el ZIP.
+El respaldo incluye recursos, padrón con datos personales, SISAE y documentos. Conservarlo en tu espacio de trabajo privado.
+No contiene la clave configurada por el campo de la app.
+Al actualizar el programa, NO sustituir la carpeta datos por la incluida en otra descarga.
+La restauración gráfica todavía no está implementada: conservar el ZIP y pedir guía antes de reemplazar una instalación con trabajo real.
+
+9. QUÉ FALTA RESPECTO DE LOS LABORATORIOS
+Las hojas aprobadas siguen siendo referencia visual y funcional; este alcance concentra trabajo inmediato.
+No están integrados folios/constancias/lotes/reapertura, listas, acreditaciones, credenciales, oficios, auditoría histórica ni tablero de integridad global.
+Falta edición controlada de celdas de programación desde pantalla, calendario visual mensual, subida MCE, adaptación PDF repositorio y avisos externos.
+La interfaz se adaptó a controles nativos Streamlit para probar funcionamiento. No es una reproducción visual exacta de todos los laboratorios.
+
+10. QUÉ INFORMACIÓN COMPARTIR SI ALGO FALLA
+Indicar pantalla, docente, curso, acción, resultado esperado y mensaje de error. Una captura ayuda; ocultar claves y datos personales de alumnos.
+Datos pendientes para completar: perfiles docentes, calendario validado, originales de repositorio por curso, formato/instrucciones de MCE si admite importación, Excel de credenciales con macro y PowerPoint.
+No enviar clave Gemini ni contraseñas MCE.
+
+11. VERIFICACIÓN REALIZADA
+Siete pruebas automatizadas aprobadas: importación/identidad en repetición, recursos inválidos sin sobrescritura, DBF SISAE y relaciones, estados/respaldos, Excel MCE con protección de fórmulas, restricciones de generación, creación y reapertura de Word con fixture académico sintético sin red.
+Plantilla fuente conserva su hash; documento generado conserva 28 tablas. El motor puede ampliar filas de contenido didáctico como en el generador heredado; la maquetación final requiere revisión humana en Word antes de uso.
+Pruebas Streamlit de apertura de las seis pantallas aprobadas. Sin revisión visual en navegador ni llamada real a Gemini/MCE.
+Los documentos sintéticos de pruebas no se distribuyen como PEA reales.

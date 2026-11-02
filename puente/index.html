@@ -1,0 +1,19 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0}iframe{width:100%;border:0;display:block}#message{font:13px system-ui;color:#35222c;background:#f5eee5;padding:5px}</style>
+<div id="message" role="status"></div><iframe title="Hoja de ATRIO" sandbox="allow-scripts allow-same-origin allow-downloads"></iframe>
+<script>
+const frame=document.querySelector('iframe'),message=document.querySelector('#message');
+let version='',count=0;
+const send=(type,data)=>parent.postMessage({isStreamlitMessage:true,type,...data},'*');
+window.addEventListener('message',event=>{
+ const m=event.data;
+ if(event.source===parent && m.type==='streamlit:render'){
+   if(version!==m.args.signature){version=m.args.signature;frame.srcdoc=m.args.page}
+   message.textContent=m.args.notice||'';
+ }else if(event.source===frame.contentWindow && m?.atrio){
+   if(m.atrio==='height'){const h=Math.max(420,m.height);frame.style.height=h+'px';send('streamlit:setFrameHeight',{height:h+message.offsetHeight+5});return}
+   message.textContent='Procesando…';
+   send('streamlit:setComponentValue',{value:{...m,nonce:Date.now()+'-'+(++count)},dataType:'json'});
+ }
+});
+send('streamlit:componentReady',{apiVersion:1});send('streamlit:setFrameHeight',{height:600});
+</script>

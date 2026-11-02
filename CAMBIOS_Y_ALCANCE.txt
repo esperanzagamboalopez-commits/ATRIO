@@ -1,0 +1,10 @@
+ATRIO OPERATIVO 01 · 30/10/2026
+Base: generador_v57_cloud/generador_pea_extension_v6_4.py y control_calidad_pea_v7.py recuperados del respaldo de la usuaria.
+Se conserva la plantilla institucional Word byte por byte respecto de la recuperada.
+Se usa el motor anterior sin las inserciones automáticas de firmas agregadas a otra copia del proyecto.
+Cambio del motor: participantes dejan de estar fijados en 10; se exige el valor confirmado por la usuaria.
+Nueva capa: SQLite persistente, importación de programación, perfiles editables, recursos versionados, generación por versión, estados documentales/MCE, exportación de 20 columnas, ajustes visuales y respaldo.
+No se incluye ninguna clave API ni credencial MCE. No se distribuyen imágenes de firmas.
+No se consultan datos personales docentes en el prompt: la integración usa el constructor académico heredado. El padrón se usa localmente para completar Word.
+La plantilla fue recuperada, no diseñada de nuevo. La revisión humana de cada documento sigue siendo obligatoria.
+El alcance y las limitaciones se documentan en LEEME_PRIMERO.txt.
