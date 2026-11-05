@@ -255,3 +255,8 @@ def save_profile(name,values,signature_bytes=None,signature_ext=None):
   # Si falla el Excel, se conserva el archivo de firma en lugar de borrar potencialmente una imagen ya utilizada.
   raise
  event(None,'Perfil docente actualizado',{'docente':name,'firma_actualizada':signature_bytes is not None})
+ def get_all_statuses():
+    """Devuelve un diccionario {group_id: {'doc': ..., 'mce': ...}} en una sola consulta"""
+    with connect() as c:
+        rows = c.execute('SELECT * FROM status').fetchall()
+        return {r['group_id']: dict(r) for r in rows}

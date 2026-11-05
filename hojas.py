@@ -13,8 +13,6 @@ def safe(value):
     return json.dumps(value,ensure_ascii=False,default=str).replace('<','\\u003c')
 
 def snapshot(groups):
-    # El id del laboratorio es numérico. Usar una conversión estable del UUID.
-    # Los primeros 13 dígitos hexadecimales caben exactamente en Number (JS).
     rows=[dict(id=int(g['id'].replace('-','')[:13],16),fingerprint=g['fingerprint'],docente=g['hoja'],curso=g['nombre'],tipo=g['tipo'].upper(),inicio=g['inicio'],fin=g['fin'],horas=g['duracion'],horario=g['horario'],sede=g['aula'],fila=g['fila']) for g in groups]
     ids={str(r['id']):g for r,g in zip(rows,groups)}
     if len(ids)!=len(rows):raise ValueError('Identificadores de grupo ambiguos.')
@@ -47,7 +45,7 @@ def snapshot(groups):
             if key:
                 links[ident]=lookup[key]
             else:
-                links.pop(ident,None)  # Desvinculación explícita: no restaurar sugerencia automática
+                links.pop(ident,None)
             r['automatic']=False
         r['linked']=links.get(ident,{}).get('key','')
         r['cut']=digest
@@ -78,8 +76,6 @@ def show(number,groups,today,tracking=False):
             state['pea'][k]=dict(state['pea'].get(k,{}),doc=status['doc'],mce=status['mce'],note=status['note'])
     template=(ROOT/f'hoja{number}.html').read_text()
     if number==3:
-        # ATRIO 10.9: elegir tarjeta en paso 2 avanza al paso 3, sin tocar
-        # el HTML ni la lógica de los pasos 3, 4 y 5.
         antes='course=picked}draw()'
         despues='course=picked;if(course){window.openCourse(course.id);return}}draw()'
         if template.count(antes)!=1:
@@ -87,8 +83,6 @@ def show(number,groups,today,tracking=False):
         else:
             template=template.replace(antes,despues,1)
     if number==3:
-        # ATRIO 10.12.1: SOLO apariencia del selector inicial Docente/Curso.
-        # Igualar botones del indicador de cinco pasos al resto de Preparar PEA.
         template += """<style>
         #atrio-preparacion .steps{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:9px!important;width:100%!important}
         #atrio-preparacion .wizard-step{border:1px solid #dec9c4!important;border-radius:10px!important;background:#fffbf8!important;color:#563742!important;min-height:44px!important;padding:10px 7px!important;font-size:12px!important;font-weight:600!important}
@@ -98,8 +92,6 @@ def show(number,groups,today,tracking=False):
         @media(max-width:650px){#atrio-preparacion .steps{gap:3px!important}#atrio-preparacion .wizard-step{padding:8px 2px!important;font-size:10px!important}}
         </style>"""
     if number==3 and st.session_state.pop('pea110_return',False):
-        # Al volver, restaurar selección y regresar al paso Validación (3),
-        # sin cambiar el HTML original del asistente.
         selected=st.session_state.get('editor_group')
         wid=next((str(k) for k,g in ids.items() if g['id']==selected),None)
         if wid is not None:

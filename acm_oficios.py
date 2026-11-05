@@ -236,13 +236,8 @@ def panel_catalogo(C):
     st.caption('Para actualizar las tres plantillas Word de ACM, entra en Ajustes → Recursos. Se conservará la versión anterior.')
 
 
-
 def validar_formato_acm(tipo, datos, previo=None):
-    """Valida Word institucional antes de actualizar un membrete o una plantilla ACM.
-
-    Los marcadores del modelo anterior se conservan para no romper la emisión.
-    Comprueba también que DOCX sea legible, no un archivo vacío o con macros.
-    """
+    """Valida Word institucional antes de actualizar un membrete o una plantilla ACM."""
     if tipo not in FILES:
         raise ValueError('Tipo de oficio ACM desconocido.')
     if not isinstance(datos, bytes) or len(datos) < 1024:
@@ -261,7 +256,6 @@ def validar_formato_acm(tipo, datos, previo=None):
     paragraphs=list(_paragraphs(doc))
     nuevo='\n'.join(p.text for p in paragraphs)
     tokens=set(re.findall(r'\{\{([A-Za-z_]+)\}\}',nuevo))
-    # Mínimos imprescindibles: los tres Word oficiales admiten estos marcadores.
     minimos={'OFICIO','FECHA_ACTUAL','DOCENTE','INSTITUCION','GRUPOS'}
     faltan=minimos-tokens
     if faltan:
@@ -317,9 +311,7 @@ def _resumen_oficio(datos):
 
 
 def _mostrar_redaccion_word(data):
-    """Lee el CUERPO del DOCX generado con la misma función que producirá el archivo.
-    El membrete, logotipos y la posición exacta de página deben comprobarse en Word.
-    """
+    """Lee el CUERPO del DOCX generado con la misma función que producirá el archivo."""
     from docx.oxml.ns import qn
     from docx.text.paragraph import Paragraph
     from docx.table import Table
@@ -426,6 +418,138 @@ def _panel_mis_oficios(C):
     if not mostrados:st.caption('No hay expedientes que coincidan con la búsqueda.')
 
 
+def generar_oficio_para_ia(groups, C, docente, curso="", institucion="", tipo_oficio="Los tres oficios", folio="S/N"):
+    """
+    Función expuesta para el Asistente Virtual (Gemini).
+    Busca el grupo, la institución, prepara las variables y genera el oficio Word.
+    """
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    
+    # 1. Filtrar grupos ACM
+    def _es_acm(g):
+        fields = ('modalidad','subtipo','tipo_accion','observaciones','aula','nombre')
+        s = ' '.join(str(g.get(k,'') or '') for k in fields).lower()
+        return bool(re.search(r'(?<![a-z])acm(?![a-z])|acci[oó]n(?:es)? m[oó]vil(?:es)?', s))
+    
+    acm_groups = [g for g in groups if _es_acm(g)]
+    
+    # 2. Buscar docente y curso
+    docente_norm = str(docente).strip().lower()
+    grupos_docente = [g for g in acm_groups if docente_norm in str(g['hoja']).lower()]
+    if not grupos_docente:
+        return {"status": "error", "mensaje": f"No se encontraron cursos ACM para el docente '{docente}'."}
+    
+    if curso:
+        curso_norm = str(curso).strip().lower()
+        grupos_curso = [g for g in grupos_docente if curso_norm in str(g['nombre']).lower()]
+        if not grupos_curso:
+            return {"status": "error", "mensaje": f"No se encontró el curso '{curso}' para {docente}."}
+        grupo = grupos_curso[0]
+    else:
+        grupo = grupos_docente[0]
+        
+    # 3. Buscar institución
+    rows = catalogo(C)
+    if not rows:
+        return {"status": "error", "mensaje": "El catálogo de instituciones ACM está vacío."}
+        
+    if institucion:
+        inst_norm = str(institucion).strip().lower()
+        inst_match = [r for r in rows if inst_norm in str(r.get('nombre', '')).lower()]
+        inst = inst_match[0] if inst_match else rows[0]
+    else:
+        inst = rows[0]
+
+    # 4. Determinar plantillas a generar
+    if tipo_oficio == "Los tres oficios" or not tipo_oficio:
+        kinds = KINDS
+    else:
+        # Buscar coincidencia flexible (ej. "presentacion" -> "Presentación")
+        kinds = [k for k in KINDS if str(tipo_oficio).strip().lower() in k.lower()]
+        if not kinds:
+            kinds = [KINDS[0]] # Por defecto Presentación
+
+    # 5. Preparar datos para el renderizado
+    try:
+        # Datos por defecto para los campos que la IA no extrajo
+        oficio_fecha = datetime.now(ZoneInfo('America/Mexico_City')).date()
+        lugar = inst.get('sede', '')
+        esp = grupo.get('especialidad_programada') or grupo.get('especialidad') or 'Capacitación para el Trabajo'
+        beneficiaries = inst.get('beneficiarios', 'las personas participantes')
+        
+        # Crear el registro detallado del grupo (lo que va en la tabla)
+        details = [dict(
+            id=str(grupo['id']), curso=grupo['nombre'], inicio=grupo['inicio'],
+            termino=grupo['fin'], dias=grupo.get('horario',''), horario=grupo.get('horario',''),
+            duracion=grupo['duracion'], sede=lugar
+        )]
+        
+        # Si el grupo tiene un formato de horario específico, intentar separarlo
+        from acm_tablas_10126 import separar_horario
+        dias, horario = separar_horario(grupo.get('horario',''))
+        details[0]['dias'] = dias
+        details[0]['horario'] = horario
+
+        inst_dict = dict(inst, responsable=inst.get('responsable',''), cargo=inst.get('cargo',''))
+        
+        variables, ciclo = _course_values(
+            [grupo], inst_dict, lugar=lugar, oficio_fecha=oficio_fecha,
+            trato='Masculino', especialidad=esp, beneficiaries=beneficiaries
+        )
+        
+        # Determinar si hay sede alterna
+        sede_alterna = (lugar.strip() if lugar.strip().casefold() not in str(inst['nombre']).casefold() 
+                        and lugar.strip().casefold() not in str(inst.get('tipo','')).casefold() else None)
+
+        # Generar los documentos
+        output_files = {}
+        for kind in kinds:
+            template_path = C.RES / 'acm' / FILES[kind]
+            if not template_path.is_file():
+                return {"status": "error", "mensaje": f"Falta el formato institucional: {FILES[kind]}"}
+            
+            output_bytes = render_word(
+                template_path, 
+                dict(variables, OFICIO=folio), 
+                ciclo, 
+                sede_alterna=sede_alterna, 
+                grupos=details
+            )
+            output_files[kind] = output_bytes
+
+        # Si es un solo oficio, devolverlo directo; si son varios, empaquetarlos en ZIP
+        if len(output_files) == 1:
+            kind = list(output_files.keys())[0]
+            filename = f"Oficio_{_slug(kind)}_{_slug(grupo['hoja'])}_{_slug(folio)}.docx"
+            return {
+                "status": "ok",
+                "mensaje": f"Oficio de {kind} generado para {grupo['hoja']}.",
+                "filename": filename,
+                "bytes": output_files[kind],
+                "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            }
+        else:
+            import zipfile
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for kind, data in output_files.items():
+                    name = f"Oficio_{_slug(kind)}_{_slug(grupo['hoja'])}.docx"
+                    zip_file.writestr(name, data)
+            
+            filename = f"Oficios_ACM_{_slug(grupo['hoja'])}.zip"
+            return {
+                "status": "ok",
+                "mensaje": f"Los 3 oficios fueron generados para {grupo['hoja']}.",
+                "filename": filename,
+                "bytes": zip_buffer.getvalue(),
+                "mime": "application/zip"
+            }
+            
+    except Exception as e:
+        return {"status": "error", "mensaje": f"Error al generar el oficio: {str(e)}"}
+
+
 def panel_oficios(groups,C):
     preparar,mis=st.tabs(['Preparar oficio','Mis oficios'])
     with preparar:_panel_preparar_oficios(groups,C)
@@ -517,12 +641,8 @@ def _panel_preparar_oficios(groups,C):
                 with y:hora_ok=st.text_input('Horario · grupo '+str(i),value=horario,key='acm_hora_'+str(g['id']))
                 details.append(dict(id=str(g['id']),curso=g['nombre'],inicio=g['inicio'],termino=g['fin'],
                                     dias=dia_ok,horario=hora_ok,duracion=g['duracion'],sede=lugar))
-        # El expander cerrado también ejecuta sus widgets: no se pierden valores.
-
         confirm=st.checkbox('Confirmé grupos, datos institucionales, folios y vigencia del firmante que aparece en el Word.')
         do=st.form_submit_button('Revisar redacción antes de generar',type='primary')
-    # La vista previa y el guardado son acciones separadas. Nunca se escribe un archivo
-    # permanente sin que la usuaria haya visto y confirmado la misma copia Word.
     identity=tuple(sorted(chosen))+(instit['id'],modalidad)
     previa=st.session_state.get('acm_vista127')
     if previa is not None and previa.get('identity')!=identity:
@@ -631,9 +751,6 @@ def _panel_preparar_oficios(groups,C):
                     st.caption(f'{len(modificaciones)} párrafo(s) modificado(s) en {tipo}.')
         if not hay_error and len(actualizados)==len(original):
             huellas={tipo:hashlib.sha256(data).hexdigest() for tipo,data in actualizados.items()}
-            # Toda variación invalida una autorización anterior.
-            # Los ZIP DOCX pueden variar en metadatos al guardarse; la aprobación
-            # debe depender de los TEXTOS, no de timestamps internos del ZIP.
             firma_textos={'base':huella_origen,'cambios':cambios_todos}
             huella_editor=hashlib.sha256(json.dumps(
                 firma_textos,sort_keys=True,ensure_ascii=False).encode('utf-8')).hexdigest()
@@ -676,6 +793,7 @@ def _panel_preparar_oficios(groups,C):
                     st.session_state.pop('acm_vista127',None)
                     st.session_state.pop('acm_aprobacion127',None)
                     st.success('Oficios guardados en Mis oficios. Son borradores; entrega y firma pendientes.')
+                    st.toast('✅ Oficios generados y guardados', icon='📄')
                 except Exception as ex:
                     st.error('No fue posible guardar: '+str(ex))
         else:
