@@ -156,9 +156,9 @@ def eval_icon(name):
 def eval_styles():
     return '''<style>
     .ae-intro{margin:.2rem 0 1rem;color:#6e5c63;line-height:1.55;font-size:14px}
-    .ae-source{display:flex;align-items:flex-start;gap:11px;background:#292126;color:#f9f0f3;border:1px solid #6e505d;border-radius:13px;padding:14px 17px;margin:8px 0 22px;box-shadow:0 5px 20px #291b2312}
+    .ae-source{display:flex;align-items:flex-start;gap:11px;background:var(--atrio-surface);color:var(--atrio-tinta);border:1px solid rgba(212,175,55,.45);border-radius:13px;padding:14px 17px;margin:8px 0 22px;box-shadow:0 5px 20px #291b2312}
     .ae-source svg{flex-shrink:0;color:#e5b4cb;margin-top:2px}
-    .ae-source strong{color:#fff;font-size:13px;display:block;margin-bottom:3px}
+    .ae-source strong{color:var(--atrio-titulo);font-size:13px;display:block;margin-bottom:3px}
     .ae-source span{color:#e6d9df;font-size:12.5px;line-height:1.55}
     .ae-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:10px 0 13px}
     .ae-kpi{background:#fffdfa;border:1px solid #eadbd6;box-shadow:0 6px 16px #34232c0a;border-radius:13px;padding:17px 18px;min-height:133px;position:relative;overflow:hidden}

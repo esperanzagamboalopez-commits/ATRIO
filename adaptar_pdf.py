@@ -29,10 +29,10 @@ CSS = """
 <style>
 .adp-head{margin:4px 0 14px}
 .adp-eyebrow{font-size:11px;letter-spacing:.12em;color:#D4AF37;text-transform:uppercase;font-weight:800}
-.adp-title{font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:700;color:#F4F4F5;margin:2px 0 4px}
-.adp-sub{font-size:12px;color:#A1A1AA}
-.adp-box{background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.22);border-radius:14px;
-  padding:12px 14px;color:#E4E4E7;font-size:13px;margin:8px 0}
+.adp-title{font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:700;color:var(--atrio-titulo);margin:2px 0 4px}
+.adp-sub{font-size:12px;color:var(--atrio-tenue)}
+.adp-box{background:var(--atrio-surface);box-shadow:var(--atrio-sombra);border:1px solid rgba(212,175,55,.22);border-radius:14px;
+  padding:12px 14px;color:var(--atrio-tinta);font-size:13px;margin:8px 0}
 </style>
 """
 

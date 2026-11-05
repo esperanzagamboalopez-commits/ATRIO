@@ -37,12 +37,12 @@ CSS='''<style>
 CONTROL_CSS='''<style>
 /* Estilos limitados a controles propios del asistente */
 [class*="st-key-p112_step_"] button{height:44px!important;border:1px solid #dfc9c7!important;border-radius:10px!important;background:#fffbf8!important;box-shadow:none!important;color:#563742!important;font-size:13px!important;min-height:44px!important;}
-[class*="st-key-p112_step_"] button[kind="primary"], [class*="st-key-p112_step_"] button[data-testid="stBaseButton-primary"] {background:#2a2227!important;border-color:#ad846d!important;color:white!important;}
-[class*="st-key-p112_step_"] button[kind="primary"] p,[class*="st-key-p112_step_"] button[data-testid="stBaseButton-primary"] p {color:white!important;}
+[class*="st-key-p112_step_"] button[kind="primary"], [class*="st-key-p112_step_"] button[data-testid="stBaseButton-primary"] {background:var(--atrio-neon)!important;border-color:var(--atrio-neon)!important;color:var(--atrio-sobre-acento)!important;}
+[class*="st-key-p112_step_"] button[kind="primary"] p,[class*="st-key-p112_step_"] button[data-testid="stBaseButton-primary"] p {color:var(--atrio-sobre-acento)!important;}
 [class*="st-key-p112_step_"] button:disabled:not([kind="primary"]){opacity:.72!important;}
 [class*="st-key-p112_back"] button,[class*="st-key-p112_reset"] button{border:1px solid #d9bcb5!important;border-radius:9px!important;background:#fffcfa!important;color:#492f3b!important;min-height:41px!important;}
-[class*="st-key-p112_go_content"] button,[class*="st-key-p112_go_exit"] button,[class*="st-key-p112_ready_next"] button{border-radius:10px!important;background:#6d2e49!important;border:1px solid #ad6684!important;color:#fff!important;min-height:43px!important;}
-[class*="st-key-p112_go_content"] button p,[class*="st-key-p112_go_exit"] button p,[class*="st-key-p112_ready_next"] button p{color:white!important;}
+[class*="st-key-p112_go_content"] button,[class*="st-key-p112_go_exit"] button,[class*="st-key-p112_ready_next"] button{border-radius:10px!important;background:var(--atrio-neon)!important;border:1px solid var(--atrio-neon)!important;color:var(--atrio-sobre-acento)!important;min-height:43px!important;}
+[class*="st-key-p112_go_content"] button p,[class*="st-key-p112_go_exit"] button p,[class*="st-key-p112_ready_next"] button p{color:var(--atrio-sobre-acento)!important;}
 </style>'''
 
 

@@ -141,7 +141,7 @@ def _esc(valor):
 
 def _prioridad_color(prioridad):
     return {"Alta": "#FF1493", "Media": "#D4AF37", "Baja": "#34D399"}.get(
-        prioridad, "#A1A1AA"
+        prioridad, "var(--atrio-tenue)"
     )
 
 
@@ -449,51 +449,51 @@ def _inyectar_estilos():
         <style>
         .block-container {padding-top: 1.35rem; padding-bottom: 2.5rem; max-width: 1600px;}
         .atrio-hero {
-          background: linear-gradient(112deg, rgba(255,20,147,.22) 0%, rgba(20,20,26,.92) 55%, rgba(212,175,55,.18) 100%);
-          border:1px solid rgba(212,175,55,.35); border-radius:22px; padding:25px 28px;
-          margin:0 0 18px 0; box-shadow:0 10px 30px rgba(255,20,147,.14);
+          background: linear-gradient(112deg, rgba(255,20,147,.10) 0%, var(--atrio-surface) 55%, rgba(212,175,55,.12) 100%);
+          border:1px solid var(--atrio-borde); border-left:6px solid var(--atrio-neon); border-radius:22px; padding:25px 28px;
+          margin:0 0 18px 0; box-shadow:var(--atrio-sombra);
           backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         }
         .atrio-eyebrow {font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;
-          font-weight:800;color:#D4AF37;margin-bottom:7px;}
+          font-weight:800;color:var(--atrio-oro);margin-bottom:7px;}
         .atrio-hero h1 {font-family:'Playfair Display',Georgia,serif;font-size:clamp(27px,3vw,39px);
-          font-weight:700;color:#F4F4F5;line-height:1.08;margin:0;}
-        .atrio-hero p {font-family:'Inter',sans-serif;font-size:13px;color:#A1A1AA;margin:8px 0 0 0;}
-        .atrio-metric {background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:16px;
-          padding:15px 16px;min-height:112px;box-shadow:0 8px 24px rgba(0,0,0,.35);
+          font-weight:700;color:var(--atrio-titulo);line-height:1.08;margin:0;}
+        .atrio-hero p {font-family:'Inter',sans-serif;font-size:13px;color:var(--atrio-tenue);margin:8px 0 0 0;}
+        .atrio-metric {background:var(--atrio-surface);border:1px solid var(--atrio-borde);border-radius:16px;
+          padding:15px 16px;min-height:112px;box-shadow:var(--atrio-sombra);
           backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);}
         .atrio-metric-top {display:flex;align-items:center;justify-content:space-between;gap:8px;}
-        .atrio-metric-label {font-size:11px;color:#A1A1AA;font-weight:700;}
+        .atrio-metric-label {font-size:11px;color:var(--atrio-tenue);font-weight:700;}
         .atrio-metric-icon {font-size:17px;}
-        .atrio-metric-value {font-family:'Playfair Display',Georgia,serif;font-size:29px;line-height:1.1;font-weight:700;color:#F4F4F5;margin-top:11px;}
-        .atrio-metric-note {font-size:10px;color:#71717A;margin-top:4px;}
-        .atrio-section-title {font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:#F4F4F5;margin:0;}
-        .atrio-section-sub {font-size:11px;color:#A1A1AA;margin-top:3px;}
-        .atrio-month-label {font-family:'Playfair Display',Georgia,serif;color:#F4F4F5;font-weight:700;font-size:25px;text-align:center;padding:5px 0 8px;}
+        .atrio-metric-value {font-family:'Playfair Display',Georgia,serif;font-size:29px;line-height:1.1;font-weight:700;color:var(--atrio-titulo);margin-top:11px;}
+        .atrio-metric-note {font-size:10px;color:var(--atrio-tenue);margin-top:4px;}
+        .atrio-section-title {font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--atrio-titulo);margin:0;}
+        .atrio-section-sub {font-size:11px;color:var(--atrio-tenue);margin-top:3px;}
+        .atrio-month-label {font-family:'Playfair Display',Georgia,serif;color:var(--atrio-titulo);font-weight:700;font-size:25px;text-align:center;padding:5px 0 8px;}
         .atrio-weekday {text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;
-          color:#D4AF37;font-weight:800;padding:7px 0;}
-        .atrio-day {background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;
+          color:var(--atrio-oro);font-weight:800;padding:7px 0;}
+        .atrio-day {background:var(--atrio-surface);border:1px solid var(--atrio-borde);border-radius:12px;
           min-height:133px;padding:8px 7px;}
-        .atrio-day.today {background:rgba(255,20,147,.10);border:2px solid #FF1493;padding:7px 6px;}
-        .atrio-day.selected {background:rgba(212,175,55,.10);border-color:rgba(212,175,55,.6);}
-        .atrio-day.muted {background:rgba(0,0,0,.25);opacity:.55;}
+        .atrio-day.today {background:var(--atrio-acento-suave);border:2px solid var(--atrio-neon);padding:7px 6px;}
+        .atrio-day.selected {background:rgba(212,175,55,.10);border-color:var(--atrio-oro);}
+        .atrio-day.muted {background:var(--atrio-bg);opacity:.55;}
         .atrio-day-head {display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-        .atrio-day-number {font-weight:800;font-size:12px;color:#E4E4E7;}
-        .atrio-day.today .atrio-day-number {background:#FF1493;color:#FFFFFF;border-radius:50%;
+        .atrio-day-number {font-weight:800;font-size:12px;color:var(--atrio-tinta);}
+        .atrio-day.today .atrio-day-number {background:var(--atrio-neon);color:var(--atrio-sobre-acento);border-radius:50%;
           width:23px;height:23px;display:inline-flex;align-items:center;justify-content:center;}
         .atrio-chip {font-size:9px;line-height:1.25;font-weight:700;padding:4px 5px;border-radius:6px;
-          color:#09090B;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .atrio-chip.deadline {background:#D4AF37;color:#09090B;border:1px solid rgba(212,175,55,.8);}
+          color:#2A2326;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .atrio-chip.deadline {background:var(--atrio-oro);color:#2A2326;border:1px solid var(--atrio-oro);}
         .atrio-chip.done {opacity:.5;text-decoration:line-through;}
-        .atrio-more {font-size:9px;color:#A1A1AA;text-align:center;margin-top:3px;}
-        .atrio-event-card {background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:14px;
+        .atrio-more {font-size:9px;color:var(--atrio-tenue);text-align:center;margin-top:3px;}
+        .atrio-event-card {background:var(--atrio-surface);box-shadow:var(--atrio-sombra);border:1px solid var(--atrio-borde);border-radius:14px;
           padding:13px 15px;margin:0 0 9px 0;backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);}
-        .atrio-event-title {font-size:14px;line-height:1.3;font-weight:800;color:#F4F4F5;}
-        .atrio-event-meta {font-size:10px;color:#A1A1AA;margin-top:5px;line-height:1.5;}
+        .atrio-event-title {font-size:14px;line-height:1.3;font-weight:800;color:var(--atrio-titulo);}
+        .atrio-event-meta {font-size:10px;color:var(--atrio-tenue);margin-top:5px;line-height:1.5;}
         .atrio-pill {display:inline-block;border-radius:20px;padding:3px 8px;font-size:9px;font-weight:800;
-          background:rgba(255,20,147,.14);color:#FF8CC6;border:1px solid rgba(255,20,147,.3);margin-right:4px;}
-        .atrio-empty {background:rgba(255,255,255,.03);border:1px dashed rgba(212,175,55,.35);border-radius:14px;
-          padding:20px;text-align:center;color:#A1A1AA;font-size:12px;}
+          background:var(--atrio-acento-suave);color:var(--atrio-neon);border:1px solid var(--atrio-neon);margin-right:4px;}
+        .atrio-empty {background:var(--atrio-surface);border:1px dashed var(--atrio-oro);border-radius:14px;
+          padding:20px;text-align:center;color:var(--atrio-tenue);font-size:12px;}
         div[data-testid="stTabs"] button {font-weight:700;}
         div[data-testid="stButton"] button {border-radius:10px;}
         @media (max-width: 900px) {
@@ -550,7 +550,7 @@ def _tarjeta_evento(ev, mostrar_categoria=True, mostrar_detalle=True):
     estado_txt = _esc(estado)
     descripcion = _esc(ev.get("descripcion") or "")
     limite_html = (
-        f'<span class="atrio-pill" style="background:rgba(212,175,55,.14);color:#D4AF37;border:1px solid rgba(212,175,55,.35)">'
+        f'<span class="atrio-pill" style="background:rgba(212,175,55,.14);color:#8A6D12;border:1px solid rgba(212,175,55,.45)">'
         f'🚩 Límite {_fecha_texto(fecha_limite)}</span>'
         if fecha_limite else ""
     )
@@ -1220,7 +1220,7 @@ def render_calendario():
             st.markdown('<div class="atrio-section-sub">Selecciona el símbolo + de un día para programar una actividad.</div>', unsafe_allow_html=True)
         with cabecera[1]:
             st.markdown(
-                '<div style="text-align:right;font-size:10px;color:#A1A1AA;padding-top:8px">'
+                '<div style="text-align:right;font-size:10px;color:var(--atrio-tenue);padding-top:8px">'
                 '<span style="color:#FF1493">●</span> Actividad &nbsp; '
                 '<span style="color:#D4AF37">●</span> Fecha límite</div>',
                 unsafe_allow_html=True,

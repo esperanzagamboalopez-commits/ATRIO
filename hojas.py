@@ -111,7 +111,7 @@ def show(number,groups,today,tracking=False):
         template += """<style>
         #atrio-preparacion .steps{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:9px!important;width:100%!important}
         #atrio-preparacion .wizard-step{border:1px solid #dec9c4!important;border-radius:10px!important;background:#fffbf8!important;color:#563742!important;min-height:44px!important;padding:10px 7px!important;font-size:12px!important;font-weight:600!important}
-        #atrio-preparacion .wizard-step.current{background:#292126!important;border-color:#b58e78!important;color:#fff!important;opacity:1!important}
+        #atrio-preparacion .wizard-step.current{background:var(--atrio-neon)!important;border-color:var(--atrio-neon)!important;color:var(--atrio-sobre-acento)!important;opacity:1!important}
         #atrio-preparacion .wizard-step:disabled:not(.current){opacity:.7!important}
         #atrio-preparacion .button.primary{border-radius:10px!important;background:#6d2e49!important;border-color:#a36b84!important}
         @media(max-width:650px){#atrio-preparacion .steps{gap:3px!important}#atrio-preparacion .wizard-step{padding:8px 2px!important;font-size:10px!important}}

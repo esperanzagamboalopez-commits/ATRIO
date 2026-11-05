@@ -26,8 +26,11 @@ def safe_error(exc):
  key=os.getenv('GEMINI_API_KEY')
  return str(exc).replace(key,'[CLAVE OCULTA]') if key else str(exc)
 st.set_page_config(page_title='ATRIO · Capacitación',page_icon='◈',layout='wide')
-# Tema único Glass Executive (fondo obsidiana). El modo claro se retiró en esta fase.
-DARK=True
+# Tema claro Editorial Rosa (fondo hueso). Migración única: el tema guardado pasa a Editorial Rosa.
+DARK=False
+if not C.setting('tema_migrado_claro',False):
+ C.set_setting('tema_visual',tema.DEFECTO)
+ C.set_setting('tema_migrado_claro',True)
 tema.fijar(C.setting('tema_visual',tema.DEFECTO))
 UI.theme(DARK)
 AC.exigir()  # Acceso privado: nada se muestra antes de la contraseña.

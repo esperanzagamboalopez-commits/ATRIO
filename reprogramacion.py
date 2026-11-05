@@ -95,11 +95,11 @@ def _calcular_fecha_fin(inicio, horas_req, bloques, festivos):
 
 def render_reprogramacion(data, today):
     st.markdown("""
-    <div class="hero-pendientes" style="background: linear-gradient(109deg, rgba(255,20,147,.28) 0%, rgba(20,20,26,.92) 45%, rgba(212,175,55,.22) 100%); border-radius: 14px; padding: 24px 26px; color: #F4F4F5; border: 1px solid rgba(212,175,55,.35); backdrop-filter: blur(14px); margin-bottom: 20px;">
+    <div class="hero-pendientes" style="background: linear-gradient(109deg, rgba(255,20,147,.12) 0%, var(--atrio-surface) 55%, rgba(212,175,55,.16) 100%); border-radius: 14px; padding: 24px 26px; color: var(--atrio-titulo); border: 1px solid rgba(212,175,55,.35); box-shadow: var(--atrio-sombra); margin-bottom: 20px;">
         <div>
             <div style="font-size:10px; font-weight:800; letter-spacing:1.5px; color:#D4AF37; margin-bottom:8px;">JEFATURA DE CAPACITACIÓN</div>
             <h1 style="margin: 0; font-family: Georgia, serif; font-size: 32px;">Reprogramación</h1>
-            <p style="margin: 5px 0 0 0; font-family: Georgia, serif;">Simulador de cascada por carril (mismos días y horas).</p>
+            <p style="margin: 5px 0 0 0; font-family: Georgia, serif; color: var(--atrio-tinta);">Simulador de cascada por carril (mismos días y horas).</p>
         </div>
     </div>
     """, unsafe_allow_html=True)

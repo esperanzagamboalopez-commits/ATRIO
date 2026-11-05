@@ -25,11 +25,11 @@ div[class*="st-key-btn_flotante_asistente"] {
 }
 div[class*="st-key-btn_flotante_asistente"] button {
     background: linear-gradient(135deg, #FF1493 0%, #D4AF37 100%) !important;
-    color: #09090B !important;
+    color: #2A2326 !important;
     border-radius: 50% !important;
     width: 65px !important;
     height: 65px !important;
-    box-shadow: 0 6px 22px rgba(255,20,147,.55) !important;
+    box-shadow: 0 6px 18px rgba(255,20,147,.35) !important;
     border: 2px solid #D4AF37 !important;
     display: flex !important;
     align-items: center !important;
@@ -55,17 +55,17 @@ div[class*="st-key-mini_chat_container"] {
     width: 360px !important;
     max-height: 520px !important;
     z-index: 99998 !important;
-    background: rgba(20,20,26,.96) !important;
-    border: 1px solid rgba(212,175,55,.45) !important;
+    background: var(--atrio-surface) !important;
+    border: 1px solid var(--atrio-borde) !important;
     border-radius: 16px !important;
-    box-shadow: 0 12px 40px rgba(0,0,0,.55), 0 0 24px rgba(255,20,147,.18) !important;
+    box-shadow: 0 12px 36px rgba(42,35,38,.14) !important;
     padding: 18px !important;
     overflow-y: auto !important;
     backdrop-filter: blur(16px);
 }
 div[class*="st-key-mini_chat_container"] h3 {
     font-family: 'Playfair Display', Georgia, serif !important;
-    color: #F4F4F5 !important;
+    color: var(--atrio-titulo) !important;
 }
 @media (max-width: 600px) {
     div[class*="st-key-mini_chat_container"] {

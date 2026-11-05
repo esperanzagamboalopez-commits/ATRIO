@@ -11,8 +11,12 @@ GLASS_EXECUTIVE = 'Glass Executive'
 JAPANDI = 'Japandi Minimalista'
 CYBER = 'Cyber-Neon'
 EDITORIAL = 'Editorial Premium'
+EDITORIAL_ROSA = 'Editorial Rosa'
 
 PRESETS = {
+    EDITORIAL_ROSA: dict(dark=False, bg='#FBF7F2', surface='#FFFFFF', accent='#FF1493', gold='#D4AF37',
+                         text='#2A2326', titulo='#2A2326', muted='#6B6063', border='#2A2326', sidebar='#F4EDE4',
+                         sobre='#2A2326'),
     GLASS_EXECUTIVE: dict(dark=True, bg='#09090B', surface='#18181B', accent='#FF1493', gold='#D4AF37',
                           text='#F5F1EA', titulo='#FFFFFF', muted='#A1A1AA', border='#FFFFFF', sidebar='#09090B'),
     JAPANDI: dict(dark=False, bg='#FAFAF9', surface='#FFFFFF', accent='#5F7A5E', gold='#8A7F5B',
@@ -22,8 +26,8 @@ PRESETS = {
     EDITORIAL: dict(dark=False, bg='#FBF7F2', surface='#FFFFFF', accent='#6D1F2F', gold='#9A7A45',
                     text='#2A2326', titulo='#2A2326', muted='#6B6063', border='#2A2326', sidebar='#F4EDE4'),
 }
-OPCIONES = list(PRESETS)
-DEFECTO = GLASS_EXECUTIVE
+OPCIONES = [EDITORIAL_ROSA, EDITORIAL, JAPANDI]  # Solo temas claros en Ajustes; los oscuros siguen definidos.
+DEFECTO = EDITORIAL_ROSA
 
 _activo = DEFECTO
 
@@ -56,7 +60,8 @@ def variables(nombre=None):
         '--atrio-sidebar': p['sidebar'], '--atrio-cristal': f"rgba({_rgb(p['surface'])},0.6)",
         '--atrio-borde': f"rgba({_rgb(p['border'])},0.08)",
         '--atrio-acento-suave': f"rgba({_rgb(p['accent'])},0.14)",
-        '--atrio-sobre-acento': '#09090B' if p['accent'] in ('#22D3EE', '#D4AF37') else '#FFFFFF',
+        '--atrio-sobre-acento': p.get('sobre') or ('#09090B' if p['accent'] in ('#22D3EE', '#D4AF37') else '#FFFFFF'),
+        '--atrio-sombra': '0 6px 24px rgba(42,35,38,.08)' if not p['dark'] else '0 0 20px rgba(255,20,147,.25)',
         '--atrio-scheme': 'dark' if p['dark'] else 'light',
         # Estados (verde, rojo, ámbar) legibles en tema claro y oscuro.
         '--atrio-ok': '#4ADE80' if p['dark'] else '#15803D',

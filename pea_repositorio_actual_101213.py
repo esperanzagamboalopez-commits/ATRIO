@@ -32,7 +32,7 @@ background:#fffbf8;border-radius:10px;font-size:12px;color:#503741;margin:8px 0 
 .r213 .tiny{font-size:11px;color:#89767a}
 .r213 .steps{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:9px 0 14px}
 .r213 .step{border:1px solid #e8d6d4;border-radius:8px;background:#fffaf8;color:#6a5059;padding:7px 10px;font-size:11px}
-.r213 .step.active{background:#35262c;color:#fff;border-color:#bd9472}
+.r213 .step.active{background:var(--atrio-neon);color:var(--atrio-sobre-acento);border-color:var(--atrio-neon)}
 </style>'''
 
 

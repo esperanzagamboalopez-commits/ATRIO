@@ -1,59 +1,59 @@
 <div id="atrio-programacion">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;700&display=swap');
-html,body{background:#09090B;margin:0}
-#atrio-programacion{--obsidiana:#09090B;--cristal:rgba(24,24,27,0.6);--borde:rgba(255,255,255,0.08);--neon:#FF1493;--oro:#D4AF37;--tinta:#F5F1EA;--tenue:#A1A1AA;color-scheme:dark;font:14px/1.5 'Inter',system-ui,Arial,sans-serif;color:var(--tinta);background:var(--obsidiana);min-height:100%}
+html,body{background:var(--atrio-bg);margin:0}
+#atrio-programacion{--obsidiana:var(--atrio-bg);--cristal:var(--atrio-surface);--borde:var(--atrio-borde);--neon:var(--atrio-neon);--oro:var(--atrio-oro);--tinta:var(--atrio-tinta);--tenue:var(--atrio-tenue);color-scheme:light;font:14px/1.5 'Inter',system-ui,Arial,sans-serif;color:var(--tinta);background:var(--obsidiana);min-height:100%}
 #atrio-programacion *{box-sizing:border-box}
 #atrio-programacion button,#atrio-programacion select,#atrio-programacion input{font:inherit;color:inherit}
 #atrio-programacion button{cursor:pointer}
-#atrio-programacion h1,#atrio-programacion h2,#atrio-programacion h3{font-family:'Playfair Display',Georgia,serif;font-weight:700;color:#FFFFFF;margin:0}
+#atrio-programacion h1,#atrio-programacion h2,#atrio-programacion h3{font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--atrio-titulo);margin:0}
 #atrio-programacion .shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
-#atrio-programacion aside{background:#000000;border-right:1px solid rgba(255,255,255,0.06);padding:30px 18px}
+#atrio-programacion aside{background:var(--atrio-sidebar);border-right:1px solid var(--atrio-borde);padding:30px 18px}
 #atrio-programacion .brand{font:700 30px 'Playfair Display',Georgia,serif;letter-spacing:6px;color:var(--oro)}
 #atrio-programacion .tiny{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--oro);font-weight:600}
 #atrio-programacion .muted{font-size:12px;color:var(--tenue)}
 #atrio-programacion .nav{margin:6px 0;padding:11px 12px;font-size:13px;color:var(--oro);border-radius:10px;border:1px solid transparent}
-#atrio-programacion .active{background:rgba(255,20,147,0.14);border-color:rgba(255,20,147,0.6);color:#FFFFFF;font-weight:600;box-shadow:0 0 18px rgba(255,20,147,0.35),inset 3px 0 0 #FF1493}
+#atrio-programacion .active{background:var(--atrio-surface);border-color:rgba(255,20,147,0.6);color:var(--atrio-titulo);font-weight:600;box-shadow:0 0 18px rgba(255,20,147,0.35),inset 3px 0 0 var(--atrio-neon)}
 #atrio-programacion main{padding:30px 40px;min-width:0}
 #atrio-programacion .top{margin:0 0 18px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 #atrio-programacion .pill{border:1px solid rgba(212,175,55,0.45);border-radius:20px;padding:4px 12px;color:var(--oro);font-size:11px;background:var(--cristal)}
-#atrio-programacion .hero{background:var(--cristal);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--borde);border-left:6px solid var(--neon);border-radius:16px;padding:28px 32px;color:#FFFFFF}
+#atrio-programacion .hero{background:var(--cristal);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--borde);border-left:6px solid var(--neon);border-radius:16px;padding:28px 32px;color:var(--atrio-titulo)}
 #atrio-programacion .hero .tiny{color:var(--oro)}
 #atrio-programacion .hero h1{font-size:40px;line-height:1.15;margin:8px 0 8px}
 #atrio-programacion .hero div:last-child{color:var(--tenue)}
 #atrio-programacion h2{font-size:24px}
-#atrio-programacion h3{font-size:16px;margin:8px 0;color:#FFFFFF}
+#atrio-programacion h3{font-size:16px;margin:8px 0;color:var(--atrio-titulo)}
 #atrio-programacion .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 #atrio-programacion .section{margin-top:22px}
 #atrio-programacion details{background:var(--cristal);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--borde);border-radius:14px;padding:14px 18px}
-#atrio-programacion summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;color:#FFFFFF}
+#atrio-programacion summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;color:var(--atrio-titulo)}
 #atrio-programacion summary .muted{margin-left:4px}
 #atrio-programacion .teachers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-#atrio-programacion .teacher{border:1px solid var(--borde);border-radius:12px;background:rgba(9,9,11,0.55);padding:15px;text-align:left;color:var(--tinta);transition:transform .18s,box-shadow .18s,border-color .18s}
+#atrio-programacion .teacher{border:1px solid var(--borde);border-radius:12px;background:var(--atrio-bg);padding:15px;text-align:left;color:var(--tinta);transition:transform .18s,box-shadow .18s,border-color .18s}
 #atrio-programacion .teacher:hover{transform:translateY(-3px);border-color:rgba(255,20,147,0.5);box-shadow:0 0 16px rgba(255,20,147,0.18)}
 #atrio-programacion .teacher[aria-pressed=true]{border-color:var(--neon);box-shadow:0 0 18px rgba(255,20,147,0.35);background:rgba(255,20,147,0.08)}
 #atrio-programacion .initials{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;width:34px;height:34px;border:1px solid rgba(212,175,55,0.5);background:rgba(212,175,55,0.08);color:var(--oro);margin-bottom:10px;font:600 14px 'Playfair Display',Georgia,serif}
-#atrio-programacion .teacher-name{display:block;font-size:13px;font-weight:600;min-height:36px;color:#FFFFFF}
+#atrio-programacion .teacher-name{display:block;font-size:13px;font-weight:600;min-height:36px;color:var(--atrio-titulo)}
 #atrio-programacion .filters{background:var(--cristal);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--borde);border-radius:14px;padding:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
 #atrio-programacion label{font-size:12px;color:var(--tenue);display:flex;flex-direction:column;gap:5px}
-#atrio-programacion input,#atrio-programacion select{width:100%;min-width:0;background:rgba(9,9,11,0.75);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;color:var(--tinta)}
+#atrio-programacion input,#atrio-programacion select{width:100%;min-width:0;background:var(--atrio-bg);border:1px solid var(--atrio-borde);border-radius:8px;padding:8px 10px;color:var(--tinta)}
 #atrio-programacion input:focus,#atrio-programacion select:focus{outline:none;border-color:var(--neon);box-shadow:0 0 0 3px rgba(255,20,147,0.18)}
-#atrio-programacion option{background:#18181B;color:var(--tinta)}
-#atrio-programacion .button{border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 13px;background:var(--cristal);color:var(--tinta);font-size:12px;transition:transform .18s,box-shadow .18s,border-color .18s}
+#atrio-programacion option{background:var(--atrio-surface);color:var(--tinta)}
+#atrio-programacion .button{border:1px solid var(--atrio-borde);border-radius:8px;padding:8px 13px;background:var(--cristal);color:var(--tinta);font-size:12px;transition:transform .18s,box-shadow .18s,border-color .18s}
 #atrio-programacion .button:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(255,20,147,0.6);box-shadow:0 0 14px rgba(255,20,147,0.25)}
 #atrio-programacion .button:disabled{opacity:.45;cursor:default}
-#atrio-programacion .primary{background:#FF1493;border-color:#FF1493;color:#FFFFFF;box-shadow:0 0 18px rgba(255,20,147,0.45)}
+#atrio-programacion .primary{background:var(--atrio-neon);border-color:var(--atrio-neon);color:var(--atrio-sobre-acento);box-shadow:0 0 18px rgba(255,20,147,0.45)}
 #atrio-programacion .primary:hover:not(:disabled){box-shadow:0 0 26px rgba(255,20,147,0.7)}
 #atrio-programacion .course{background:var(--cristal);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--borde);border-radius:14px;padding:18px 20px;margin-top:12px;transition:border-color .18s}
 #atrio-programacion .course:hover{border-color:rgba(255,20,147,0.3)}
-#atrio-programacion .badge{font-size:11px;border-radius:14px;padding:3px 10px;display:inline-block;border:1px solid rgba(255,255,255,0.14);color:#E4E4E7;background:rgba(255,255,255,0.04)}
+#atrio-programacion .badge{font-size:11px;border-radius:14px;padding:3px 10px;display:inline-block;border:1px solid var(--atrio-borde);color:var(--atrio-tinta);background:var(--atrio-surface)}
 #atrio-programacion .badge.extension{border-color:rgba(255,20,147,0.55);color:#FF8BC4}
 #atrio-programacion .badge.regular{border-color:rgba(212,175,55,0.55);color:var(--oro)}
 #atrio-programacion .badge.repository{border-color:rgba(147,197,253,0.45);color:#BFDBFE}
 #atrio-programacion .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:13px 0;color:var(--tenue);font-size:12px}
-#atrio-programacion .facts strong{display:block;font-weight:500;color:#FFFFFF;font-size:14px}
+#atrio-programacion .facts strong{display:block;font-weight:500;color:var(--atrio-titulo);font-size:14px}
 #atrio-programacion .schedule{border-top:1px solid var(--borde);padding-top:10px;margin-bottom:12px;font-size:12px;color:var(--tenue)}
-#atrio-programacion .sheet{background:rgba(9,9,11,0.6);padding:16px;border-radius:10px;margin-top:12px;border-left:3px solid var(--oro)}
+#atrio-programacion .sheet{background:var(--atrio-bg);padding:16px;border-radius:10px;margin-top:12px;border-left:3px solid var(--oro)}
 #atrio-programacion .sheet dl{display:grid;grid-template-columns:150px 1fr;gap:8px;font-size:12px}
 #atrio-programacion .sheet dt{color:var(--tenue)}
 #atrio-programacion .sheet dd{margin:0;overflow-wrap:anywhere;color:var(--tinta)}
@@ -64,8 +64,8 @@ html,body{background:#09090B;margin:0}
 #atrio-programacion .compare-row{display:grid;grid-template-columns:110px 1fr 1fr 1.2fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--borde);align-items:center;font-size:12px}
 #atrio-programacion .compare-row>*{min-width:0;overflow-wrap:anywhere}
 #atrio-programacion .compare-head{font-weight:600;color:var(--oro)}
-#atrio-programacion .compare-cell[data-sis-field][style*="f5e0c9"]{color:#09090B!important;border-radius:4px;padding:2px 4px}
-#atrio-programacion .review{background:rgba(9,9,11,0.6);border-left:3px solid var(--oro);padding:13px 15px;margin-top:12px;border-radius:8px}
+#atrio-programacion .compare-cell[data-sis-field][style*="f5e0c9"]{color:#2A2326!important;border-radius:4px;padding:2px 4px}
+#atrio-programacion .review{background:var(--atrio-bg);border-left:3px solid var(--oro);padding:13px 15px;margin-top:12px;border-radius:8px}
 #atrio-programacion .proposal-note{font-size:12px;color:var(--tenue)}
 #atrio-programacion [hidden]{display:none!important}
 @media(max-width:800px){#atrio-programacion .shell{grid-template-columns:1fr}#atrio-programacion aside{padding:14px 20px}#atrio-programacion aside .nav,#atrio-programacion aside .tiny{display:none}#atrio-programacion .brand{font-size:24px}#atrio-programacion main{padding:18px}}

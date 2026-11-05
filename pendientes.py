@@ -44,15 +44,15 @@ def _meses_entre(inicio, fin):
 def render_pendientes(data, today):
     st.markdown("""
     <style>
-    .hero-pendientes { background: linear-gradient(109deg, rgba(255,20,147,.28) 0%, rgba(20,20,26,.92) 45%, rgba(212,175,55,.22) 100%); border-radius: 14px; padding: 24px 26px; color: #F4F4F5; border: 1px solid rgba(212,175,55,.35); backdrop-filter: blur(14px); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .hero-pendientes { background: linear-gradient(109deg, rgba(255,20,147,.12) 0%, var(--atrio-surface) 55%, rgba(212,175,55,.16) 100%); border-radius: 14px; padding: 24px 26px; color: var(--atrio-titulo); border: 1px solid rgba(212,175,55,.35); box-shadow: var(--atrio-sombra); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     .hero-pendientes h1 { margin: 0; font-family: Georgia, serif; font-size: 32px; }
-    .hero-pendientes p { margin: 5px 0 0 0; font-family: Georgia, serif; }
+    .hero-pendientes p { margin: 5px 0 0 0; font-family: Georgia, serif; color: var(--atrio-tinta); }
     
-    .kpi-progreso { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10); border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
-    .kpi-progreso .header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #F4F4F5; margin-bottom: 10px; }
-    .kpi-progreso .bar-bg { height: 8px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+    .kpi-progreso { background: var(--atrio-surface); border: 1px solid rgba(212,175,55,.35); border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: var(--atrio-sombra); }
+    .kpi-progreso .header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--atrio-titulo); margin-bottom: 10px; }
+    .kpi-progreso .bar-bg { height: 8px; background: rgba(212,175,55,.18); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
     .kpi-progreso .bar-fill { height: 100%; background: #FF1493; border-radius: 4px; transition: width 0.5s ease; }
-    .kpi-progreso .footer { display: flex; justify-content: space-between; font-size: 11px; color: #A1A1AA; }
+    .kpi-progreso .footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--atrio-tenue); }
     </style>
     """, unsafe_allow_html=True)
 
@@ -262,7 +262,7 @@ def render_pendientes(data, today):
                     if st.button("⬅️ Anterior", key=f"prev_{key_pag}", disabled=st.session_state[key_pag] == 1):
                         st.session_state[key_pag] -= 1; st.rerun()
                 with col_info:
-                    st.markdown(f"<div style='text-align:center; color:#A1A1AA; font-size:12px; margin-top:10px;'>Página {st.session_state[key_pag]} de {total_paginas}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='text-align:center; color:var(--atrio-tenue); font-size:12px; margin-top:10px;'>Página {st.session_state[key_pag]} de {total_paginas}</div>", unsafe_allow_html=True)
                 with col_next:
                     if st.button("Siguiente ➡️", key=f"next_{key_pag}", disabled=st.session_state[key_pag] == total_paginas):
                         st.session_state[key_pag] += 1; st.rerun()

@@ -1639,7 +1639,7 @@ def render_auditoria_sisae() -> None:
     _inyectar_estilos()
     st.markdown(
         """
-        <div style="background:linear-gradient(109deg,var(--atrio-surface) 0%,#2a2110 45%,#D4AF37 100%);border-radius:14px;padding:22px 25px;color:var(--atrio-titulo);margin-bottom:18px;">
+        <div style="background:linear-gradient(109deg,var(--atrio-surface) 0%,rgba(212,175,55,.14) 60%,rgba(212,175,55,.30) 100%);border-radius:14px;padding:22px 25px;color:var(--atrio-titulo);margin-bottom:18px;">
           <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:#D4AF37;margin-bottom:7px;">
             AUDITORÍA HISTÓRICA
           </div>

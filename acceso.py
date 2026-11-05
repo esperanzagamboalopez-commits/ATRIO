@@ -35,7 +35,7 @@ def exigir():
                 st.rerun()
         return
     st.markdown('<h2 style="font-family:\'Playfair Display\',Georgia,serif;color:#D4AF37;margin-bottom:0">ATRIO</h2>'
-                '<p style="color:#A1A1AA">Acceso privado · CECATI 31</p>', unsafe_allow_html=True)
+                '<p style="color:#6B6063">Acceso privado · CECATI 31</p>', unsafe_allow_html=True)
     with st.form('atrio_login'):
         intento = st.text_input('Contraseña', type='password')
         entrar = st.form_submit_button('Entrar')
