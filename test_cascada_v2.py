@@ -115,19 +115,23 @@ def extraer_bloques_horario(horario_str):
     return bloques
 
 def _clave_carril(horario_str):
-    """Mismos dias + misma duracion + misma hora de inicio = mismo carril."""
+    """Mismos dias + misma duracion + misma hora de inicio en TODOS los bloques = mismo carril."""
     bloques = extraer_bloques_horario(horario_str)
     if not bloques:
         return None
-    b = bloques[0]
-    return (tuple(sorted(b["dias"])), round(b["duracion"], 2), b["hora_inicio_min"])
+    return tuple(sorted(
+        (tuple(sorted(b["dias"])), round(b["duracion"], 2), b["hora_inicio_min"])
+        for b in bloques
+    ))
 
 def _describir_carril(clave):
     if not clave:
         return "(sin horario)"
-    dias, dur, h_min = clave
-    h, m = h_min // 60, h_min % 60
-    return f"dias={dias} | {int(dur)}h/dia | inicio={h:02d}:{m:02d}"
+    partes = []
+    for dias, dur, h_min in clave:
+        h, m = h_min // 60, h_min % 60
+        partes.append(f"dias={dias} | {int(dur)}h/dia | inicio={h:02d}:{m:02d}")
+    return " ; ".join(partes)
 
 def simular_desde_inicio(fecha_inicio, bloques, limite=500):
     resultados, actual = [], fecha_inicio

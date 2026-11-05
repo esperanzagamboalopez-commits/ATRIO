@@ -1,7 +1,7 @@
 from pathlib import Path
 from collections import Counter
 from datetime import date,datetime
-import hashlib, io,json,re
+import hashlib, io, json, re, zipfile
 import streamlit as st
 import streamlit.components.v1 as components
 from openpyxl import load_workbook
@@ -12,13 +12,23 @@ widget=components.declare_component('atrio_hoja',path=str(ROOT/'puente'))
 def safe(value):
     return json.dumps(value,ensure_ascii=False,default=str).replace('<','\\u003c')
 
+class RecursoFaltante(Exception):
+    pass
+
+def leer_recurso(nombre):
+    """Lee un recurso de datos/recursos; si falta, lanza RecursoFaltante con mensaje en español."""
+    try:
+        return (C.RES/nombre).read_bytes()
+    except FileNotFoundError as exc:
+        raise RecursoFaltante(f'Falta el archivo {nombre}. Por favor, súbelo en Ajustes.') from exc
+
 def snapshot(groups):
     # El id del laboratorio es numérico. Usar una conversión estable del UUID.
     # Los primeros 13 dígitos hexadecimales caben exactamente en Number (JS).
     rows=[dict(id=int(g['id'].replace('-','')[:13],16),fingerprint=g['fingerprint'],docente=g['hoja'],curso=g['nombre'],tipo=g['tipo'].upper(),inicio=g['inicio'],fin=g['fin'],horas=g['duracion'],horario=g['horario'],sede=g['aula'],fila=g['fila']) for g in groups]
     ids={str(r['id']):g for r,g in zip(rows,groups)}
     if len(ids)!=len(rows):raise ValueError('Identificadores de grupo ambiguos.')
-    raw=(C.RES/'SISAE.zip').read_bytes()
+    raw=leer_recurso('SISAE.zip')
     tables=C.sisae_bytes(raw)
     counts=Counter(r['CLV_CURSO'] for r in tables['INSCRIPCION.DBF'])
     def dt(x):return f'{x[:4]}-{x[4:6]}-{x[6:]}' if len(x)==8 else ''
@@ -69,7 +79,14 @@ def working_copy(ids,proposals):
     out=io.BytesIO();wb.save(out);return out.getvalue()
 
 def show(number,groups,today,tracking=False):
-    rows,ids,sis,links,students,digest=snapshot(groups)
+    try:
+        rows,ids,sis,links,students,digest=snapshot(groups)
+    except RecursoFaltante as e:
+        st.error(str(e))
+        return
+    except (zipfile.BadZipFile,KeyError,ValueError) as e:
+        st.error(f'El archivo SISAE.zip no se pudo leer ({e}). Por favor, vuelve a subirlo en Ajustes.')
+        return
     keys=['links','proposals','pea','school','bags','records']
     state={k:C.setting('hojas03_'+k,{}) for k in keys}
     for k,g in ids.items():
@@ -77,6 +94,8 @@ def show(number,groups,today,tracking=False):
         if k in state['pea'] or status['doc']!='Sin verificar' or status['mce']!='Sin verificar':
             state['pea'][k]=dict(state['pea'].get(k,{}),doc=status['doc'],mce=status['mce'],note=status['note'])
     template=(ROOT/f'hoja{number}.html').read_text()
+    import tema
+    template='<style>'+tema.root_css()+'</style>'+template
     if number==3:
         # ATRIO 10.9: elegir tarjeta en paso 2 avanza al paso 3, sin tocar
         # el HTML ni la lógica de los pasos 3, 4 y 5.
@@ -116,7 +135,7 @@ def show(number,groups,today,tracking=False):
     template+='<style>body{margin:0}div.shell{display:block!important;grid-template-columns:1fr!important}main{min-width:0}</style>'
     values={'program-data':rows,'ce-data':rows,'close-data':rows,'sis-reference':sis,'sisae-data':sis,'ce-links':links,'ce-students':students}
     for k,v in values.items():template=template.replace('@@'+k+'@@',safe(v))
-    template=template.replace('@@fecha@@','corte cargado').replace('@@hoy@@',today.isoformat()).replace('@@corte@@',f'{len(sis)} grupos y {sum(x["alumnos"] for x in sis)} inscripciones')
+    template=template.replace('@@ngrupos@@',str(len(rows))).replace('@@fecha@@','corte cargado').replace('@@hoy@@',today.isoformat()).replace('@@corte@@',f'{len(sis)} grupos y {sum(x["alumnos"] for x in sis)} inscripciones')
     bridge='''<script>window.store=STATE;let before=JSON.parse(JSON.stringify(window.store));window.openCourse=id=>parent.postMessage({atrio:'open',id},'*');
     function flush(){let delta=[];for(let k of Object.keys(window.store)){for(let id of new Set([...Object.keys(window.store[k]),...Object.keys(before[k])])){let value=window.store[k][id],old=before[k][id];if(JSON.stringify(old)!==JSON.stringify(value))delta.push({k,id,old:old??null,value:value??null})}}
     if(delta.length){before=JSON.parse(JSON.stringify(window.store));parent.postMessage({atrio:'save',delta},'*')}}

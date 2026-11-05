@@ -1,11 +1,13 @@
 """Historial SISAE y comparación de grupos e inscripciones entre dos respaldos."""
-import fcntl,io,os,re,uuid,zipfile
+import io,os,re,threading,uuid,zipfile
 from collections import Counter
 from datetime import date
 from pathlib import Path
 import centro as C
 
 KNOWN={'016026619ce2ee13479393412722d2cabd08d574da4cbf7de0eab8a29a94ca3b':'2026-10-17','6241c87feb027edd2217ed4bd07321de6d01563a2b65a455131a70840d4d99a0':'2026-10-29'}
+# Bloqueo de proceso: el servidor Streamlit corre en un solo proceso. Evita fcntl (solo Unix).
+_BLOQUEO=threading.Lock()
 G='PROG_CURSOS1.DBF'
 I='INSCRIPCION.DBF'
 
@@ -40,8 +42,7 @@ def validate(raw):
 
 def save(raw,name,cut,activate):
     validate(raw);digest=C.sha(raw)
-    with (C.DATA/'sisae.lock').open('a') as lock:
-        fcntl.flock(lock,fcntl.LOCK_EX)
+    with _BLOQUEO:
         paths,active=history()
         if digest not in paths:
             target=C.ARCH/(digest+'_SISAE.zip')

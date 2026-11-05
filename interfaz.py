@@ -1,110 +1,193 @@
-"""Presentación recuperada del Inicio aprobado. No modifica datos ni documentos."""
+"""ATRIO · Tema Glass Executive (fase 1).
+Presentación únicamente: no modifica datos, documentos ni lógica de negocio.
+"""
 from pathlib import Path
 import json, html, re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import streamlit as st
-import streamlit.components.v1 as components
+import tema
 
-MONTHS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+# Paleta Glass Executive
+OBSIDIANA = '#09090B'
+CRISTAL = 'rgba(24, 24, 27, 0.6)'
+BORDE_CRISTAL = 'rgba(255, 255, 255, 0.08)'
+NEON = '#FF1493'
+ORO = '#D4AF37'
+TINTA = '#F5F1EA'
+TENUE = '#A1A1AA'
+
+
 def fecha(value):
- y,m,d=value.split('-');return f'{int(d)} de {MONTHS[int(m)-1]} de {y}'
+    y, m, d = value.split('-')
+    return f'{int(d)} de {MONTHS[int(m) - 1]} de {y}'
 
-def theme(dark):
- ink,bg,panel,muted,border=('#f4eee8','#201c20','#2e272d','#dbcbd1','#705d68') if dark else ('#252022','#f6f1e9','#fffdfa','#695762','#d5c9c0')
- st.markdown(f'''<style>
- .stApp,[data-testid="stAppViewContainer"]{{background:{bg};color:{ink};--text-color:{ink};--background-color:{bg};--secondary-background-color:{panel}}}
- [data-testid="stHeader"]{{background:{bg}}}
- [data-testid="stMain"] p,[data-testid="stMain"] label,[data-testid="stMain"] h1,[data-testid="stMain"] h2,[data-testid="stMain"] h3,[data-testid="stMain"] h4,[data-testid="stMain"] li,[data-testid="stMain"] [data-testid="stMetricValue"],[data-testid="stMain"] [data-testid="stMetricLabel"]{{color:{ink}}}
- h1,h2,h3{{font-family:Georgia,serif!important}}
- [data-testid="stCaptionContainer"] p{{color:{muted}!important}}
- [data-testid="stSidebar"]{{background:#221c20;color:#f4eee8}}
- [data-testid="stSidebar"] p,[data-testid="stSidebar"] label,[data-testid="stSidebar"] span,[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p{{color:#f4eee8!important}}
- [data-testid="stMain"] input,[data-testid="stMain"] textarea,[data-testid="stMain"] [data-baseweb="select"]>div,[data-testid="stMain"] [data-baseweb="input"],[data-testid="stMain"] [data-baseweb="textarea"]{{background:{panel}!important;color:{ink}!important;-webkit-text-fill-color:{ink};border-color:{border}}}
- [data-testid="stSidebar"] button{{background:#342b31;color:#fff;border-color:#705d68}}
- [data-testid="stMain"] [data-baseweb="select"] span{{color:{ink}!important}}
- [data-testid="stMain"] [data-testid="stAlert"]{{background:{panel};border:1px solid {border}}}
- [data-testid="stSidebar"] input{{background:#342b31!important;color:#fff!important;-webkit-text-fill-color:#fff}}
- [data-testid="stMain"] button{{color:{ink};border-color:{border};background:{panel};transition:transform .18s,box-shadow .18s}}
- [data-testid="stMain"] button p{{color:inherit!important}}
- [data-testid="stMain"] button:hover{{transform:translateY(-2px);box-shadow:0 6px 18px #211d2018;border-color:#b99461}}
- [data-testid="stMain"] button[kind="primary"]{{background:#211d20;color:white!important;border-color:#b99461}}
- [data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"],[data-testid="stMain"] [data-testid="stForm"]{{border-color:{border}}}
- .atrio-hero{{background:linear-gradient(115deg,var(--soft),var(--strong));padding:24px;border-radius:14px;margin-bottom:22px;color:#21191d}}
- .atrio-hero h1,.atrio-hero p{{color:#21191d!important}}
- .atrio-badge{{display:inline-block;padding:5px 10px;border-radius:20px;font-size:12px;color:#252022;background:#e5d9e9}}
- .floating{{position:fixed;bottom:22px;right:22px;background:#211d20;color:#fff;padding:12px 18px;border:1px solid #d5b782;border-radius:24px;z-index:900;pointer-events:none}}
- @media(prefers-reduced-motion:reduce){{*{{transition:none!important}}button:hover{{transform:none!important}}}}
- </style>''',unsafe_allow_html=True)
- st.markdown('<style>\n/* ATRIO 10.4: SOLO el menú nativo, sin tocar widgets de otras hojas. */\n[data-testid="stSidebar"]{background:#211c21!important;color:#f8f3ef!important}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"]{margin-bottom:3px!important}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button{\n    width:100%!important;min-height:39px!important;padding:9px 13px!important;\n    border-radius:12px!important;border:1px solid transparent!important;\n    box-shadow:none!important;background:transparent!important;color:#f1e9e6!important;\n    display:flex!important;justify-content:flex-start!important;align-items:center!important;\n    gap:11px!important;text-align:left!important;transition:background .16s,border-color .16s!important\n}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button p{color:#f1e9e6!important;font-size:13px!important;font-weight:520!important}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button span[data-testid="stIconMaterial"],\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button .material-symbols-rounded{\n    color:#d8b58b!important;font-size:19px!important;flex:0 0 20px\n}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button:hover{\n    background:#392b34!important;border-color:#604552!important\n}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"],\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[kind="primary"]{\n    background:linear-gradient(105deg,#5c3146,#7c435d)!important;\n    border-color:#c887a6!important;box-shadow:inset 3px 0 #f2a8ca!important\n}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] p,\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[kind="primary"] p{color:white!important;font-weight:700!important}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] span[data-testid="stIconMaterial"],\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] .material-symbols-rounded{color:#ffe1ee!important}\n.atrio-menu-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#c9bbaa;\n  margin:8px 0 12px;font-weight:700}\n@media(prefers-reduced-motion:reduce){[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button{transition:none!important}}\n\n/* ATRIO 10.5: icono y texto alineados a la IZQUIERDA, únicamente menú lateral. */\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button {\n  display:flex!important;\n  flex-direction:row!important;\n  justify-content:flex-start!important;\n  align-items:center!important;\n  text-align:left!important;\n  gap:12px!important;\n  padding-left:18px!important;\n  padding-right:12px!important;\n}\n/* Streamlit puede centrar el contenido en un contenedor interior. */\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button > div,\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button > span:not([data-testid="stIconMaterial"]),\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button [data-testid="stMarkdownContainer"] {\n  display:flex!important;\n  flex-direction:row!important;\n  justify-content:flex-start!important;\n  align-items:center!important;\n  text-align:left!important;\n  margin-left:0!important;\n  margin-right:0!important;\n  width:auto!important;\n  flex:0 1 auto!important;\n  gap:12px!important;\n}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button p,\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button [data-testid="stMarkdownContainer"] p {\n  text-align:left!important;\n  margin:0!important;\n  white-space:normal!important;\n  line-height:1.3!important;\n}\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button span[data-testid="stIconMaterial"],\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button span.material-symbols-rounded,\n[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button svg {\n  margin-left:0!important;\n  margin-right:0!important;\n  flex:0 0 20px!important;\n}\n\n</style>',unsafe_allow_html=True)
- st.sidebar.markdown('<h1 style="color:#d5b782;letter-spacing:5px">ATRIO</h1>',unsafe_allow_html=True)
 
-def color(v,default):return v if re.fullmatch(r'#[0-9a-fA-F]{6}',str(v)) else default
+GLASS_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;700&display=swap');
 
-def heading(title,soft,strong):
- st.markdown(f'<div class="atrio-hero" style="--soft:{color(soft,"#f5d8df")};--strong:{color(strong,"#ed78ab")}"><small>JEFATURA DE CAPACITACIÓN · CECATI 31</small><h1>{html.escape(title)}</h1><p>Tu gestión, bajo tu dirección.</p></div>',unsafe_allow_html=True)
+
+/* Fondo y tipografía base */
+html,body,.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background:#09090B!important;color:#F5F1EA!important;font-family:'Inter',system-ui,sans-serif}
+[data-testid="stHeader"]{background:rgba(9,9,11,0.85)!important;backdrop-filter:blur(12px)}
+[data-testid="stMain"] p,[data-testid="stMain"] label,[data-testid="stMain"] li,[data-testid="stMain"] span,[data-testid="stMain"] [data-testid="stMetricValue"],[data-testid="stMain"] [data-testid="stMetricLabel"]{color:#F5F1EA}
+[data-testid="stCaptionContainer"] p,[data-testid="stMain"] small{color:#A1A1AA!important}
+h1,h2,h3,h4{font-family:'Playfair Display',Georgia,serif!important;color:#FFFFFF!important;letter-spacing:.2px}
+
+/* Ancho completo */
+[data-testid="stMainBlockContainer"],[data-testid="stAppViewBlockContainer"],.block-container{max-width:100%!important;padding-left:2.5rem!important;padding-right:2.5rem!important}
+
+/* Barra lateral: negro absoluto y textos en oro */
+[data-testid="stSidebar"]{background:#000000!important;border-right:1px solid rgba(255,255,255,0.06)}
+[data-testid="stSidebar"] p,[data-testid="stSidebar"] label,[data-testid="stSidebar"] span,[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p{color:#D4AF37!important}
+[data-testid="stSidebar"] input{background:#18181B!important;color:#F5F1EA!important;-webkit-text-fill-color:#F5F1EA!important;border:1px solid rgba(255,255,255,0.08)!important}
+[data-testid="stSidebar"] button{background:rgba(24,24,27,0.6);color:#F5F1EA;border:1px solid rgba(255,255,255,0.08)}
+
+/* Tarjetas, expansores y formularios de cristal */
+[data-testid="stMain"] [data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stMain"] [data-testid="stForm"],
+[data-testid="stMain"] [data-testid="stExpander"]{background:rgba(24,24,27,0.6)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)!important;border-radius:14px}
+[data-testid="stMain"] [data-testid="stExpander"] summary{color:#F5F1EA!important}
+
+/* Campos */
+[data-testid="stMain"] input,[data-testid="stMain"] textarea,[data-testid="stMain"] [data-baseweb="select"]>div,[data-testid="stMain"] [data-baseweb="input"],[data-testid="stMain"] [data-baseweb="textarea"]{background:rgba(9,9,11,0.7)!important;color:#F5F1EA!important;-webkit-text-fill-color:#F5F1EA;border-color:rgba(255,255,255,0.12)!important}
+[data-testid="stMain"] [data-baseweb="select"] span{color:#F5F1EA!important}
+[data-baseweb="popover"] [data-baseweb="menu"],[data-baseweb="popover"] li{background:#18181B!important;color:#F5F1EA!important}
+[data-baseweb="popover"] li:hover{background:rgba(255,20,147,0.15)!important}
+
+/* Botones: cristal; primarios en rosa neón con brillo */
+[data-testid="stMain"] button{color:#F5F1EA;background:rgba(24,24,27,0.6);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(16px);border-radius:10px;transition:transform .18s,box-shadow .18s,border-color .18s}
+[data-testid="stMain"] button p{color:inherit!important}
+[data-testid="stMain"] button:hover{transform:translateY(-2px);border-color:rgba(255,20,147,0.6);box-shadow:0 0 16px rgba(255,20,147,0.25)}
+[data-testid="stMain"] button[kind="primary"],[data-testid="stMain"] button[data-testid="stBaseButton-primary"]{background:#FF1493!important;border-color:#FF1493!important;color:#FFFFFF!important;box-shadow:0 0 18px rgba(255,20,147,0.45)}
+[data-testid="stMain"] button[kind="primary"]:hover,[data-testid="stMain"] button[data-testid="stBaseButton-primary"]:hover{box-shadow:0 0 26px rgba(255,20,147,0.7)}
+[data-testid="stMain"] button[kind="primary"] p,[data-testid="stMain"] button[data-testid="stBaseButton-primary"] p{color:#FFFFFF!important}
+[data-testid="stMain"] button:disabled{opacity:.45}
+
+/* Alertas: cristal oscuro con borde neón (sin azul ni verde por defecto) */
+[data-testid="stAlert"]{background:rgba(24,24,27,0.6)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)!important;border-left:4px solid #FF1493!important;border-radius:12px!important;color:#F5F1EA!important}
+[data-testid="stAlert"] p,[data-testid="stAlert"] li,[data-testid="stAlert"] span{color:#F5F1EA!important}
+[data-testid="stAlert"] svg{color:#FF1493!important;fill:#FF1493!important}
+
+/* Encabezado tipo héroe */
+.atrio-hero{background:rgba(24,24,27,0.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-left:6px solid #FF1493;padding:28px 32px;border-radius:16px;margin-bottom:24px;color:#FFFFFF}
+.atrio-hero small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#D4AF37;font-weight:700;margin-bottom:6px}
+.atrio-hero h1{font-family:'Playfair Display',Georgia,serif!important;font-size:40px;line-height:1.15;color:#FFFFFF!important;margin:4px 0 8px}
+.atrio-hero p{color:#A1A1AA!important;margin:0}
+
+.atrio-badge{display:inline-block;padding:5px 11px;border-radius:20px;font-size:12px;color:#D4AF37;border:1px solid rgba(212,175,55,0.4);background:rgba(24,24,27,0.6)}
+.floating{position:fixed;bottom:22px;right:22px;background:rgba(24,24,27,0.8);backdrop-filter:blur(16px);color:#FFFFFF;padding:12px 18px;border:1px solid #FF1493;border-radius:24px;z-index:900;pointer-events:none;box-shadow:0 0 20px rgba(255,20,147,0.35)}
+.sisae-data{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.sisae-number{font-family:'Playfair Display',Georgia,serif;font-size:34px;color:#D4AF37}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important}[data-testid="stMain"] button:hover{transform:none!important}}
+"""
+
+MENU_CSS = """
+/* Menú lateral nativo: texto dorado, activo con halo rosa neón. */
+[data-testid="stSidebar"] .atrio-menu-eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#D4AF37;margin:8px 0 12px;font-weight:700;opacity:.85}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"]{margin-bottom:3px!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button{
+  width:100%!important;min-height:40px!important;padding:9px 13px 9px 18px!important;
+  border-radius:12px!important;border:1px solid transparent!important;box-shadow:none!important;
+  background:transparent!important;color:#D4AF37!important;
+  display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;
+  gap:12px!important;text-align:left!important;backdrop-filter:none!important;
+  transition:background .16s,border-color .16s,box-shadow .16s!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button p{color:#D4AF37!important;font-size:13px!important;font-weight:500!important;text-align:left!important;margin:0!important;white-space:normal!important;line-height:1.3!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button span[data-testid="stIconMaterial"],
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button .material-symbols-rounded,
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button svg{color:#D4AF37!important;font-size:19px!important;flex:0 0 20px!important;margin:0!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button:hover{background:rgba(255,20,147,0.08)!important;border-color:rgba(255,20,147,0.3)!important;transform:none!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"],
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[kind="primary"]{
+  background:rgba(255,20,147,0.14)!important;border-color:rgba(255,20,147,0.6)!important;
+  box-shadow:0 0 18px rgba(255,20,147,0.35),inset 3px 0 0 #FF1493!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] p,
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[kind="primary"] p{color:#FFFFFF!important;font-weight:700!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] span[data-testid="stIconMaterial"],
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] .material-symbols-rounded,
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button[data-testid="stBaseButton-primary"] svg{color:#FF1493!important}
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button > div,
+[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button [data-testid="stMarkdownContainer"]{display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;gap:12px!important;width:auto!important;margin:0!important;text-align:left!important}
+@media(prefers-reduced-motion:reduce){[data-testid="stSidebar"] [class*="st-key-atrio_menu_"] button{transition:none!important}}
+"""
+
+
+def theme(dark=True):
+    """Tema único Glass Executive. El parámetro dark se conserva por compatibilidad."""
+    st.markdown('<style>' + tema.root_css() + '</style>', unsafe_allow_html=True)
+    st.markdown('<style>' + tema.tematizar(GLASS_CSS) + '</style>', unsafe_allow_html=True)
+    st.markdown('<style>' + tema.tematizar(MENU_CSS) + '</style>', unsafe_allow_html=True)
+    st.sidebar.markdown('<h1 style="font-family:\'Playfair Display\',Georgia,serif;color:#D4AF37;letter-spacing:6px;margin-bottom:0">ATRIO</h1>', unsafe_allow_html=True)
+
+
+def color(v, default):
+    return v if re.fullmatch(r'#[0-9a-fA-F]{6}', str(v)) else default
+
+
+def heading(title, soft, strong):
+    """Encabezado héroe. Los colores de título ya no cambian el tema; se conservan los parámetros por compatibilidad."""
+    st.markdown(
+        '<div class="atrio-hero"><small>JEFATURA DE CAPACITACIÓN · CECATI 31</small>'
+        f'<h1>{html.escape(title)}</h1><p>Tu gestión, bajo tu dirección.</p></div>',
+        unsafe_allow_html=True)
+
 
 def sisae_resume():
     """Compact total from active SISAE cut. Never leak any student PII."""
     import centro as C
     import cortes
-    p=C.RES/'SISAE.zip'
+    p = C.RES / 'SISAE.zip'
     if not p.exists():
         return '<div class="sisae-data"><span>Inscripciones SISAE</span><span class="subtle">Sin corte cargado · Importa un ZIP en SISAE · Cortes.</span></div>'
     try:
-        raw=p.read_bytes()
-        tables=C.sisae_bytes(raw)
-        n=len(tables['INSCRIPCION.DBF'])
+        raw = p.read_bytes()
+        tables = C.sisae_bytes(raw)
+        n = len(tables['INSCRIPCION.DBF'])
         from collections import Counter
-        by=Counter(x.get('PERIODO','').strip() for x in tables['INSCRIPCION.DBF'])
-        digest=C.sha(raw)
-        date_cut=C.setting('corte_'+digest,{}).get('date') or cortes.KNOWN.get(digest,'Fecha sin verificar')
-        split=' · '.join('P'+str(k)+': '+str(by.get(str(k),0)) for k in range(1,5) if by.get(str(k),0))
+        by = Counter(x.get('PERIODO', '').strip() for x in tables['INSCRIPCION.DBF'])
+        digest = C.sha(raw)
+        date_cut = C.setting('corte_' + digest, {}).get('date') or cortes.KNOWN.get(digest, 'Fecha sin verificar')
+        split = ' · '.join('P' + str(k) + ': ' + str(by.get(str(k), 0)) for k in range(1, 5) if by.get(str(k), 0))
         return ('<div class="sisae-data"><div><strong>Inscripciones registradas en SISAE</strong>'
-                '<div class="subtle">Corte importado: '+html.escape(date_cut)+' · '+html.escape(split)+'</div></div>'
-                '<span class="sisae-number">'+str(n)+'</span></div>')
+                '<div class="subtle">Corte importado: ' + html.escape(date_cut) + ' · ' + html.escape(split) + '</div></div>'
+                '<span class="sisae-number">' + str(n) + '</span></div>')
     except Exception:
         return '<div class="sisae-data"><span>Inscripciones SISAE</span><span class="subtle">No se pudo leer el corte activo. Revisar en SISAE · Cortes.</span></div>'
 
-def home_html(data,alerts,dark,soft,strong,today):
- messages={g['id']:message for g,message in alerts}
- rows=[dict(id=g['id'],docente=g['hoja'],curso=g['nombre'],tipo=g['tipo'].upper(),inicio=g['inicio'],fin=g['fin'],horas=g['duracion'],horario=g['horario'],alerta=messages.get(g['id'],'')) for g in data]
- text=(Path(__file__).parent/'inicio.html').read_text()
- now=datetime.now(ZoneInfo('America/Mexico_City'))
- dark_css='''#atrio-inicio-lab{--ink:#f4eee8;--paper:#201c20;--muted:#dbcbd1;--wine:#efc0d3}#atrio-inicio-lab .metric,#atrio-inicio-lab .progress-card,#atrio-inicio-lab .details,#atrio-inicio-lab input{background:#2e272d;color:#f4eee8;border-color:#705d68}#atrio-inicio-lab .track{background:#53454c}#atrio-inicio-lab .hero,#atrio-inicio-lab .hero h1{color:#21191d}''' if dark else ''
- replacements={'__COURSES__':json.dumps(rows,ensure_ascii=False).replace('<','\\u003c'),'__COUNT__':str(len(rows)),'__TODAY__':today.isoformat(),'__GREETING__':'Buenos días' if now.hour<12 else 'Buenas tardes' if now.hour<20 else 'Buenas noches','__ALERT_TEXT__':f'{len(alerts)} pendientes confirmados · consulta y atiende su seguimiento.' if alerts else 'Sin pendientes confirmados. Los estados sin verificar requieren revisión.','__SISAE_SUMMARY__':sisae_resume(),'__DARK_CSS__':dark_css,'__SOFT__':color(soft,'#f5d8df'),'__STRONG__':color(strong,'#ed78ab')}
- for key,value in replacements.items():text=text.replace(key,value)
- return text
 
-def home(data,alerts,dark,soft,strong,today):
- components.html(home_html(data,alerts,dark,soft,strong,today),height=1250,scrolling=True)
+def home_html(data, alerts, dark, soft, strong, today):
+    messages = {g['id']: message for g, message in alerts}
+    rows = [dict(id=g['id'], docente=g['hoja'], curso=g['nombre'], tipo=g['tipo'].upper(), inicio=g['inicio'], fin=g['fin'], horas=g['duracion'], horario=g['horario'], alerta=messages.get(g['id'], '')) for g in data]
+    text = (Path(__file__).parent / 'inicio.html').read_text()
+    text = '<style>' + tema.root_css() + '</style>' + text
+    now = datetime.now(ZoneInfo('America/Mexico_City'))
+    dark_css = ''  # El tema llega por variables CSS (tema.root_css).
+    replacements = {
+        '__COURSES__': json.dumps(rows, ensure_ascii=False).replace('<', '\\u003c'),
+        '__COUNT__': str(len(rows)),
+        '__TODAY__': today.isoformat(),
+        '__GREETING__': 'Buenos días' if now.hour < 12 else 'Buenas tardes' if now.hour < 20 else 'Buenas noches',
+        '__ALERT_TEXT__': f'{len(alerts)} pendientes confirmados · consulta y atiende su seguimiento.' if alerts else 'Sin pendientes confirmados. Los estados sin verificar requieren revisión.',
+        '__SISAE_SUMMARY__': sisae_resume(),
+        '__DARK_CSS__': dark_css,
+        '__TEMA_CSS__': tema.root_css(),
+        '__SOFT__': color(soft, '#f5d8df'),
+        '__STRONG__': color(strong, '#ed78ab'),
+    }
+    for key, value in replacements.items():
+        text = text.replace(key, value)
+    return text
 
-def teacher_courses(data,status):
- teachers=sorted({g['hoja'] for g in data})
- selected=st.session_state.get('teacher')
- if selected not in teachers:
-  st.subheader('¿Para qué docente?')
-  st.caption('Selecciona su tarjeta para abrir sus cursos directamente.')
-  cols=st.columns(3)
-  for i,teacher in enumerate(teachers):
-   total=sum(g['hoja']==teacher for g in data)
-   if cols[i%3].button(f'{teacher}\n\n{total} cursos →',key='teacher_card_'+teacher,width='stretch'):
-    st.session_state['teacher']=teacher;st.session_state.pop('pea_confirmed',None);st.rerun()
-  st.stop()
- if st.button('← Elegir otro docente'):
-  st.session_state.pop('teacher',None);st.session_state.pop('pea_confirmed',None);st.rerun()
- st.subheader('Cursos de '+selected)
- rows=sorted([g for g in data if g['hoja']==selected],key=lambda g:g['inicio'])
- ids=[g['id'] for g in rows]
- chosen=st.radio('Selecciona el curso y confirma para preparar',rows,index=ids.index(st.session_state['selected']) if st.session_state.get('selected') in ids else 0,format_func=lambda g:f"{g['nombre']} · {g['tipo']} · {g['duracion']:g} h · {fecha(g['inicio'])} → {fecha(g['fin'])}",key='pea_card_course')
- s=status(chosen['id']);shade='#d9eee0' if s['mce']=='Autorizado' else '#f5d4d4' if s['mce']=='Observado' else {'Regular':'#dbe8f1','Repositorio':'#deeadf','Extensión':'#e8ddeb'}[chosen['tipo']]
- st.markdown(f'<div class="atrio-badge" style="background:{shade}">{html.escape(chosen["tipo"])} · {html.escape(s["doc"])} · MCE: {html.escape(s["mce"])}</div>',unsafe_allow_html=True)
- if st.button('Continuar con este curso →',type='primary'):
-  st.session_state['selected']=chosen['id'];st.session_state['pea_confirmed']=chosen['id']
- if st.session_state.get('pea_confirmed')!=chosen['id']:st.stop()
- return chosen
 
-# ATRIO 10.4 · Navegación visual nativa de Streamlit.
+def home(data, alerts, dark, soft, strong, today):
+    st.iframe(home_html(data, alerts, dark, soft, strong, today), height=1250)
+
+
+# ATRIO · Navegación visual nativa de Streamlit.
 # Únicamente cambia el control gráfico; conserva nombres y rutas originales.
 _ICONOS_MENU = {
     'Inicio': ':material/home:',
@@ -119,23 +202,25 @@ _ICONOS_MENU = {
     'Excel para MCE': ':material/table_chart:',
     'Mis PEA': ':material/folder_open:',
     'SISAE · Cortes': ':material/database:',
+    'Auditoría histórica': ':material/troubleshoot:',
     'Evaluación trimestral': ':material/monitoring:',
     'Revisor': ':material/manage_search:',
     'Ajustes': ':material/settings:',
     'Respaldos': ':material/backup:',
 }
 
+
 def menu_visual(paginas):
     """Menú con iconos reales: conserva literalmente los nombres y destinos de ATRIO."""
     actual = st.session_state.get('_atrio_pagina_actual', 'Inicio')
     if actual not in paginas:
         actual = paginas[0]
-    st.sidebar.markdown('<div class="atrio-menu-eyebrow">ATRIO · CECATI 31</div>',unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="atrio-menu-eyebrow">ATRIO · CECATI 31</div>', unsafe_allow_html=True)
     for indice, pagina in enumerate(paginas):
         seleccionado = pagina == actual
         if st.sidebar.button(
             pagina,
-            key='atrio_menu_'+str(indice),
+            key='atrio_menu_' + str(indice),
             type='primary' if seleccionado else 'secondary',
             icon=_ICONOS_MENU.get(pagina, ':material/chevron_right:'),
             width='stretch',

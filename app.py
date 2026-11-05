@@ -6,6 +6,7 @@ import streamlit as st
 import centro as C
 import trabajos as J
 import interfaz as UI
+import tema
 import hojas
 import orden_menu as OM
 import acm_oficios as ACM
@@ -15,32 +16,45 @@ import pea_wizard_112 as F112
 import pea_historicos_101212 as H1212
 import revisor_pea_112 as R112
 import asistente_atrio_101214 as AI214
+import acceso as AC
+import calendario as CAL
+import pendientes as PEND
+import reprogramacion as REPRO
+import adaptar_pdf as ADP
+import asistente_flotante as FLOT
 def safe_error(exc):
  key=os.getenv('GEMINI_API_KEY')
  return str(exc).replace(key,'[CLAVE OCULTA]') if key else str(exc)
 st.set_page_config(page_title='ATRIO · Capacitación',page_icon='◈',layout='wide')
-if not C.groups():C.import_program(C.RES/'PROGRAMACION DE CURSOS.xlsx')
-DARK=st.sidebar.toggle('Modo oscuro',value=C.setting('dark',False))
-if DARK!=C.setting('dark',False):C.set_setting('dark',DARK)
+# Tema único Glass Executive (fondo obsidiana). El modo claro se retiró en esta fase.
+DARK=True
+tema.fijar(C.setting('tema_visual',tema.DEFECTO))
 UI.theme(DARK)
-a=C.setting('header_soft','#f5d8df');b=C.setting('header_strong','#ed78ab')
-PAGES=['Inicio','Programación','Acciones Móviles','Preparar PEA','PEA históricos','Seguimiento y MCE','Control escolar','Constancias y folios','Excel para MCE','Mis PEA','SISAE · Cortes','Evaluación trimestral','Revisor','Asistente virtual','Ajustes','Respaldos']
+AC.exigir()  # Acceso privado: nada se muestra antes de la contraseña.
+try:
+ if not C.groups():C.import_program(C.RES/'PROGRAMACION DE CURSOS.xlsx')
+except FileNotFoundError as e:
+ st.error('Falta el archivo PROGRAMACION DE CURSOS.xlsx. Por favor, súbelo en Ajustes · Recursos.')
+except Exception as e:
+ st.error(f'No se pudo leer la programación: {safe_error(e)}. Revisa el archivo en Ajustes · Recursos; la aplicación sigue disponible.')
+a=tema.PRESETS[tema.activo()]['accent'];b=tema.PRESETS[tema.activo()]['gold']
+PAGES=['Inicio','Programación','Mi Calendario','Pendientes','Reprogramación','Adaptar PDF','Acciones Móviles','Preparar PEA','PEA históricos','Seguimiento y MCE','Control escolar','Constancias y folios','Excel para MCE','Mis PEA','SISAE · Cortes','Auditoría histórica','Evaluación trimestral','Revisor','Asistente virtual','Ajustes','Respaldos']
 if 'jump' in st.session_state:st.session_state['_atrio_pagina_actual']=st.session_state.pop('jump')
 UI._ICONOS_MENU['Asistente virtual']=':material/auto_awesome:'
 nav=UI.menu_visual(OM.orden_actual(PAGES,C.setting('orden_menu',[])))
 if nav=='Preparar PEA' and st.session_state.get('pea110_stage') in ('validacion','contenido','salida'):
  nav='Preparar documento'  # Subetapa integrada: el menú sigue resaltando Preparar PEA.
 today=datetime.now(ZoneInfo('America/Mexico_City')).date();data=C.groups()
-query=st.sidebar.text_input('Buscar curso, docente o acción',placeholder='PEA, calendario, nombre…')
+query=st.text_input('Buscar curso, docente o acción',placeholder='PEA, calendario, nombre…',key='atrio_buscador')
 if query:
  actions={'Generar PEA':'Preparar PEA','Alta de regulares y exportación MCE':'Seguimiento y MCE','Subir ZIP SISAE':'SISAE · Cortes','Cambiar calendario y días inhábiles':'Ajustes','Actualizar plantilla Word':'Ajustes','Editar perfil docente':'Ajustes','Cambiar colores de títulos':'Ajustes','Descargar respaldo':'Respaldos'}
  for label,target in actions.items():
   if C.motor.normal(query) in C.motor.normal(label):
-   if st.sidebar.button(label,key='search_action_'+label):st.session_state['jump']=target;st.rerun()
+   if st.button(label,key='search_action_'+label):st.session_state['jump']=target;st.rerun()
  hits=[g for g in data if C.motor.normal(query) in C.motor.normal(g['nombre']+' '+g['hoja'])]
  if hits:
-  found=st.sidebar.selectbox('Resultados',hits,format_func=lambda g:f"{g['hoja']} · {g['nombre']} · {g['inicio']}")
-  if st.sidebar.button('Abrir curso'):
+  found=st.selectbox('Resultados',hits,format_func=lambda g:f"{g['hoja']} · {g['nombre']} · {g['inicio']}")
+  if st.button('Abrir curso'):
    st.session_state['selected']=found['id'];st.session_state['teacher']=found['hoja'];st.session_state['editor_group']=found['id'];st.session_state['pea110_stage']='contenido';st.session_state['jump']='Preparar PEA';st.rerun()
 alerts=[]
 for g in data:
@@ -53,7 +67,7 @@ if alerts:
  st.markdown(f'<div class="floating">● {len(alerts)} pendientes por atender</div>',unsafe_allow_html=True)
  with st.sidebar.expander('Ver pendientes',expanded=False):
   for g,msg in alerts:st.write(f"{g['nombre']} · {msg}")
-if nav not in ('Inicio','Programación','Acciones Móviles','Preparar PEA','PEA históricos','Preparar documento','Seguimiento y MCE','Control escolar','Constancias y folios','Revisor','Asistente virtual'):UI.heading(nav,a,b)
+if nav not in ('Inicio','Programación','Mi Calendario','Pendientes','Reprogramación','Adaptar PDF','Acciones Móviles','Preparar PEA','PEA históricos','Preparar documento','Seguimiento y MCE','Control escolar','Constancias y folios','Revisor','Asistente virtual','Auditoría histórica'):UI.heading(nav,a,b)
 def show_group(g):
  st.subheader(g['nombre']);st.caption(f"{g['hoja']} · {g['tipo']} · {g['duracion']:g} horas")
  st.write(f"Inicio: {UI.fecha(g['inicio'])} · Término: {UI.fecha(g['fin'])}")
@@ -77,6 +91,18 @@ elif nav in ('Programación','Preparar PEA','Control escolar','Constancias y fol
 elif nav=='PEA históricos':
  H1212.panel_historicos()
 
+elif nav=='Mi Calendario':
+ CAL.render_calendario()
+
+elif nav=='Pendientes':
+ PEND.render_pendientes(data,today)
+
+elif nav=='Reprogramación':
+ REPRO.render_reprogramacion(data,today)
+
+elif nav=='Adaptar PDF':
+ ADP.panel()
+
 elif nav=='Preparar documento':
  UI.heading('Preparar PEA',a,b)
  uid=st.session_state.get('editor_group')
@@ -89,8 +115,7 @@ elif nav=='Preparar documento':
  else:F112.panel(g)
 
 elif nav=='Acciones Móviles':
- UI.heading('Acciones Móviles',a,b)
- ACM.panel_oficios(data,C)
+ ACM.panel_oficios(data,C)  # El encabezado se dibuja arriba, una sola vez.
 
 elif nav=='Revisor':
  R112.panel(data)
@@ -111,6 +136,10 @@ elif nav=='Evaluación trimestral':
 elif nav=='SISAE · Cortes':
  import cortes
  cortes.panel()
+
+elif nav=='Auditoría histórica':
+ import modulo_auditoria_sisae as AUD
+ AUD.render_auditoria_sisae()
 
 elif nav=='Ajustes':
  OM.panel_ajustes(PAGES,C)
@@ -188,13 +217,13 @@ elif nav=='Ajustes':
  with st.expander('Autoridades y presentación',expanded=False):
   with st.form('settings'):
    valida=st.text_input('Valida',C.setting('valida','Lila Inurreta Fernández'));visto=st.text_input('Visto bueno',C.setting('visto','Lila Inurreta Fernández'));autoriza=st.text_input('Autoriza',C.setting('autoriza','Sergio López Hernández'))
-   soft=st.color_picker('Título · color suave',a);strong=st.color_picker('Título · color intenso',b)
+   tema_sel=st.selectbox('Tema visual',tema.OPCIONES,index=tema.OPCIONES.index(tema.activo()),help='Cambia colores de toda la aplicación. Se aplica al guardar.')
    deadline=st.number_input('Anticipación para aviso · días naturales',min_value=1,value=C.setting('deadline_days',11));anchor=st.selectbox('Referencia del plazo',['Inicio','Término'],index=0 if C.setting('deadline_anchor','Término')=='Inicio' else 1)
    if st.form_submit_button('Guardar ajustes'):
-    for k,v in [('valida',valida),('visto',visto),('autoriza',autoriza),('header_soft',soft),('header_strong',strong),('deadline_days',deadline),('deadline_anchor',anchor)]:C.set_setting(k,v)
+    for k,v in [('valida',valida),('visto',visto),('autoriza',autoriza),('tema_visual',tema_sel),('deadline_days',deadline),('deadline_anchor',anchor)]:C.set_setting(k,v)
     st.rerun()
  with st.expander('Servicio de contenido IA',expanded=False):
-  key=st.text_input('Clave Gemini · solo memoria de esta sesión del servidor',type='password');model=st.text_input('Modelo Gemini',os.getenv('GEMINI_MODELO','gemini-flash-latest'))
+  key=st.text_input('Clave Gemini · solo memoria de esta sesión del servidor',type='password');model=st.text_input('Modelo Gemini',os.getenv('GEMINI_MODELO','gemini-2.5-flash'))
   if st.button('Usar configuración IA en esta sesión'):
    if key:os.environ['GEMINI_API_KEY']=key
    os.environ['GEMINI_MODELO']=model;st.success('Configuración cargada. No se escribe en el respaldo.')
@@ -211,3 +240,6 @@ elif nav=='Respaldos':
  if st.button('Preparar respaldo completo de datos'):st.session_state['backup']=C.backup()
  if 'backup' in st.session_state:st.download_button('Descargar respaldo',st.session_state['backup'],file_name='ATRIO_RESPALDO_DATOS.zip')
  st.warning('No reemplaces la carpeta datos al actualizar el código. Conserva una descarga de respaldo antes de cada actualización.')
+
+# Asistente flotante global: una sola instancia, al final de la página.
+FLOT.render()

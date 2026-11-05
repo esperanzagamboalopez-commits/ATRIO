@@ -36,3 +36,7 @@ Thumbs.db
 
 # ============ STREAMLIT (secretos) ============
 .streamlit/secrets.toml
+
+# ============ EXCEPCIÓN: DATOS FICTICIOS DE PRUEBA (sí se suben) ============
+!datos_ejemplo/
+!datos_ejemplo/**

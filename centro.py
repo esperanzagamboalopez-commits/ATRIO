@@ -11,6 +11,11 @@ for p in (RES,OUT,ARCH):p.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0,str(ROOT/'motor'))
 import generador_pea_extension_v6_4 as motor
 
+def ruta_dias_sin_clase():
+    """Primera ruta existente de DIAS_SIN_CLASE.json (datos/recursos y luego raíz). None si no existe."""
+    for candidata in (RES/'DIAS_SIN_CLASE.json', ROOT/'DIAS_SIN_CLASE.json'):
+        if candidata.exists():return candidata
+    return None
 def now():return datetime.now(ZoneInfo('America/Mexico_City')).isoformat(timespec='seconds')
 def connect():
  c=sqlite3.connect(DATA/'atrio.sqlite3');c.row_factory=sqlite3.Row

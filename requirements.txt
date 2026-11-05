@@ -2,3 +2,4 @@ streamlit==1.66.1
 openpyxl==3.1.5
 python-docx==1.2.0
 google-genai==2.34.0
+pymupdf

@@ -217,7 +217,7 @@ def _archive():
         with st.expander(row['curso']+' · '+row['ciclo']+' · '+row['docente'],expanded=False):
             st.caption(f"{row['accion']} · {row['duracion']:g} horas · {row['estado']}")
             if row['notas']:st.caption(row['notas'])
-            adapted=Path(row['word_path']).parent/'PEA_PDF_ADAPTADO.pdf' if row['word_path'] else None
+            adapted=Path(row['pdf_path']).parent/'PEA_PDF_ADAPTADO.pdf' if row['pdf_path'] else None
             if adapted is not None and (C.ROOT/adapted).is_file():
                 x,y,z,w=st.columns(4,gap='small')
                 with x:_download('↓ PDF adaptado',str(adapted),'h1212_pdfnew_'+row['id'])

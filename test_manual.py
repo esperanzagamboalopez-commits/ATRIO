@@ -15,7 +15,7 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
-BASE = Path.home() / "PEAS" / "ATRIO_OPERATIVO_01"
+BASE = Path(__file__).resolve().parent
 DB = BASE / "datos" / "atrio.sqlite3"
 OUT_DIR = BASE / "datos" / "asistente_test"
 
@@ -101,18 +101,24 @@ def extraer_bloques_horario(horario_str):
     return bloques
 
 def _clave_carril(horario_str):
+    # Usa TODOS los bloques del horario: un curso "Lun 16-19 y Vie 10-12" no debe
+    # compartir carril con uno que solo tenga el primer bloque.
     bloques = extraer_bloques_horario(horario_str)
     if not bloques:
         return None
-    b = bloques[0]
-    return (tuple(sorted(b["dias"])), round(b["duracion"], 2), b["hora_inicio_min"])
+    return tuple(sorted(
+        (tuple(sorted(b["dias"])), round(b["duracion"], 2), b["hora_inicio_min"])
+        for b in bloques
+    ))
 
 def _describir_carril(clave):
     if not clave:
         return "(sin horario)"
-    dias, dur, h_min = clave
-    h, m = h_min // 60, h_min % 60
-    return f"dias={dias} | {int(dur)}h/dia | inicio={h:02d}:{m:02d}"
+    partes = []
+    for dias, dur, h_min in clave:
+        h, m = h_min // 60, h_min % 60
+        partes.append(f"dias={dias} | {int(dur)}h/dia | inicio={h:02d}:{m:02d}")
+    return " ; ".join(partes)
 
 def calcular_horas_entre(inicio, fin, bloques):
     total_h, total_d = 0, 0
