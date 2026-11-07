@@ -86,8 +86,13 @@ def recuperar_programacion():
         if not journal.exists(): return False
         try:
             data=json.loads(journal.read_text(encoding='utf-8'))
-            operation_id=str(data['operation_id'])
-            commit_action=str(data.get('commit_action','Reprogramación aplicada'))
+            operation_id=data['operation_id']
+            if not isinstance(operation_id,str) or not operation_id.strip():
+                raise ValueError('El journal contiene un operation_id vacío o inválido.')
+            commit_action=data.get('commit_action','Reprogramación aplicada')
+            acciones_permitidas={'Reprogramación aplicada','Importación programación'}
+            if commit_action not in acciones_permitidas:
+                raise ValueError('El journal contiene un commit_action no permitido.')
             excel=Path(data['excel']).resolve()
             backup=Path(data['backup']).resolve()
             if not _es_ruta_segura_programacion(excel) or not _es_ruta_segura_programacion(backup):
