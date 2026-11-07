@@ -328,10 +328,10 @@ body[data-theme="personalizado"]{background:radial-gradient(circle at 7% 8%,colo
     for(const button of buttons) button.setAttribute('aria-pressed',String(button.dataset.selectTheme===name));
   }
   function applyColors(){
-    root.style.setProperty('--user-page',fields.page.value);
-    root.style.setProperty('--user-accent',fields.accent.value);
-    root.style.setProperty('--user-secondary',fields.secondary.value);
-    root.style.setProperty('--user-calendar',fields.calendar.value);
+    document.documentElement.style.setProperty('--user-page',fields.page.value);
+    document.documentElement.style.setProperty('--user-accent',fields.accent.value);
+    document.documentElement.style.setProperty('--user-secondary',fields.secondary.value);
+    document.documentElement.style.setProperty('--user-calendar',fields.calendar.value);
   }
   for(const button of buttons){
     button.addEventListener('click',()=>setTheme(button.dataset.selectTheme));
