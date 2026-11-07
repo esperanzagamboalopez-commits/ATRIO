@@ -105,7 +105,7 @@ def import_program(path):
   for item in plan['nuevos']:
    g=dict(item['actual']);g.pop('fingerprint',None)
    uid=str(uuid.uuid4());new_ids[uid]=item
-   pea_required=bool(item['requiere_pea_nuevo'] and g.get('tipo')!='Regular')
+   pea_required=bool(item['requiere_pea_nuevo'] and g.get('tipo')=='Extensión')
    g['_atrio']={
     'estado_programacion':'Revisar identidad' if item['requiere_revision_manual'] else 'Vigente',
     'incluido_en_ultima_actualizacion':True,
