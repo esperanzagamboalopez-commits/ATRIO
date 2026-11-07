@@ -384,7 +384,22 @@ def _save_resource_impl(name,raw):
   if name=='PROGRAMACION DE CURSOS.xlsx':
    # La importación y su evento de confirmación comparten la transacción SQLite.
    result=_import_program_impl(path,operation_id=operation_id)
-   _ruta_journal_programacion().unlink(missing_ok=True)
+   try:
+    _ruta_journal_programacion().unlink(missing_ok=True)
+   except Exception:
+    # Si SQLite ya confirmó, una falla transitoria al limpiar el journal no invalida la importación.
+    recuperar_programacion()
+    with connect() as conn:
+     rows=conn.execute("SELECT payload FROM events WHERE action='Importación programación'").fetchall()
+    confirmado=False
+    for row in rows:
+     try: payload=json.loads(row['payload'] or '{}')
+     except (TypeError,ValueError): continue
+     if isinstance(payload,dict) and payload.get('operation_id')==operation_id:
+      confirmado=True
+      break
+    if not confirmado or _ruta_journal_programacion().exists():
+     raise
   else:
    result=None
   event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
