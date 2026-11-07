@@ -428,15 +428,17 @@ def calcular_score(ev):
 
 
 def _abrir_modulo(modulo):
+    if modulo in MODULOS_ATRIO:
+        # app.py consume jump antes de construir el menú y conserva su ruta original.
+        st.session_state["jump"] = modulo
+        st.rerun()
+        return
     rutas = st.session_state.get("ATRIO_RUTAS", {})
     if isinstance(rutas, dict) and rutas.get(modulo) and hasattr(st, "switch_page"):
         st.switch_page(rutas[modulo])
     else:
         st.session_state["atrio_modulo_destino"] = modulo
-        st.info(
-            f"Destino solicitado: **{_esc(modulo)}**. Falta conectar esta etiqueta "
-            "con la ruta real de app.py."
-        )
+        st.info(f"Destino solicitado: **{_esc(modulo)}**.")
 
 
 # -----------------------------------------------------------------------------
@@ -1035,8 +1037,26 @@ def _cursos_de_fecha(cursos, fecha):
     return salida
 
 
-def _marcas_inicio_mes(anio, mes, eventos, cursos):
-    """Marcas compactas por día: actividad, límite, inicio o término de curso."""
+def _tareas_de_fecha(tareas, fecha):
+    """Seguimientos derivados de ATRIO; no duplica actividades de Mi Calendario."""
+    salida = []
+    for tarea in tareas or []:
+        if tarea.get("proceso") == "Mi Calendario" or tarea.get("fuente") == "Mi Calendario":
+            continue
+        if _fecha(tarea.get("fecha")) == fecha:
+            salida.append(tarea)
+    orden = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3, "En espera": 4, "Por verificar": 5}
+    salida.sort(key=lambda x: (
+        orden.get(x.get("estado"), 6),
+        x.get("fecha") or "9999-12-31",
+        x.get("proceso", ""),
+        x.get("curso", ""),
+    ))
+    return salida
+
+
+def _marcas_inicio_mes(anio, mes, eventos, cursos, tareas=None):
+    """Marcas compactas: actividades, límites, tareas ATRIO e hitos de cursos."""
     marcas = {}
     for dia, items in _construir_items_mes(anio, mes, eventos).items():
         for item in items:
@@ -1050,10 +1070,18 @@ def _marcas_inicio_mes(anio, mes, eventos, cursos):
             fecha = _fecha(grupo.get(campo))
             if fecha and inicio_mes <= fecha <= fin_mes:
                 marcas.setdefault(fecha.day, []).append(marca)
+    for tarea in tareas or []:
+        fecha = _fecha(tarea.get("fecha"))
+        if (
+            fecha and inicio_mes <= fecha <= fin_mes
+            and tarea.get("proceso") != "Mi Calendario"
+            and tarea.get("fuente") != "Mi Calendario"
+        ):
+            marcas.setdefault(fecha.day, []).append("L")
     return marcas
 
 
-def render_inicio_calendario(cursos=None):
+def render_inicio_calendario(cursos=None, tareas=None):
     """Panel funcional de calendario y agenda para Inicio.
 
     Las actividades usan las tablas normales de Mi Calendario. Los cursos solo
@@ -1120,7 +1148,7 @@ def render_inicio_calendario(cursos=None):
         st.rerun()
 
     eventos_mes = obtener_eventos(anio, mes)
-    marcas = _marcas_inicio_mes(anio, mes, eventos_mes, cursos or [])
+    marcas = _marcas_inicio_mes(anio, mes, eventos_mes, cursos or [], tareas or [])
     semanas = calendar.Calendar(firstweekday=0).monthdayscalendar(anio, mes)
     lado_cal, lado_agenda = st.columns([1.45, 1], gap="large")
 
@@ -1170,7 +1198,8 @@ def render_inicio_calendario(cursos=None):
             seleccionado, obtener_eventos(seleccionado.year, seleccionado.month)
         )
         cursos_dia = _cursos_de_fecha(cursos, seleccionado)
-        if not actividades_dia and not cursos_dia:
+        tareas_dia = _tareas_de_fecha(tareas, seleccionado)
+        if not actividades_dia and not cursos_dia and not tareas_dia:
             st.markdown(
                 '<div class="atrio-empty">No hay actividades ni inicios o términos de cursos para este día.</div>',
                 unsafe_allow_html=True,
@@ -1202,6 +1231,26 @@ def render_inicio_calendario(cursos=None):
                 unsafe_allow_html=True,
             )
 
+        for indice, tarea in enumerate(tareas_dia):
+            estado = str(tarea.get("estado") or "Pendiente")
+            st.markdown(
+                f'<div class="atrio-event-card">'
+                f'<span class="atrio-pill">Fecha límite · {_esc(tarea.get("proceso", "Seguimiento"))}</span>'
+                f'<div class="atrio-event-title">{_esc(tarea.get("curso", "Actividad"))}</div>'
+                f'<div class="atrio-event-meta">{_esc(estado)} · {_esc(tarea.get("docente", ""))}</div>'
+                f'<div class="atrio-event-meta">{_esc(tarea.get("motivo", ""))}</div>'
+                f'<div class="atrio-event-meta">Siguiente acción: {_esc(tarea.get("accion", ""))}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            modulo = tarea.get("modulo")
+            if modulo in MODULOS_ATRIO:
+                if st.button(
+                    f"Ir a {modulo} →",
+                    key=f"inicio_cal_tarea_{indice}_{abs(hash(str(tarea.get('id', ''))))}",
+                ):
+                    _abrir_modulo(modulo)
+
         with st.expander("Próximos 7 días", expanded=False):
             fin_ventana = seleccionado + timedelta(days=7)
             proximos = [
@@ -1220,6 +1269,24 @@ def render_inicio_calendario(cursos=None):
             else:
                 for ev in proximos[:5]:
                     _tarjeta_prioridad(ev, compacta=True)
+
+            tareas_proximas = [
+                tarea for tarea in (tareas or [])
+                if (
+                    tarea.get("proceso") != "Mi Calendario"
+                    and tarea.get("fuente") != "Mi Calendario"
+                    and _fecha(tarea.get("fecha"))
+                    and seleccionado < _fecha(tarea.get("fecha")) <= fin_ventana
+                )
+            ]
+            if tareas_proximas:
+                st.markdown("**Fechas límite y seguimientos ATRIO**")
+                for tarea in tareas_proximas[:8]:
+                    st.caption(
+                        f"{_fecha_texto(tarea.get('fecha'))} · "
+                        f"{tarea.get('proceso')} · {tarea.get('curso')} · "
+                        f"{tarea.get('estado')}"
+                    )
 
             cursos_proximos = []
             for desplazamiento in range(8):
