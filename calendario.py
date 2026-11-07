@@ -1110,10 +1110,10 @@ def render_inicio_calendario(cursos=None, tareas=None):
 
     st.markdown(
         '<div class="atrio-section-title">Calendario y agenda</div>'
-        '<div class="atrio-section-sub">Tus actividades y las fechas de los cursos, en un mismo lugar.</div>',
+        '<div class="atrio-section-sub">Vista rápida de tus actividades, seguimientos y fechas de cursos. La edición completa está en Mi Calendario.</div>',
         unsafe_allow_html=True,
     )
-    controles = st.columns([0.85, 0.85, 1.15, 0.85, 1.25])
+    controles = st.columns([0.85, 0.85, 1.35, 0.85])
     if controles[0].button("Hoy", key="inicio_cal_hoy", use_container_width=True):
         st.session_state.update({
             "inicio_cal_anio": hoy.year, "inicio_cal_mes": hoy.month,
@@ -1143,11 +1143,6 @@ def render_inicio_calendario(cursos=None, tareas=None):
             "inicio_cal_fecha": date(anio, mes, 1),
         })
         st.rerun()
-    if controles[4].button("＋ Nueva actividad", key="inicio_cal_nueva", type="primary", use_container_width=True):
-        st.session_state["cal_fecha_form"] = seleccionado
-        st.session_state["mostrar_form_cal"] = True
-        st.rerun()
-
     eventos_mes = obtener_eventos(anio, mes)
     marcas = _marcas_inicio_mes(anio, mes, eventos_mes, cursos or [], tareas or [])
     semanas = calendar.Calendar(firstweekday=0).monthdayscalendar(anio, mes)
@@ -1211,17 +1206,6 @@ def render_inicio_calendario(cursos=None, tareas=None):
             if "límite" in tipo.casefold():
                 st.warning(f"Fecha límite: **{ev.get('titulo') or 'Actividad'}**")
             _tarjeta_evento(ev, mostrar_detalle=True)
-            acciones = st.columns(2)
-            if acciones[0].button("Editar", key=f"inicio_cal_editar_{ev['id']}", use_container_width=True):
-                st.session_state["inicio_cal_editar_id"] = ev["id"]
-                st.rerun()
-            estado = ev.get("estado") or "Pendiente"
-            if estado not in ESTADOS_CERRADOS:
-                if acciones[1].button("Completar", key=f"inicio_cal_completar_{ev['id']}", use_container_width=True):
-                    cambiar_estado(ev["id"], "Completada")
-                    st.rerun()
-            elif estado in ("Completada", "Completado"):
-                acciones[1].caption("Actividad completada")
 
         for item in cursos_dia:
             st.markdown(
@@ -1258,72 +1242,12 @@ def render_inicio_calendario(cursos=None, tareas=None):
                 ):
                     _abrir_modulo(modulo)
 
-        with st.expander("Próximos 7 días", expanded=False):
-            fin_ventana = seleccionado + timedelta(days=7)
-            proximos = [
-                ev for ev in obtener_pendientes(limite=1000)
-                if (
-                    _fecha(ev.get("fecha_inicio")) and
-                    seleccionado <= _fecha(ev.get("fecha_inicio")) <= fin_ventana
-                ) or (
-                    _fecha(ev.get("fecha_limite")) and
-                    seleccionado <= _fecha(ev.get("fecha_limite")) <= fin_ventana
-                )
-            ]
-            proximos.sort(key=lambda ev: (_fecha_referencia(ev) or date.max, ev.get("id", 0)))
-            if not proximos:
-                st.caption("No hay actividades pendientes registradas en los próximos siete días.")
-            else:
-                for ev in proximos[:5]:
-                    _tarjeta_prioridad(ev, compacta=True)
+    st.caption(
+        "Esta es una vista rápida. Para registrar, editar o completar actividades, "
+        "abre el módulo Mi Calendario."
+    )
 
-            tareas_proximas = [
-                tarea for tarea in (tareas or [])
-                if (
-                    tarea.get("proceso") != "Mi Calendario"
-                    and tarea.get("fuente") != "Mi Calendario"
-                    and _fecha(tarea.get("fecha"))
-                    and seleccionado < _fecha(tarea.get("fecha")) <= fin_ventana
-                )
-            ]
-            if tareas_proximas:
-                st.markdown("**Fechas límite y seguimientos ATRIO**")
-                for tarea in tareas_proximas[:8]:
-                    st.caption(
-                        f"{_fecha_texto(tarea.get('fecha'))} · "
-                        f"{tarea.get('proceso')} · {tarea.get('curso')} · "
-                        f"{tarea.get('estado')}"
-                    )
 
-            cursos_proximos = []
-            for desplazamiento in range(8):
-                fecha_proxima = seleccionado + timedelta(days=desplazamiento)
-                for item in _cursos_de_fecha(cursos, fecha_proxima):
-                    cursos_proximos.append((fecha_proxima, item))
-            if cursos_proximos:
-                st.markdown("**Fechas de cursos**")
-                for fecha_proxima, item in cursos_proximos:
-                    st.caption(
-                        f"{_fecha_texto(fecha_proxima)} · {item['tipo']} · "
-                        f"{item['nombre']} · {item['docente']}"
-                    )
-
-    editar_id = st.session_state.get("inicio_cal_editar_id")
-    if editar_id:
-        evento_editar = next((ev for ev in obtener_eventos(anio, mes) if ev.get("id") == editar_id), None)
-        if evento_editar:
-            with st.expander("Editar actividad seleccionada", expanded=True):
-                _form_editar(evento_editar)
-                if st.button("Cerrar edición", key="inicio_cal_cerrar_edicion"):
-                    st.session_state.pop("inicio_cal_editar_id", None)
-                    st.rerun()
-        else:
-            st.session_state.pop("inicio_cal_editar_id", None)
-
-    if st.session_state.get("mostrar_form_cal"):
-        st.session_state.setdefault("cal_fecha_form", seleccionado)
-        with st.container(border=True):
-            _form_nuevo()
 
 
 
