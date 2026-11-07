@@ -116,8 +116,6 @@ Los valores se validan como hexadecimal de seis dígitos. La tipografía, las su
 ### Vista previa independiente
 - Inicio conserva la franja oscura `PEA y trámites en MCE` como título de identidad, sin el bloque `Lo que requiere tu atención`, texto de aviso demostrativo ni botón `Ver cursos para revisar`.
 - El resumen informativo no se presenta como acción pendiente ni duplica el seguimiento que corresponde a sus módulos.
-- Inicio conserva la franja oscura `PEA y trámites en MCE` como título de identidad, sin el bloque `Lo que requiere tu atención`, texto de aviso demostrativo ni botón `Ver cursos para revisar`.
-- El resumen informativo no se presenta como acción pendiente ni duplica el seguimiento que corresponde a sus módulos.
 - `laboratorio_orbita_streamlit.py`: muestra el tema y la composición real de `inicio.html` con tres cursos ficticios.
 - No importa `app.py` ni `centro.py`; no abre SQLite, Excel, SISAE, expedientes o documentos.
 - Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
