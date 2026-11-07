@@ -1045,7 +1045,7 @@ def _tareas_de_fecha(tareas, fecha):
             continue
         if _fecha(tarea.get("fecha")) == fecha:
             salida.append(tarea)
-    orden = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3, "En espera": 4, "Por verificar": 5}
+    orden = {"Vencido": 0, "Bloqueado": 1, "Pendiente": 2, "Aviso": 3, "En espera": 4, "Por verificar": 5}
     salida.sort(key=lambda x: (
         orden.get(x.get("estado"), 6),
         x.get("fecha") or "9999-12-31",
