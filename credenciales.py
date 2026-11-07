@@ -1,6 +1,9 @@
 from pathlib import Path
 import io,zipfile,copy
 from lxml import etree as E
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.worksheet.page import PageMargins
 import centro as C
 NS={'p':'http://schemas.openxmlformats.org/presentationml/2006/main','a':'http://schemas.openxmlformats.org/drawingml/2006/main','r':'http://schemas.openxmlformats.org/officeDocument/2006/relationships'}
 def datos(raw,clave,seleccion):
@@ -24,9 +27,24 @@ def datos(raw,clave,seleccion):
     if not ids or len(rows)!=len(ids) or {r['NCONTROL'].replace('|','') for r in rows}!=ids:raise ValueError('Selecciona inscripciones únicas del grupo y del corte actual.')
     return rows
 
+def ruta_plantilla_powerpoint():
+    """Ubica la plantilla original sin crear ni sustituir una plantilla distinta."""
+    candidatos = (
+        Path(__file__).with_name('FORMATO_CREDENCIALES.pptx'),
+        Path(C.RES) / 'FORMATO_CREDENCIALES.pptx',
+    )
+    for ruta in candidatos:
+        if ruta.is_file():
+            return ruta
+    raise FileNotFoundError(
+        'No se encontró FORMATO_CREDENCIALES.pptx. Coloca la plantilla institucional '
+        'junto a credenciales.py o en datos/recursos; no se generó una plantilla sustituta.'
+    )
+
+
 def powerpoint(rows):
     if not rows:raise ValueError('Selecciona al menos un alumno.')
-    with zipfile.ZipFile(Path(__file__).with_name('FORMATO_CREDENCIALES.pptx')) as src:
+    with zipfile.ZipFile(ruta_plantilla_powerpoint()) as src:
         parts={n:src.read(n) for n in src.namelist()}
     def xml(key):return E.fromstring(parts[key])
     def put(key,node):parts[key]=E.tostring(node,encoding='UTF-8',xml_declaration=True,standalone=True)
@@ -61,3 +79,120 @@ def powerpoint(rows):
     with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as z:
         for k,v in parts.items():z.writestr(k,v)
     return buf.getvalue()
+
+
+def _texto_excel(value):
+    """Evita que un dato importado se interprete como fórmula al abrir Excel."""
+    texto = str(value or '').strip()
+    return "'" + texto if texto.startswith(('=', '+', '-', '@')) else texto
+
+
+def excel_firmas(rows, curso, docente='', inicio='', termino='', fecha_elaboracion=None):
+    """Relación imprimible de alumnos para firmar la recepción de credenciales.
+
+    No incluye CURP. Solo utiliza las inscripciones seleccionadas y validadas
+    para el mismo grupo al generar el PowerPoint.
+    """
+    if not rows:
+        raise ValueError('No hay alumnos seleccionados para la relación de firmas.')
+    fecha_elaboracion = fecha_elaboracion or C.now()[:10]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Firmas credenciales'
+    ws.sheet_view.showGridLines = False
+    ws.merge_cells('A1:D1')
+    ws['A1'] = 'CECATI N.º 31 · ÁREA DE CAPACITACIÓN'
+    ws['A1'].font = Font(name='Aptos', size=12, bold=True, color='FFFFFF')
+    ws['A1'].fill = PatternFill('solid', fgColor='173B46')
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 25
+
+    ws.merge_cells('A2:D2')
+    ws['A2'] = 'RELACIÓN DE CREDENCIALES ELABORADAS'
+    ws['A2'].font = Font(name='Aptos Display', size=15, bold=True, color='173B46')
+    ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 30
+
+    ws['A4'] = 'Nombre del curso:'
+    ws.merge_cells('B4:D4')
+    ws['B4'] = _texto_excel(curso)
+    ws['A5'] = 'Docente:'
+    ws.merge_cells('B5:D5')
+    ws['B5'] = _texto_excel(docente)
+    ws['A6'] = 'Inicio / término:'
+    ws.merge_cells('B6:C6')
+    ws['B6'] = f'{inicio or "—"} / {termino or "—"}'
+    ws['D6'] = f'Elaboradas: {fecha_elaboracion}'
+    for row in (4, 5, 6):
+        ws[f'A{row}'].font = Font(bold=True, color='173B46')
+        ws[f'A{row}'].alignment = Alignment(vertical='center')
+        for col in 'BCD':
+            ws[f'{col}{row}'].alignment = Alignment(vertical='center', wrap_text=True)
+    ws.row_dimensions[4].height = 23
+    ws.row_dimensions[5].height = 23
+    ws.row_dimensions[6].height = 23
+
+    header_row = 8
+    encabezados = ('N.º', 'N.º DE CONTROL', 'NOMBRE COMPLETO DEL ALUMNO', 'FIRMA DE RECIBIDO')
+    for col, titulo in enumerate(encabezados, 1):
+        cell = ws.cell(header_row, col, titulo)
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill('solid', fgColor='245B64')
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = Border(
+            left=Side(style='thin', color='FFFFFF'),
+            right=Side(style='thin', color='FFFFFF'),
+            top=Side(style='thin', color='FFFFFF'),
+            bottom=Side(style='thin', color='FFFFFF'),
+        )
+    ws.row_dimensions[header_row].height = 30
+
+    borde = Border(
+        left=Side(style='thin', color='AAB9B9'),
+        right=Side(style='thin', color='AAB9B9'),
+        top=Side(style='thin', color='AAB9B9'),
+        bottom=Side(style='thin', color='AAB9B9'),
+    )
+    for indice, alumno in enumerate(rows, 1):
+        fila = header_row + indice
+        control = str(alumno.get('NCONTROL') or '').replace('|', '').strip()
+        valores = (indice, _texto_excel(control), _texto_excel(alumno.get('NOMBRE')), '')
+        for col, valor in enumerate(valores, 1):
+            cell = ws.cell(fila, col, valor)
+            cell.border = borde
+            cell.alignment = Alignment(
+                horizontal='center' if col in (1, 2) else 'left',
+                vertical='center',
+                wrap_text=True,
+            )
+            if col == 2:
+                cell.number_format = '@'
+            if indice % 2 == 0:
+                cell.fill = PatternFill('solid', fgColor='F2F6F5')
+        ws.row_dimensions[fila].height = 38
+
+    ws.column_dimensions['A'].width = 7
+    ws.column_dimensions['B'].width = 19
+    ws.column_dimensions['C'].width = 43
+    ws.column_dimensions['D'].width = 48
+    ultima = header_row + len(rows)
+    ws.freeze_panes = 'A9'
+    ws.auto_filter.ref = f'A{header_row}:D{ultima}'
+    ws.print_area = f'A1:D{ultima}'
+    ws.print_title_rows = f'1:{header_row}'
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.paperSize = ws.PAPERSIZE_LETTER
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.page_margins = PageMargins(
+        left=0.25, right=0.25, top=0.45, bottom=0.45,
+        header=0.2, footer=0.2,
+    )
+    ws.oddFooter.center.text = 'CECATI N.º 31 · Área de Capacitación'
+    ws.oddFooter.right.text = 'Página &P de &N'
+    wb.properties.title = f'Relación de credenciales elaboradas · {curso}'
+    wb.properties.subject = 'Evidencia de recepción de credenciales mediante firma'
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
