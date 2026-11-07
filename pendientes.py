@@ -87,7 +87,7 @@ def render_pendientes(data, today):
     )
 
     st.markdown("### Filtros de seguimiento")
-    f1, f2, f3, f4 = st.columns([1.0, 1.4, 1.2, 1.0])
+    f1, f2, f3, f4, f5 = st.columns([1.0, 1.25, 1.15, 0.9, 1.0])
     with f1:
         periodo = st.selectbox(
             "Cuándo",
@@ -110,6 +110,20 @@ def render_pendientes(data, today):
     with f4:
         estados = ["Todos"] + sorted({str(t.get("estado") or "Pendiente") for t in tareas})
         estado_sel = st.selectbox("Situación", estados, key="pendientes_estado_nuevo")
+    with f5:
+        periodos = [
+            ("Todos", "Todos"),
+            ("P1 · Jul–Sep", "P1"),
+            ("P2 · Oct–Dic", "P2"),
+            ("P3 · Ene–Mar", "P3"),
+            ("P4 · Abr–Jun", "P4"),
+        ]
+        etiqueta_periodo = st.selectbox(
+            "Periodo SISAE",
+            [x[0] for x in periodos],
+            key="pendientes_periodo_sisae_nuevo",
+        )
+        periodo_sisae = next(valor for etiqueta, valor in periodos if etiqueta == etiqueta_periodo)
     fecha_personal = None
     if periodo == "Fecha":
         fecha_personal = st.date_input("Día específico", value=today, key="pendientes_fecha_nueva")
@@ -121,10 +135,13 @@ def render_pendientes(data, today):
         proceso=proceso,
         responsable=responsable,
         fecha_personal=fecha_personal,
+        periodo_sisae=periodo_sisae,
     )
     if estado_sel != "Todos":
         filtrados = [t for t in filtrados if str(t.get("estado") or "Pendiente") == estado_sel]
     st.caption(f"{len(filtrados)} tarea(s) en esta vista · {len(tareas)} en seguimiento total.")
+    if periodo_sisae != "Todos":
+        st.caption("El filtro SISAE muestra solo grupos vinculados inequívocamente con ese periodo. Los compromisos personales quedan fuera de este filtro.")
 
     por_proceso = defaultdict(list)
     for tarea in filtrados:
