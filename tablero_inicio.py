@@ -457,7 +457,7 @@ html,body{margin:0;padding:0;background:transparent}
        columnas_tarjetas, tarjetas_interactivas
     ):
         with columna:
-            etiqueta = f"**{titulo}**  \n\n# {valor:,}  \n\n{nota}  \n\n↳ Tocar para ver cursos"
+            etiqueta = f"**{titulo}**  \n\n{valor:,}  \n\n{nota}  \n\n↳ Tocar para ver cursos"
             if st.button(
                 etiqueta,
                 key=f"inicio_panorama_{clave}",
