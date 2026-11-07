@@ -92,13 +92,13 @@ class TestReprogramacion(unittest.TestCase):
     def test_bloqueo_interproceso_impide_entrada_simultanea(self):
         lock_script = (
             "import sys; from pathlib import Path; import centro as C; "
-            "C.DATA=Path(sys.argv[1]); "
+            "C.DATA=Path(sys.argv[1]); C.ARCH=Path(sys.argv[2]); "
             "ctx=C.programacion_lock(timeout=0.25); "
             "ctx.__enter__()"
         )
         with C.programacion_lock():
             result = subprocess.run(
-                [sys.executable, "-c", lock_script, str(C.DATA)],
+                [sys.executable, "-c", lock_script, str(C.DATA), str(C.ARCH)],
                 capture_output=True, text=True, timeout=5,
             )
         self.assertNotEqual(result.returncode, 0)
@@ -107,12 +107,12 @@ class TestReprogramacion(unittest.TestCase):
     def test_bloqueo_interproceso_se_libera_al_terminar(self):
         lock_script = (
             "import sys; from pathlib import Path; import centro as C; "
-            "C.DATA=Path(sys.argv[1]); "
+            "C.DATA=Path(sys.argv[1]); C.ARCH=Path(sys.argv[2]); "
             "with_lock=C.programacion_lock(timeout=1); "
             "with_lock.__enter__(); with_lock.__exit__(None,None,None)"
         )
         result = subprocess.run(
-            [sys.executable, "-c", lock_script, str(C.DATA)],
+            [sys.executable, "-c", lock_script, str(C.DATA), str(C.ARCH)],
             capture_output=True, text=True, timeout=5,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
