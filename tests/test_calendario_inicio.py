@@ -88,3 +88,18 @@ def test_agenda_se_guarda_en_la_base_configurada_y_aislada(tmp_path, monkeypatch
     assert ruta_temporal.is_file()
     assert [evento["titulo"] for evento in resultado] == ["Actividad temporal"]
     assert CAL.DB_PATH == ruta_temporal
+
+
+def test_actividad_con_limite_el_mismo_dia_aparece_una_sola_vez():
+    fecha = date(2026, 11, 10)
+    eventos = [{
+        "id": 7, "titulo": "Revisión",
+        "fecha_inicio": "2026-11-10", "fecha_fin": None,
+        "fecha_limite": "2026-11-10",
+    }]
+
+    resultado = CAL._eventos_de_fecha(fecha, eventos)
+
+    assert len(resultado) == 1
+    assert resultado[0][0] == "Actividad · fecha límite"
+    assert resultado[0][1]["id"] == 7
