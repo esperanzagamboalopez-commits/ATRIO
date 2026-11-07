@@ -215,6 +215,34 @@ def test_save_programacion_recupera_si_falla_fsync_del_directorio_excel(isolated
     assert all(not json.loads(row["payload"] or "{}").get("operation_id") for row in rows)
 
 
+def test_save_programacion_confirma_si_falla_fsync_despues_de_eliminar_journal(isolated, monkeypatch):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    raw = resource.read_bytes()
+    fsync_real = C._fsync_directorio
+    calls = {"archive": 0}
+
+    def fail_after_journal_unlink(path):
+        if Path(path) == C.ARCH:
+            calls["archive"] += 1
+            # Respaldo, journal y limpieza final: el tercer fsync ocurre después del unlink.
+            if calls["archive"] == 3:
+                raise OSError("fallo fsync tras borrar journal")
+        return fsync_real(path)
+
+    monkeypatch.setattr(C, "_fsync_directorio", fail_after_journal_unlink)
+    result = C.save_resource("PROGRAMACION DE CURSOS.xlsx", raw)
+
+    assert result[0] == 1
+    assert calls["archive"] >= 3
+    assert not C._ruta_journal_programacion().exists()
+    with C.connect() as db:
+        rows = db.execute(
+            "SELECT payload FROM events WHERE action='Importación programación'"
+        ).fetchall()
+    assert any(json.loads(row["payload"] or "{}").get("operation_id") for row in rows)
+    assert C._validar_excel_programacion(resource)
+
+
 def test_save_programacion_sincroniza_respaldo_excel_y_directorios(isolated, monkeypatch):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     raw = resource.read_bytes()
