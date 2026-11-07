@@ -183,6 +183,67 @@ class TestReprogramacion(unittest.TestCase):
         self.assertTrue(any(path.parent == self.archive for path in synced_files))
         self.assertTrue(any(path.parent == self.resources for path in synced_files))
 
+    def test_recuperacion_sincroniza_respaldo_temporal_antes_de_sustituir(self):
+        original = self.excel.read_bytes()
+        backup = self.archive / "backup_restore_fsync.xlsx"
+        backup.write_bytes(original)
+        wb = load_workbook(self.excel)
+        wb["DOCENTE A"].cell(15, 6).value = date(2027, 1, 15)
+        wb.save(self.excel)
+        wb.close()
+        C._escribir_journal_programacion({
+            "operation_id": "operacion-restore-fsync",
+            "excel": str(self.excel.resolve()),
+            "backup": str(backup.resolve()),
+            "created": C.now(),
+        })
+        fsync_real = C._fsync_archivo
+        synced = []
+
+        def track_sync(path):
+            synced.append(Path(path))
+            return fsync_real(path)
+
+        with patch.object(C, "_fsync_archivo", side_effect=track_sync):
+            self.assertTrue(C.recuperar_programacion())
+
+        restore_temps = [p for p in synced if p.name.startswith("RECUPERACION_")]
+        self.assertEqual(len(restore_temps), 1)
+        self.assertEqual(self.excel.read_bytes(), original)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+
+    def test_conserva_journal_y_excel_si_falla_fsync_del_respaldo_temporal(self):
+        original = self.excel.read_bytes()
+        backup = self.archive / "backup_restore_fsync_error.xlsx"
+        backup.write_bytes(original)
+        wb = load_workbook(self.excel)
+        wb["DOCENTE A"].cell(15, 6).value = date(2027, 1, 15)
+        wb.save(self.excel)
+        wb.close()
+        excel_actual = self.excel.read_bytes()
+        C._escribir_journal_programacion({
+            "operation_id": "operacion-restore-fsync-falla",
+            "excel": str(self.excel.resolve()),
+            "backup": str(backup.resolve()),
+            "created": C.now(),
+        })
+        fsync_real = C._fsync_archivo
+
+        def fail_restore_temp(path):
+            if Path(path).name.startswith("RECUPERACION_"):
+                raise OSError("fallo fsync del respaldo temporal")
+            return fsync_real(path)
+
+        with patch.object(C, "_fsync_archivo", side_effect=fail_restore_temp):
+            with self.assertRaisesRegex(RuntimeError, "fallo fsync del respaldo temporal"):
+                C.recuperar_programacion()
+
+        self.assertEqual(self.excel.read_bytes(), excel_actual)
+        self.assertTrue(C._ruta_journal_programacion().exists())
+        self.assertTrue(C.recuperar_programacion())
+        self.assertEqual(self.excel.read_bytes(), original)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+
     def test_reprogramacion_recupera_si_falla_fsync_del_directorio_excel(self):
         original = self.excel.read_bytes()
         fsync_real = C._fsync_directorio
