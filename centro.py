@@ -455,8 +455,13 @@ def _save_resource_impl(name,raw):
    try:
     _eliminar_journal_programacion()
    except Exception:
-    # Si SQLite ya confirmó, una falla transitoria al limpiar el journal no invalida la importación.
-    recuperar_programacion()
+    # Una falla del fsync final puede ocurrir después de unlink: el journal puede no existir.
+    # Si aún permanece, intentar recuperar; si ya desapareció, verificar el commit exacto.
+    try:
+     recuperar_programacion()
+    except RuntimeError:
+     if _ruta_journal_programacion().exists():
+      raise
     with connect() as conn:
      rows=conn.execute("SELECT payload FROM events WHERE action='Importación programación'").fetchall()
     confirmado=False
@@ -468,6 +473,7 @@ def _save_resource_impl(name,raw):
       break
     if not confirmado or _ruta_journal_programacion().exists():
      raise
+    _validar_excel_programacion(path)
   else:
    result=None
   event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
