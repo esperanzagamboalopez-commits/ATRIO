@@ -1083,10 +1083,11 @@ def _marcas_inicio_mes(anio, mes, eventos, cursos, tareas=None):
 
 
 def render_inicio_calendario(cursos=None, tareas=None):
-    """Panel funcional de calendario y agenda para Inicio.
+    """Vista rápida de solo lectura del calendario y agenda para Inicio.
 
-    Las actividades usan las tablas normales de Mi Calendario. Los cursos solo
-    aportan marcas de inicio/término y no se duplican como eventos editables.
+    Consulta las actividades almacenadas en Mi Calendario; no crea, edita ni
+    completa registros desde el tablero. Los cursos solo aportan marcas de
+    inicio/término y no se duplican como eventos editables.
     """
     try:
         init_db()
