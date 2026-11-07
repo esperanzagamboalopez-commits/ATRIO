@@ -12,9 +12,7 @@
 #atrio-inicio-lab .calendar .calhead,#atrio-inicio-lab .calendar .calhead button,#atrio-inicio-lab .calendar .days{color:var(--atrio-tinta)!important}
 #atrio-inicio-lab .calendar .clock{border-color:rgba(var(--atrio-borde-rgb),.25)!important}
 #atrio-inicio-lab .calendar .days .selected{background:var(--atrio-neon)!important;color:var(--atrio-sobre-acento)!important}
-/* Franja de identidad: solo título, sin contador, aviso ni acción simulada. */
-#atrio-inicio-lab .pea-mce-band{display:flex;align-items:center;min-height:54px;margin-top:22px;padding:14px 20px;background:var(--atrio-encabezado)!important;color:var(--atrio-encabezado-texto)!important;border-left:5px solid var(--atrio-encabezado-acento)!important;border-radius:8px;box-shadow:var(--atrio-sombra);font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
-#atrio-inicio-lab .pea-mce-band::after{content:"";height:2px;width:36px;margin-left:auto;background:var(--atrio-encabezado-acento);opacity:.9}
+
 </style>
 <div class="shell"><main>
 <div class="topline"><span class="tiny">Tu espacio de dirección</span><span class="pill">Inicio · diseño v7 recuperado</span></div>
@@ -22,7 +20,7 @@
 <h2>Fechas límite</h2><div class="two"><div class="deadline"><strong id="cycle-days"></strong><div>Fin del ciclo escolar<div class="subtle">días · 30 de junio de 2027*</div></div></div><div class="deadline"><strong id="period-days"></strong><div>Cierre del periodo <span id="period"></span><div class="subtle" id="period-label"></div></div></div></div><div class="subtle" style="margin-top:7px">*Referencia del ciclo julio–junio; fecha oficial de entrega por confirmar.</div>
 <h2>El avance de tu ciclo</h2><div class="subtle">Grupos programados · terminados según su fecha, no por cierre de constancias.</div><label class="cutoff">Fecha de corte de la vista <input id="cutoff" type="date" value="__TODAY__" min="2026-07-01" max="2027-06-30"></label>
 <div class="three metrics" id="metrics"></div><div class="sisae-resumen" aria-live="polite">__SISAE_SUMMARY__</div><section class="details" id="detail" hidden aria-live="polite"><div class="row"><strong id="detail-title"></strong><button class="action" id="close">Cerrar</button></div><div id="detail-body"></div></section><div id="progress"></div>
-<div class="pea-mce-band" role="heading" aria-level="2">PEA y trámites en MCE</div>
+
 
 <div class="foot"><span>Programación cargada: __COUNT__ grupos · programación guardada</span><span>Auditoría histórica en su propio apartado</span></div>
 </main></div>
