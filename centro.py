@@ -73,6 +73,29 @@ def _es_ruta_segura_programacion(path):
     allowed=(RES.resolve(),ARCH.resolve())
     return any(candidate==base or base in candidate.parents for base in allowed)
 
+def _validar_excel_programacion(path):
+    """Comprueba que el XLSX existe, supera CRC ZIP y puede leerse completo."""
+    path=Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f'No existe el archivo Excel de programación: {path}')
+    try:
+        with zipfile.ZipFile(path) as archive:
+            corrupt=archive.testzip()
+            if corrupt:
+                raise ValueError(f'El componente {corrupt} está dañado.')
+        workbook=load_workbook(path,read_only=True,data_only=True)
+        try:
+            if not workbook.sheetnames:
+                raise ValueError('El libro no contiene hojas.')
+            for sheet in workbook.worksheets:
+                for _ in sheet.iter_rows(values_only=True):
+                    pass
+        finally:
+            workbook.close()
+    except Exception as exc:
+        raise ValueError(f'El archivo de programación no se pudo validar como XLSX válido: {exc}') from exc
+    return True
+
 def _fsync_archivo(path):
     """Fuerza a disco el contenido de un archivo ya escrito."""
     with open(path,'rb') as stream:
@@ -152,10 +175,12 @@ def recuperar_programacion():
                         'SQLite confirmó la operación, pero el Excel de programación no existe; '
                         'se conserva el journal para recuperación manual.'
                     )
+                _validar_excel_programacion(excel)
                 _eliminar_journal_programacion()
                 return True
             if not backup.is_file():
                 raise FileNotFoundError('No se encuentra el respaldo necesario para restaurar la programación no confirmada.')
+            _validar_excel_programacion(backup)
             # SQLite no confirmó: restaurar el Excel anterior antes de permitir otra operación.
             fd,name=tempfile.mkstemp(prefix='RECUPERACION_',suffix='.xlsx',dir=str(excel.parent))
             os.close(fd)
