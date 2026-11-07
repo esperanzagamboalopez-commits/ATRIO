@@ -219,6 +219,26 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
           transform:translateY(-2px);
           box-shadow:0 10px 24px rgba(42,35,38,.12);
         }
+        .atrio-panorama-click-card div[data-testid="stButton"]{height:100%}
+        .atrio-panorama-click-card div[data-testid="stButton"] button{
+          width:100%;height:100%;min-height:154px;text-align:left;
+          border:1px solid rgba(var(--atrio-oro-rgb),.48);
+          border-radius:11px;background:var(--atrio-surface);
+          color:var(--atrio-tinta);box-shadow:var(--atrio-sombra);
+          padding:15px 17px;white-space:pre-wrap;
+        }
+        .atrio-panorama-click-card div[data-testid="stButton"] button:hover{
+          border-color:var(--atrio-neon);color:var(--atrio-tinta);
+          transform:translateY(-2px);
+        }
+        .atrio-panorama-click-card div[data-testid="stButton"] button p{
+          line-height:1.45;margin:0;
+        }
+        .atrio-panorama-detail{
+          border:1px solid var(--atrio-borde);border-left:4px solid var(--atrio-neon);
+          border-radius:12px;padding:15px 18px;margin:4px 0 16px;
+          background:var(--atrio-surface);box-shadow:var(--atrio-sombra);
+        }
         .atrio-panorama-card-head{
           display:flex;justify-content:space-between;align-items:center;gap:8px;
           color:var(--atrio-tenue);font:700 10px/1.35 Inter,system-ui,sans-serif;
@@ -413,23 +433,98 @@ html,body{margin:0;padding:0;background:transparent}
             '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
         ),
     ]
-    tarjetas_html = "".join(
-        (
-            '<article class="atrio-panorama-card">'
-            '<div class="atrio-panorama-card-head">'
-            f'<span>{html.escape(titulo)}</span>'
-            f'<span class="atrio-panorama-icon" aria-hidden="true">{icono}</span>'
-            '</div>'
-            f'<strong class="atrio-panorama-value">{html.escape(valor)}</strong>'
-            f'<p class="atrio-panorama-note">{html.escape(nota)}</p>'
-            '</article>'
+    detalle_key = "inicio_panorama_detalle"
+    columnas_tarjetas = st.columns(5, gap="small")
+    tarjetas_interactivas = [
+        ("programados", "Programados", resumen["total"],
+         "Grupos en la programación", "Todos los cursos programados"),
+        ("terminados", "Terminados", resumen["terminados"],
+         "Por fecha de término", "Cursos cuya fecha de término ya pasó"),
+        ("en_curso", "En curso", resumen["vigentes"],
+         "Activos a la fecha de corte", "Cursos activos hoy"),
+        ("por_iniciar", "Por iniciar", resumen["por_iniciar"],
+         "Con inicio en fecha futura", "Cursos con inicio posterior a hoy"),
+    ]
+    for columna, (clave, titulo, valor, nota, encabezado) in zip(
+       (columnas_tarjetas, tarjetas_interactivas)
+    ):
+        with columna:
+            st.markdown('<div class="atrio-panorama-click-card">', unsafe_allow_html=True)
+            etiqueta = f"**{titulo}**  \n\n# {valor:,}  \n\n{nota}  \n\n↳ Tocar para ver cursos"
+            if st.button(
+                etiqueta,
+                key=f"inicio_panorama_{clave}",
+                use_container_width=True,
+                help=f"Mostrar u ocultar el detalle de {titulo.lower()}",
+            ):
+                st.session_state[detalle_key] = (
+                    None if st.session_state.get(detalle_key) == clave else clave
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+    with columnas_tarjetas[4]:
+        st.markdown(
+            (
+                '<article class="atrio-panorama-card">'
+                '<div class="atrio-panorama-card-head">'
+                '<span>Total de inscritos</span>'
+                f'<span class="atrio-panorama-icon" aria-hidden="true">'
+                '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/>'
+                '<path d="M7 9h10M7 13h10M7 17h6"/></svg></span></div>'
+                f'<strong class="atrio-panorama-value">{html.escape(inscripciones)}</strong>'
+                '<p class="atrio-panorama-note">Registros del corte SISAE</p></article>'
+            ),
+            unsafe_allow_html=True,
         )
-        for titulo, valor, nota, icono in tarjetas
-    )
-    st.markdown(
-        f'<div class="atrio-panorama-grid">{tarjetas_html}</div>',
-        unsafe_allow_html=True,
-    )
+
+    detalle_activo = st.session_state.get(detalle_key)
+    if detalle_activo:
+        grupos_detalle = {
+            "programados": grupos,
+            "terminados": resumen["tipos"]["Extensión"] + resumen["tipos"]["Repositorio"] + resumen["tipos"]["Regular"],
+            "en_curso": [],
+            "por_iniciar": [],
+        }
+        # Los cuatro estados se obtienen con el mismo criterio de fechas del resumen.
+        for grupo in grupos:
+            inicio = date.fromisoformat(str(grupo["inicio"])[:10])
+            fin = date.fromisoformat(str(grupo["fin"])[:10])
+            if inicio <= hoy <= fin:
+                grupos_detalle["en_curso"].append(grupo)
+            elif inicio > hoy:
+                grupos_detalle["por_iniciar"].append(grupo)
+        # La tarjeta de terminados incluye también grupos de tipo no catalogado.
+        if detalle_activo == "terminados":
+            grupos_detalle["terminados"] = [
+                g for g in grupos
+                if date.fromisoformat(str(g["fin"])[:10]) < hoy
+            ]
+        seleccionados = grupos_detalle.get(detalle_activo, [])
+        nombres = {
+            "programados": "Todos los cursos programados",
+            "terminados": "Cursos terminados",
+            "en_curso": "Cursos en curso",
+            "por_iniciar": "Cursos por iniciar",
+        }
+        st.markdown('<div class="atrio-panorama-detail">', unsafe_allow_html=True)
+        st.markdown(f"**{nombres.get(detalle_activo, 'Detalle de cursos')}**")
+        if st.button("Ocultar detalle", key="inicio_panorama_cerrar"):
+            st.session_state[detalle_key] = None
+        if not seleccionados:
+            st.info("No hay cursos en esta categoría para la fecha de corte.")
+        else:
+            filas = []
+            for grupo in seleccionados:
+                filas.append({
+                    "Curso": grupo.get("nombre") or "Sin nombre registrado",
+                    "Docente": grupo.get("hoja") or "Sin docente registrado",
+                    "Especialidad": grupo.get("especialidad_programada") or "Sin especialidad",
+                    "Tipo": grupo.get("tipo") or "Sin tipo",
+                    "Inicio": str(grupo.get("inicio") or "")[:10],
+                    "Término": str(grupo.get("fin") or "")[:10],
+                    "Horario": grupo.get("horario") or "Sin horario",
+                })
+            st.dataframe(filas, hide_index=True, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
     st.caption(f'SISAE · {metricas.get("corte", "Sin corte cargado")}')
 
     st.markdown(
