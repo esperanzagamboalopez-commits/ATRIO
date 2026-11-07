@@ -117,6 +117,48 @@ class TestReprogramacion(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_rechaza_ruta_alternativa_sin_modificar_archivos_ni_sqlite(self):
+        otro = self.resources / "PROGRAMACION_ALTERNATIVA.xlsx"
+        wb = Workbook()
+        wb.active.cell(15, 2).value = "Curso de prueba"
+        wb.save(otro)
+        wb.close()
+        excel_antes = self.excel.read_bytes()
+        otro_antes = otro.read_bytes()
+        with self._connect() as db:
+            payload_antes = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+
+        with self.assertRaisesRegex(ValueError, "solo puede modificar el Excel oficial"):
+            R._actualizar_excel_y_db([self._change()], otro)
+
+        self.assertEqual(self.excel.read_bytes(), excel_antes)
+        self.assertEqual(otro.read_bytes(), otro_antes)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+        self.assertEqual(list(self.archive.iterdir()), [])
+        with self._connect() as db:
+            payload_despues = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+        self.assertEqual(payload_despues, payload_antes)
+
+    def test_rechaza_enlace_simbolico_a_excel_oficial(self):
+        alias = self.resources / "ALIAS_PROGRAMACION.xlsx"
+        try:
+            alias.symlink_to(self.excel)
+        except (OSError, NotImplementedError):
+            self.skipTest("El sistema no permite crear enlaces simbólicos en este entorno")
+        excel_antes = self.excel.read_bytes()
+
+        with self.assertRaisesRegex(ValueError, "no se permiten enlaces simbólicos"):
+            R._actualizar_excel_y_db([self._change()], alias)
+
+        self.assertEqual(self.excel.read_bytes(), excel_antes)
+        self.assertTrue(alias.is_symlink())
+        self.assertFalse(C._ruta_journal_programacion().exists())
+        self.assertEqual(list(self.archive.iterdir()), [])
+
     def test_aplica_excel_sqlite_y_conserva_identidad_y_expediente(self):
         backup, archivo = R._actualizar_excel_y_db([self._change()], self.excel)
         self.assertTrue(backup.is_file())
