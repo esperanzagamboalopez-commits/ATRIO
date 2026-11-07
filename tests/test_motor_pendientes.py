@@ -136,13 +136,13 @@ def test_filtros_hoy_manana_y_fecha_personal():
     assert len(filtrar_pendientes(tareas, hoy, "Fecha", fecha_personal=date(2026, 11, 7))) == 1
 
 
-def test_prioridades_del_dia_prefiere_bloqueos_y_vencidos():
+def test_prioridades_del_dia_prefiere_plazos_confirmados_antes_que_bloqueos():
     tareas = [
         {"id": "a", "estado": "Pendiente", "prioridad": "Alta", "fecha": "2026-11-06"},
         {"id": "b", "estado": "Bloqueado", "prioridad": "Alta", "fecha": "2026-11-09"},
         {"id": "c", "estado": "Vencido", "prioridad": "Alta", "fecha": "2026-11-01"},
     ]
-    assert [x["id"] for x in prioridades_del_dia(tareas, date(2026, 11, 6))] == ["b", "c", "a"]
+    assert [x["id"] for x in prioridades_del_dia(tareas, date(2026, 11, 6))] == ["c", "b", "a"]
 
 
 
