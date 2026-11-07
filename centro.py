@@ -2,7 +2,7 @@
 from pathlib import Path
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
-import contextlib, hashlib, io, json, os, re, shutil, sqlite3, struct, sys, uuid, zipfile
+import contextlib, hashlib, io, json, os, re, shutil, sqlite3, struct, sys, uuid, zipfile, threading, time
 from openpyxl import load_workbook, Workbook
 from docx import Document
 ROOT=Path(__file__).resolve().parent
@@ -25,6 +25,93 @@ def connect():
  CREATE TABLE IF NOT EXISTS status(group_id TEXT PRIMARY KEY, doc TEXT DEFAULT 'Sin verificar', mce TEXT DEFAULT 'Sin verificar', note TEXT DEFAULT '');
  CREATE TABLE IF NOT EXISTS artifacts(id TEXT PRIMARY KEY, group_id TEXT, created TEXT, path TEXT, content_path TEXT, fingerprint TEXT, reviewed INTEGER DEFAULT 0);
  CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT);''');return c
+
+_PROGRAM_LOCK_LOCAL=threading.local()
+
+@contextlib.contextmanager
+def programacion_lock(timeout=60):
+    """Bloqueo interproceso de la programación; flock se libera si el proceso termina."""
+    ARCH.mkdir(parents=True,exist_ok=True)
+    depth=getattr(_PROGRAM_LOCK_LOCAL,'depth',0)
+    if depth:
+        _PROGRAM_LOCK_LOCAL.depth=depth+1
+        try: yield
+        finally: _PROGRAM_LOCK_LOCAL.depth-=1
+        return
+    lock_path=ARCH/'PROGRAMACION.lock'
+    handle=open(lock_path,'a+b')
+    try:
+        try:
+            import fcntl
+        except ImportError as exc:
+            raise RuntimeError('El bloqueo seguro de programación requiere soporte fcntl en este entorno.') from exc
+        deadline=time.monotonic()+timeout
+        while True:
+            try:
+                fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic()>=deadline:
+                    raise TimeoutError('La programación está siendo utilizada por otro proceso. Intenta nuevamente.')
+                time.sleep(.1)
+        _PROGRAM_LOCK_LOCAL.depth=1
+        try: yield
+        finally:
+            _PROGRAM_LOCK_LOCAL.depth=0
+            fcntl.flock(handle.fileno(),fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+def _ruta_journal_programacion():
+    return ARCH/'PROGRAMACION_PENDING.json'
+
+def _es_ruta_segura_programacion(path):
+    candidate=Path(path).resolve()
+    allowed=(RES.resolve(),ARCH.resolve())
+    return any(candidate==base or base in candidate.parents for base in allowed)
+
+def _escribir_journal_programacion(data):
+    journal=_ruta_journal_programacion()
+    tmp=journal.with_suffix('.json.tmp')
+    raw=json.dumps(data,ensure_ascii=False).encode('utf-8')
+    with open(tmp,'wb') as stream:
+        stream.write(raw);stream.flush();os.fsync(stream.fileno())
+    os.replace(tmp,journal)
+
+def recuperar_programacion():
+    """Resuelve una operación interrumpida según el evento de confirmación en SQLite."""
+    with programacion_lock():
+        journal=_ruta_journal_programacion()
+        if not journal.exists(): return False
+        try:
+            data=json.loads(journal.read_text(encoding='utf-8'))
+            operation_id=str(data['operation_id'])
+            excel=Path(data['excel']).resolve()
+            backup=Path(data['backup']).resolve()
+            if not _es_ruta_segura_programacion(excel) or not _es_ruta_segura_programacion(backup):
+                raise ValueError('El journal contiene rutas fuera de los directorios permitidos.')
+            if not backup.is_file():
+                raise FileNotFoundError('No se encuentra el respaldo necesario para recuperar la programación.')
+            with connect() as conn:
+                row=conn.execute("SELECT 1 FROM events WHERE action='Reprogramación aplicada' AND payload LIKE ?",('%'+operation_id+'%',)).fetchone()
+            if row:
+                # SQLite confirmó: conservar el Excel nuevo y retirar solo el journal.
+                journal.unlink()
+                return True
+            # SQLite no confirmó: restaurar el Excel anterior antes de permitir otra operación.
+            fd,name=tempfile.mkstemp(prefix='RECUPERACION_',suffix='.xlsx',dir=str(excel.parent))
+            os.close(fd)
+            temp=Path(name)
+            try:
+                shutil.copy2(backup,temp)
+                os.replace(temp,excel)
+            finally:
+                temp.unlink(missing_ok=True)
+            journal.unlink()
+            return True
+        except Exception as exc:
+            raise RuntimeError(f'ATRIO detectó una reprogramación interrumpida y no pudo completar su recuperación: {exc}') from exc
+
 
 def setting(k,default=None):
  with connect() as c:r=c.execute('SELECT value FROM settings WHERE key=?',(k,)).fetchone()
@@ -61,7 +148,7 @@ def parse_program(path):
  return out
 
 def fingerprint(g):return sha(json.dumps({k:g.get(k) for k in ['hoja','nombre','tipo','inicio','fin','duracion','horario','poblacion','aula','especialidad_programada']},sort_keys=True,default=str).encode())
-def import_program(path):
+def _import_program_impl(path):
  rows=parse_program(path)
  previous=[]
  with connect() as c:
@@ -171,9 +258,16 @@ def import_program(path):
   warnings.append(f"{no_included} grupo(s) no incluidos en esta actualización quedaron conservados como pendientes de reprogramación; no se eliminaron.")
  return len(rows),warnings
 
+def import_program(path):
+ with programacion_lock():
+  recuperar_programacion()
+  return _import_program_impl(path)
+
 def groups():
  """Devuelve todos los grupos activos, incluidos los pendientes para consulta y reprogramación."""
- with connect() as c:rows=c.execute('SELECT * FROM groups WHERE active=1').fetchall()
+ with programacion_lock():
+  recuperar_programacion()
+  with connect() as c:rows=c.execute('SELECT * FROM groups WHERE active=1').fetchall()
  return [dict(json.loads(x['payload']),id=x['id'],fingerprint=x['fingerprint']) for x in rows]
 
 def operational_groups(groups=None):
@@ -224,7 +318,7 @@ def update_status(uid,doc,mce,note):
 def artifacts(uid):
  with connect() as c:return [dict(x) for x in c.execute('SELECT * FROM artifacts WHERE group_id=? ORDER BY created DESC',(uid,))]
 
-def save_resource(name,raw):
+def _save_resource_impl(name,raw):
  allowed={'PROGRAMACION DE CURSOS.xlsx','Plantilla_Datos_Docentes_PEA_CECATI31.xlsx','PEA_final en blanco.docx','DIAS_SIN_CLASE.json','SISAE.zip','MEMBRETE.docx','REPOSITORIO.pdf','CALENDARIO.pdf'}
  if name not in allowed:raise ValueError('Recurso no permitido')
  if len(raw)>100*1024*1024:raise ValueError('Máximo 100 MB')
@@ -251,6 +345,13 @@ def save_resource(name,raw):
  tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_bytes(raw);os.replace(tmp,path);event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
  if name=='DIAS_SIN_CLASE.json':set_setting('calendario_confirmado',False)
  return import_program(path) if name.startswith('PROGRAMACION') else None
+
+def save_resource(name,raw):
+ if name=='PROGRAMACION DE CURSOS.xlsx':
+  with programacion_lock():
+   recuperar_programacion()
+   return _save_resource_impl(name,raw)
+ return _save_resource_impl(name,raw)
 
 def dbf(raw):
  count=struct.unpack_from('<I',raw,4)[0];head,length=struct.unpack_from('<HH',raw,8);fields=[];p=32
