@@ -287,10 +287,17 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
         C._eliminar_journal_programacion()
         return backup, excel
     except Exception:
-        # Resolver según el commit real de SQLite. Nunca restaurar el Excel anterior
-        # si la transacción ya confirmó, aunque haya fallado la limpieza del journal.
-        if backup.exists() and journal.exists():
-            C.recuperar_programacion()
+        # Resolver según el commit real de SQLite, incluso si el journal ya se eliminó
+        # pero falló el fsync final del directorio.
+        if backup.exists():
+            if journal.exists():
+                try:
+                    C.recuperar_programacion()
+                except RuntimeError:
+                    # Si sigue presente, la recuperación no terminó y debe informarse.
+                    # Si ya no está, verificar el commit exacto antes de decidir.
+                    if journal.exists():
+                        raise
             with C.connect() as conn:
                 rows = conn.execute(
                     "SELECT payload FROM events WHERE action=?",
@@ -306,6 +313,7 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
                     confirmado = True
                     break
             if confirmado and excel.is_file() and not journal.exists():
+                C._validar_excel_programacion(excel)
                 return backup, excel
         raise
     finally:
