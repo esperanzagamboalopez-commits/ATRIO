@@ -62,16 +62,24 @@ def candidatos():
         # Los documentos de grupos sustituidos también deben conservar su contexto.
         # Se consulta groups completo, sin reactivar ni modificar antecedentes.
         with C.connect() as db:
-            stored_groups=db.execute('SELECT id,payload FROM groups').fetchall()
+            stored_groups=db.execute('SELECT id,fingerprint,payload FROM groups').fetchall()
             artifacts=[dict(x) for x in db.execute('SELECT * FROM artifacts ORDER BY created DESC LIMIT 250')]
         groups={}
         for stored in stored_groups:
             try:
-                groups[stored['id']]=json.loads(stored['payload'] or '{}')
+                groups[stored['id']] = {
+                    'payload': json.loads(stored['payload'] or '{}'),
+                    'fingerprint': stored['fingerprint'],
+                }
             except (TypeError, ValueError):
                 continue
         for a in artifacts:
-            g=groups.get(a['group_id'],{})
+            stored=groups.get(a['group_id'],{})
+            g=stored.get('payload',{})
+            old_version=bool(
+                a.get('fingerprint') and stored.get('fingerprint')
+                and a['fingerprint'] != stored['fingerprint']
+            )
             path=(C.ROOT/a['path']).resolve()
             if C.OUT.resolve() not in path.parents or path.suffix.lower()!='.docx' or not path.is_file():
                 continue
@@ -80,6 +88,7 @@ def candidatos():
                         'curso':g.get('nombre','PEA generado por ATRIO'),'docente':g.get('hoja','Docente histórico'),
                         'duracion':g.get('duracion','?'),'creado':a['created'],
                         'estado_programacion':meta.get('estado_programacion',''),
+                        'es_version_anterior':old_version,
                         'ruta':str(path.relative_to(C.ROOT)),'nombre_original':path.name})
     except Exception:
         # Los originales de biblioteca siguen accesibles si no hay artefactos nativos.
@@ -355,9 +364,12 @@ def _dl(r,label='Descargar Word'):
 
 def _label(r):
     label=f"{r['curso']} · {r['docente']} · {r['duracion'] or '?'} h · {r['creado'][:10]}"
-    state=str(r.get('estado_programacion') or '').strip()
-    if state and state!='Vigente':
-        label+=f" · {state}"
+    if r.get('es_version_anterior'):
+        label+=" · Versión anterior de programación"
+    else:
+        state=str(r.get('estado_programacion') or '').strip()
+        if state and state!='Vigente':
+            label+=f" · {state}"
     return label
 
 
