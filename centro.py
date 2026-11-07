@@ -106,7 +106,8 @@ def _escribir_journal_programacion(data):
     tmp=journal.with_suffix('.json.tmp')
     raw=json.dumps(data,ensure_ascii=False).encode('utf-8')
     with open(tmp,'wb') as stream:
-        stream.write(raw);stream.flush();os.fsync(stream.fileno())
+        stream.write(raw);stream.flush()
+    _fsync_archivo(tmp)
     os.replace(tmp,journal)
     _fsync_directorio(journal.parent)
 
