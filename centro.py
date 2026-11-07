@@ -2,7 +2,7 @@
 from pathlib import Path
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
-import contextlib, hashlib, io, json, os, re, shutil, sqlite3, struct, sys, uuid, zipfile, threading, time
+import contextlib, hashlib, io, json, os, re, shutil, sqlite3, struct, sys, uuid, zipfile, threading, time, tempfile
 from openpyxl import load_workbook, Workbook
 from docx import Document
 ROOT=Path(__file__).resolve().parent
@@ -38,7 +38,8 @@ def programacion_lock(timeout=60):
         try: yield
         finally: _PROGRAM_LOCK_LOCAL.depth-=1
         return
-    lock_path=ARCH/'PROGRAMACION.lock'
+    lock_key=hashlib.sha256(str(DATA.resolve()).encode('utf-8')).hexdigest()[:20]
+    lock_path=Path(tempfile.gettempdir())/f'atrio_programacion_{lock_key}.lock'
     handle=open(lock_path,'a+b')
     try:
         try:
