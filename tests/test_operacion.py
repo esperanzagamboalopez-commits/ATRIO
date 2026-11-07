@@ -47,7 +47,7 @@ def _programming_book(path):
     wb = Workbook()
     ws = wb.active
     ws.title = "DOCENTE PRUEBA"
-    ws.cell(1, 1, "ESPECIALIDAD")
+    ws.cell(1, 1, "23-INFO-2026")
     ws.cell(1, 2, "INFORMÁTICA")
     row = 15
     values = {
