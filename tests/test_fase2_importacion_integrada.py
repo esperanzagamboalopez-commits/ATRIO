@@ -4,6 +4,7 @@ Estas pruebas ejercitan centro.import_program() de extremo a extremo sin
 consultar ni modificar recursos institucionales.
 """
 import json
+from datetime import date
 
 import pytest
 from openpyxl import Workbook
@@ -212,5 +213,5 @@ def test_coincidencia_ambigua_no_se_operativiza_ni_se_reprograma(fase2):
 
     with pytest.raises(ValueError, match="no participa en la actualización"):
         R._planificar_cascada(
-            C.groups(), unresolved["id"], __import__("datetime").date(2026, 12, 20), []
+            C.groups(), unresolved["id"], date(2026, 12, 20), []
         )
