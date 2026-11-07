@@ -161,6 +161,31 @@ def test_save_programacion_confirma_importacion_y_limpia_journal(isolated):
     assert json.loads(row["payload"])["operation_id"]
 
 
+def test_save_programacion_rechaza_enlace_simbolico_sin_tocar_destino(isolated):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    target = C.RES / "PROGRAMACION_REAL.xlsx"
+    resource.rename(target)
+    resource.symlink_to(target.name)
+    original = target.read_bytes()
+    with C.connect() as db:
+        events_before = db.execute(
+            "SELECT COUNT(*) FROM events WHERE action='Importación programación'"
+        ).fetchone()[0]
+
+    with pytest.raises(ValueError, match="no se permiten enlaces simbólicos"):
+        C.save_resource("PROGRAMACION DE CURSOS.xlsx", original)
+
+    assert resource.is_symlink()
+    assert target.read_bytes() == original
+    assert not C._ruta_journal_programacion().exists()
+    assert list(C.ARCH.iterdir()) == []
+    with C.connect() as db:
+        events_after = db.execute(
+            "SELECT COUNT(*) FROM events WHERE action='Importación programación'"
+        ).fetchone()[0]
+    assert events_after == events_before
+
+
 def test_save_programacion_conserva_commit_si_falla_una_vez_el_borrado_del_journal(isolated, monkeypatch):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     raw = resource.read_bytes()
