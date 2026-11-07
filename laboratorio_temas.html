@@ -144,6 +144,33 @@ body[data-theme="glass-anterior"]{background:radial-gradient(circle at 12% 10%,r
 [data-theme="cyber"] .sidebar,[data-theme="cyber"] .metric,[data-theme="cyber"] .panel{background:#1E293B}
 [data-theme="glass-anterior"] .sidebar{background:#09090B}
 
+
+/* ATRIO Órbita: identidad exclusiva basada en gestión, precisión y movimiento */
+[data-theme="orbita"]{--page:#F1F0E8;--surface:#FFFEF8;--surface-2:#E8EEE9;--ink:#172F3B;--muted:#586C70;--line:rgba(23,47,59,.16);--accent:#087E83;--accent-2:#D4E36A;--gold:#D4E36A;--sidebar:#172F3B;--sidebar-ink:#F5F4EA;--shadow:0 16px 42px rgba(18,49,57,.13);--soft-accent:rgba(8,126,131,.13);--hero-grad:linear-gradient(118deg,#D6E9E2 0%,#F7F5E9 53%,#D4E36A 125%);--calendar:#F5E8C8;--calendar-ink:#243E43;--calendar-line:rgba(8,126,131,.25)}
+body[data-theme="orbita"]{background:radial-gradient(circle at 7% 8%,rgba(8,126,131,.19),transparent 28rem),radial-gradient(circle at 92% 88%,rgba(212,227,106,.22),transparent 25rem),#E9EDE5}
+[data-theme="orbita"] .title-strip{background:#172F3B;border:1px solid rgba(212,227,106,.25)}
+[data-theme="orbita"] .title-strip .strip-label strong,[data-theme="orbita"] .title-strip .gold-dot{color:#D4E36A;background:#D4E36A}
+[data-theme="orbita"] .brand{color:#087E83}
+[data-theme="orbita"] .navitem.active{box-shadow:inset 3px 0 #D4E36A,0 5px 15px rgba(0,0,0,.07)}
+[data-theme="orbita"] .metric-icon{border-radius:50%}
+[data-theme="orbita"] .calendar{box-shadow:0 12px 25px rgba(8,66,71,.12)}
+.customizer{margin:0 0 16px;padding:18px 20px;border:1px solid var(--line);border-radius:17px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink)}
+.customizer[hidden]{display:none}
+.customizer-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.customizer-heading strong{font:20px var(--font-head)}
+.customizer-heading p,.customizer-hint{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
+.color-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.color-controls label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);font-size:11px;font-weight:700}
+.color-controls input{width:43px;height:34px;border:0;background:transparent;padding:0;cursor:pointer}
+.reset-btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:9px 13px;font-size:11px;font-weight:750;cursor:pointer}
+.customizer-hint{margin-top:12px}
+[data-theme="personalizado"]{--page:var(--user-page,#F1F0E8);--surface:#FFFEF8;--surface-2:color-mix(in srgb,var(--user-accent) 8%,#FFFFFF);--ink:#172F3B;--muted:#586C70;--line:rgba(23,47,59,.16);--accent:var(--user-accent,#087E83);--accent-2:var(--user-secondary,#D4E36A);--gold:var(--user-secondary,#D4E36A);--sidebar:#172F3B;--sidebar-ink:#F5F4EA;--shadow:0 16px 42px rgba(18,49,57,.13);--soft-accent:color-mix(in srgb,var(--user-accent) 13%,transparent);--hero-grad:linear-gradient(118deg,color-mix(in srgb,var(--user-accent) 17%,white),#F7F5E9 55%,color-mix(in srgb,var(--user-secondary) 35%,white));--calendar:var(--user-calendar,#F5E8C8);--calendar-ink:#243E43;--calendar-line:color-mix(in srgb,var(--user-accent) 25%,transparent)}
+body[data-theme="personalizado"]{background:radial-gradient(circle at 7% 8%,color-mix(in srgb,var(--user-accent) 18%,transparent),transparent 28rem),var(--user-page,#F1F0E8)}
+[data-theme="personalizado"] .title-strip{background:#172F3B;border:1px solid color-mix(in srgb,var(--user-secondary) 35%,transparent)}
+[data-theme="personalizado"] .title-strip .strip-label strong,[data-theme="personalizado"] .title-strip .gold-dot{color:var(--user-secondary);background:var(--user-secondary)}
+@media(max-width:760px){.color-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.color-controls{grid-template-columns:1fr}}
+
 @media(max-width:1080px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.welcome{grid-template-columns:minmax(0,1fr) 280px}.main{padding:21px}}
 @media(max-width:760px){body{padding:10px}.frame{grid-template-columns:1fr}.sidebar{padding:13px 14px;display:block}.brand{font-size:23px;padding:0 7px}.brand-caption,.navlabel,.navnote{display:none}.nav{display:flex;overflow-x:auto;padding:9px 0 1px;gap:5px}.navitem{white-space:nowrap;padding:9px 10px;font-size:10px}.navitem.active{border-left:0;border-bottom:2px solid var(--accent)}.main{padding:16px}.welcome{grid-template-columns:1fr}.welcome-copy{min-height:145px}.calendar{max-width:380px;width:100%}.workgrid{grid-template-columns:1fr}.title-strip{align-items:flex-start;flex-direction:column}.labbar{align-items:flex-start}.themechooser{width:100%}.theme-btn{flex:1 1 42%}}
 @media(max-width:440px){.metrics{grid-template-columns:1fr 1fr;gap:8px}.metric{padding:12px}.metric-value{font-size:27px}.welcome{padding:16px}.welcome h1{font-size:30px}.topline{align-items:flex-start}.demo-date{font-size:9px}.labflag{font-size:9px}}
@@ -151,15 +178,16 @@ body[data-theme="glass-anterior"]{background:radial-gradient(circle at 12% 10%,r
 </style>
 </head>
 <body>
-<div class="lab" id="laboratorio" data-theme="rosa-renovado">
+<div class="lab" id="laboratorio" data-theme="orbita">
   <header class="labbar">
     <div class="labidentity">
       <div class="labmark" aria-hidden="true">A</div>
-      <div><div class="labtitle">ATRIO · Laboratorio visual</div><div class="labsub">Fase 2 · Comparación completa: temas existentes y propuestas</div></div>
-      <span class="labflag">SOLO DEMOSTRACIÓN · DATOS FICTICIOS</span>
+      <div><div class="labtitle">ATRIO · Laboratorio visual</div><div class="labsub">Fase 2 · Identidad visual propia y personalizable</div></div>
+      <span class="labflag">10 VARIANTES · SOLO DEMOSTRACIÓN · DATOS FICTICIOS</span>
     </div>
     <div class="themechooser" role="group" aria-label="Seleccionar tema visual">
-      <button class="theme-btn" type="button" data-select-theme="rosa-renovado" aria-pressed="true">Rosa · Renovado</button>
+      <button class="theme-btn" type="button" data-select-theme="orbita" aria-pressed="true">ATRIO Órbita · Exclusivo</button>
+      <button class="theme-btn" type="button" data-select-theme="rosa-renovado" aria-pressed="false">Rosa · Renovado</button>
       <button class="theme-btn" type="button" data-select-theme="rosa-anterior" aria-pressed="false">Rosa · Anterior</button>
       <button class="theme-btn" type="button" data-select-theme="premium" aria-pressed="false">Editorial Premium</button>
       <button class="theme-btn" type="button" data-select-theme="japandi" aria-pressed="false">Japandi</button>
@@ -168,8 +196,24 @@ body[data-theme="glass-anterior"]{background:radial-gradient(circle at 12% 10%,r
       <button class="theme-btn" type="button" data-select-theme="glass-renovado" aria-pressed="false">Glass · Renovado</button>
       <button class="theme-btn" type="button" data-select-theme="oro" aria-pressed="false">Editorial Oro · Nuevo</button>
       <button class="theme-btn" type="button" data-select-theme="terracota" aria-pressed="false">Editorial Terracota · Nuevo</button>
+      <button class="theme-btn" type="button" data-select-theme="personalizado" aria-pressed="false">Personalizar · Mi paleta</button>
     </div>
   </header>
+
+
+  <section class="customizer" id="personalizador" hidden aria-label="Personalizar colores de ATRIO">
+    <div class="customizer-heading">
+      <div><strong>Tu identidad, tus colores</strong><p>Modifica la paleta y observa el resultado al instante. Esta prueba no guarda cambios en ATRIO.</p></div>
+      <button class="reset-btn" id="reset-colors" type="button">Restablecer paleta</button>
+    </div>
+    <div class="color-controls">
+      <label>Fondo general <input type="color" id="pick-page" value="#F1F0E8"></label>
+      <label>Color principal <input type="color" id="pick-accent" value="#087E83"></label>
+      <label>Color secundario <input type="color" id="pick-secondary" value="#D4E36A"></label>
+      <label>Calendario <input type="color" id="pick-calendar" value="#F5E8C8"></label>
+    </div>
+    <p class="customizer-hint">La tipografía y los fondos de lectura permanecen controlados para conservar contraste. Puedes probar combinaciones sin alterar información ni archivos.</p>
+  </section>
 
   <div class="frame">
     <aside class="sidebar">
@@ -269,16 +313,38 @@ body[data-theme="glass-anterior"]{background:radial-gradient(circle at 12% 10%,r
 (() => {
   const root = document.getElementById('laboratorio');
   const buttons = Array.from(document.querySelectorAll('[data-select-theme]'));
-  for (const button of buttons) {
-    button.addEventListener('click', () => {
-      const selected = button.dataset.selectTheme;
-      root.dataset.theme = selected;
-      document.body.dataset.theme = selected;
-      for (const item of buttons) {
-        item.setAttribute('aria-pressed', String(item === button));
-      }
-    });
+  const panel = document.getElementById('personalizador');
+  const defaults = {page:'#F1F0E8',accent:'#087E83',secondary:'#D4E36A',calendar:'#F5E8C8'};
+  const fields = {
+    page:document.getElementById('pick-page'),
+    accent:document.getElementById('pick-accent'),
+    secondary:document.getElementById('pick-secondary'),
+    calendar:document.getElementById('pick-calendar')
+  };
+  function setTheme(name){
+    root.dataset.theme=name;
+    document.body.dataset.theme=name;
+    panel.hidden=name!=='personalizado';
+    for(const button of buttons) button.setAttribute('aria-pressed',String(button.dataset.selectTheme===name));
   }
+  function applyColors(){
+    root.style.setProperty('--user-page',fields.page.value);
+    root.style.setProperty('--user-accent',fields.accent.value);
+    root.style.setProperty('--user-secondary',fields.secondary.value);
+    root.style.setProperty('--user-calendar',fields.calendar.value);
+  }
+  for(const button of buttons){
+    button.addEventListener('click',()=>setTheme(button.dataset.selectTheme));
+  }
+  for(const field of Object.values(fields)){
+    field.addEventListener('input',applyColors);
+    field.addEventListener('change',applyColors);
+  }
+  document.getElementById('reset-colors').addEventListener('click',()=>{
+    for(const [key,value] of Object.entries(defaults)) fields[key].value=value;
+    applyColors();
+  });
+  applyColors();
 })();
 </script>
 </body>
