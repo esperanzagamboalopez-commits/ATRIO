@@ -232,8 +232,11 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
     journal = C._ruta_journal_programacion()
     try:
         wb.save(temp)
+        C._fsync_archivo(temp)
         wb.close()
         shutil.copy2(excel, backup)
+        C._fsync_archivo(backup)
+        C._fsync_directorio(backup.parent)
         C._escribir_journal_programacion({
             "operation_id": operation_id,
             "excel": str(excel.resolve()),
@@ -254,7 +257,7 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
                 if not _grupo_incluido(payload):
                     raise ValueError(f"{cambio['curso']} quedó pendiente y no participa en esta jornada.")
                 actuales[cambio["id"]] = payload
-            os.replace(temp, excel)
+            C._reemplazar_archivo_durable(temp, excel)
             reemplazado = True
             for cambio in cambios:
                 payload = actuales[cambio["id"]]
@@ -282,7 +285,7 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
                     "regla": "Se conservaron group_id, estados y documentos existentes.",
                 }, ensure_ascii=False)),
             )
-        journal.unlink(missing_ok=True)
+        C._eliminar_journal_programacion()
         return backup, excel
     except Exception:
         # Resolver según el commit real de SQLite. Nunca restaurar el Excel anterior
