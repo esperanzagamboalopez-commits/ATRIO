@@ -991,6 +991,247 @@ def _vista_agenda():
             _tarjeta_evento(ev, mostrar_detalle=False)
 
 
+
+# -----------------------------------------------------------------------------
+# VISTA COMPACTA PARA INICIO · CALENDARIO + AGENDA
+# -----------------------------------------------------------------------------
+
+def _eventos_de_fecha(fecha, eventos):
+    """Devuelve actividades y fechas límite que corresponden a un día."""
+    salida = []
+    for ev in eventos or []:
+        fi = _fecha(ev.get("fecha_inicio"))
+        ff = _fecha(ev.get("fecha_fin"), fi)
+        limite = _fecha(ev.get("fecha_limite"))
+        if fi and ff and fi <= fecha <= ff:
+            salida.append(("Actividad", ev))
+        if limite == fecha:
+            salida.append(("Fecha límite", ev))
+    return salida
+
+
+def _cursos_de_fecha(cursos, fecha):
+    """Fechas de inicio y término de cursos; son referencias, nunca eventos editables."""
+    salida = []
+    for grupo in cursos or []:
+        inicio = _fecha(grupo.get("inicio"))
+        termino = _fecha(grupo.get("fin"))
+        nombre = grupo.get("nombre") or grupo.get("curso") or "Curso sin nombre"
+        docente = grupo.get("hoja") or grupo.get("docente") or "Docente sin dato"
+        if inicio == fecha:
+            salida.append({
+                "tipo": "Inicio de curso", "nombre": nombre, "docente": docente,
+                "grupo_id": grupo.get("id"),
+            })
+        if termino == fecha:
+            salida.append({
+                "tipo": "Término de curso", "nombre": nombre, "docente": docente,
+                "grupo_id": grupo.get("id"),
+            })
+    return salida
+
+
+def _marcas_inicio_mes(anio, mes, eventos, cursos):
+    """Marcas compactas por día: actividad, límite, inicio o término de curso."""
+    marcas = {}
+    for dia, items in _construir_items_mes(anio, mes, eventos).items():
+        for item in items:
+            marcas.setdefault(dia, []).append(
+                "L" if item["tipo"] == "limite" else "A"
+            )
+    inicio_mes = date(int(anio), int(mes), 1)
+    fin_mes = date(int(anio), int(mes), calendar.monthrange(int(anio), int(mes))[1])
+    for grupo in cursos or []:
+        for campo, marca in (("inicio", "C"), ("fin", "T")):
+            fecha = _fecha(grupo.get(campo))
+            if fecha and inicio_mes <= fecha <= fin_mes:
+                marcas.setdefault(fecha.day, []).append(marca)
+    return marcas
+
+
+def render_inicio_calendario(cursos=None):
+    """Panel funcional de calendario y agenda para Inicio.
+
+    Las actividades usan las tablas normales de Mi Calendario. Los cursos solo
+    aportan marcas de inicio/término y no se duplican como eventos editables.
+    """
+    try:
+        init_db()
+    except Exception as exc:
+        st.error(f"No se pudo preparar el calendario de Inicio: {exc}")
+        return
+
+    hoy = fecha_hoy()
+    st.session_state.setdefault("inicio_cal_anio", hoy.year)
+    st.session_state.setdefault("inicio_cal_mes", hoy.month)
+    st.session_state.setdefault("inicio_cal_fecha", hoy)
+
+    seleccionado = _fecha(st.session_state.get("inicio_cal_fecha"), hoy)
+    anio = int(st.session_state["inicio_cal_anio"])
+    mes = int(st.session_state["inicio_cal_mes"])
+    if (seleccionado.year, seleccionado.month) != (anio, mes):
+        anio, mes = seleccionado.year, seleccionado.month
+        st.session_state["inicio_cal_anio"] = anio
+        st.session_state["inicio_cal_mes"] = mes
+
+    st.markdown(
+        '<div class="atrio-section-title">Calendario y agenda</div>'
+        '<div class="atrio-section-sub">Tus actividades y las fechas de los cursos, en un mismo lugar.</div>',
+        unsafe_allow_html=True,
+    )
+    controles = st.columns([0.85, 0.85, 1.15, 0.85, 1.25])
+    if controles[0].button("Hoy", key="inicio_cal_hoy", use_container_width=True):
+        st.session_state.update({
+            "inicio_cal_anio": hoy.year, "inicio_cal_mes": hoy.month,
+            "inicio_cal_fecha": hoy,
+        })
+        st.rerun()
+    if controles[1].button("‹", key="inicio_cal_anterior", help="Mes anterior", use_container_width=True):
+        mes -= 1
+        if mes < 1:
+            mes, anio = 12, anio - 1
+        st.session_state.update({
+            "inicio_cal_anio": anio, "inicio_cal_mes": mes,
+            "inicio_cal_fecha": date(anio, mes, 1),
+        })
+        st.rerun()
+    controles[2].markdown(
+        f'<div class="atrio-month-label" style="font-size:19px;padding:5px 0">'
+        f'{MESES[mes - 1]} {anio}</div>',
+        unsafe_allow_html=True,
+    )
+    if controles[3].button("›", key="inicio_cal_siguiente", help="Mes siguiente", use_container_width=True):
+        mes += 1
+        if mes > 12:
+            mes, anio = 1, anio + 1
+        st.session_state.update({
+            "inicio_cal_anio": anio, "inicio_cal_mes": mes,
+            "inicio_cal_fecha": date(anio, mes, 1),
+        })
+        st.rerun()
+    if controles[4].button("＋ Nueva actividad", key="inicio_cal_nueva", type="primary", use_container_width=True):
+        st.session_state["cal_fecha_form"] = seleccionado
+        st.session_state["mostrar_form_cal"] = True
+        st.rerun()
+
+    eventos_mes = obtener_eventos(anio, mes)
+    marcas = _marcas_inicio_mes(anio, mes, eventos_mes, cursos or [])
+    semanas = calendar.Calendar(firstweekday=0).monthdayscalendar(anio, mes)
+    lado_cal, lado_agenda = st.columns([1.45, 1], gap="large")
+
+    with lado_cal:
+        encabezados = st.columns(7, gap="small")
+        for col, nombre in zip(encabezados, DIAS_CORTOS):
+            col.markdown(
+                f'<div class="atrio-weekday">{_esc(nombre)}</div>',
+                unsafe_allow_html=True,
+            )
+        for numero_semana, semana in enumerate(semanas):
+            columnas = st.columns(7, gap="small")
+            for indice, dia in enumerate(semana):
+                with columnas[indice]:
+                    if not dia:
+                        st.markdown('<div style="height:34px"></div>', unsafe_allow_html=True)
+                        continue
+                    fecha_dia = date(anio, mes, dia)
+                    claves = marcas.get(dia, [])
+                    etiqueta = str(dia) + (" ·" if claves else "")
+                    if st.button(
+                        etiqueta,
+                        key=f"inicio_cal_dia_{anio}_{mes}_{dia}",
+                        type="primary" if fecha_dia == seleccionado else "secondary",
+                        help="Marcas: " + ", ".join({
+                            "A": "actividad", "L": "fecha límite",
+                            "C": "inicio de curso", "T": "término de curso",
+                        }[x] for x in claves) if claves else f"Seleccionar {_fecha_texto(fecha_dia)}",
+                        use_container_width=True,
+                    ):
+                        st.session_state["inicio_cal_fecha"] = fecha_dia
+                        st.rerun()
+                    if claves:
+                        leyenda = " · ".join(dict.fromkeys(claves))
+                        st.caption(leyenda)
+
+        st.caption("A · Actividad   L · Fecha límite   C · Inicio de curso   T · Término de curso")
+
+    seleccionado = _fecha(st.session_state.get("inicio_cal_fecha"), hoy)
+    with lado_agenda:
+        st.markdown(
+            f'<div class="atrio-section-title" style="font-size:19px">Agenda del día</div>'
+            f'<div class="atrio-section-sub">{_esc(_fecha_texto(seleccionado, incluir_dia=True))}</div>',
+            unsafe_allow_html=True,
+        )
+        actividades_dia = _eventos_de_fecha(
+            seleccionado, obtener_eventos(seleccionado.year, seleccionado.month)
+        )
+        cursos_dia = _cursos_de_fecha(cursos, seleccionado)
+        if not actividades_dia and not cursos_dia:
+            st.markdown(
+                '<div class="atrio-empty">No hay actividades ni inicios o términos de cursos para este día.</div>',
+                unsafe_allow_html=True,
+            )
+
+        for tipo, ev in actividades_dia:
+            if tipo == "Fecha límite":
+                st.warning(f"Fecha límite: **{ev.get('titulo') or 'Actividad'}**")
+            _tarjeta_evento(ev, mostrar_detalle=True)
+            acciones = st.columns(2)
+            if acciones[0].button("Editar", key=f"inicio_cal_editar_{ev['id']}", use_container_width=True):
+                st.session_state["inicio_cal_editar_id"] = ev["id"]
+                st.rerun()
+            estado = ev.get("estado") or "Pendiente"
+            if estado not in ESTADOS_CERRADOS:
+                if acciones[1].button("Completar", key=f"inicio_cal_completar_{ev['id']}", use_container_width=True):
+                    cambiar_estado(ev["id"], "Completada")
+                    st.rerun()
+            elif estado in ("Completada", "Completado"):
+                acciones[1].caption("Actividad completada")
+
+        for item in cursos_dia:
+            st.markdown(
+                f'<div class="atrio-event-card">'
+                f'<span class="atrio-pill">{_esc(item["tipo"])}</span>'
+                f'<div class="atrio-event-title">{_esc(item["nombre"])}</div>'
+                f'<div class="atrio-event-meta">{_esc(item["docente"])} · Fecha tomada de Programación</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+        with st.expander("Próximos 7 días", expanded=False):
+            fin_ventana = seleccionado + timedelta(days=7)
+            proximos = [
+                ev for ev in obtener_pendientes(limite=1000)
+                if (
+                    _fecha(ev.get("fecha_inicio")) and
+                    seleccionado <= _fecha(ev.get("fecha_inicio")) <= fin_ventana
+                ) or (
+                    _fecha(ev.get("fecha_limite")) and
+                    seleccionado <= _fecha(ev.get("fecha_limite")) <= fin_ventana
+                )
+            ]
+            proximos.sort(key=lambda ev: (_fecha_referencia(ev) or date.max, ev.get("id", 0)))
+            if not proximos:
+                st.caption("No hay actividades pendientes registradas en los próximos siete días.")
+            else:
+                for ev in proximos[:5]:
+                    _tarjeta_prioridad(ev, compacta=True)
+
+    editar_id = st.session_state.get("inicio_cal_editar_id")
+    if editar_id:
+        evento_editar = next((ev for ev in obtener_eventos(anio, mes) if ev.get("id") == editar_id), None)
+        if evento_editar:
+            with st.expander("Editar actividad seleccionada", expanded=True):
+                _form_editar(evento_editar)
+        else:
+            st.session_state.pop("inicio_cal_editar_id", None)
+
+    if st.session_state.get("mostrar_form_cal"):
+        st.session_state.setdefault("cal_fecha_form", seleccionado)
+        with st.container(border=True):
+            _form_nuevo()
+
+
+
 def _vista_pendientes():
     st.markdown('<div class="atrio-section-title">Pendientes por atender</div>', unsafe_allow_html=True)
     st.markdown('<div class="atrio-section-sub">Filtra por área, prioridad o situación para decidir qué atender primero.</div>', unsafe_allow_html=True)
