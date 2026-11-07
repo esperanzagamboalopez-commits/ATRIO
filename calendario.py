@@ -1077,7 +1077,8 @@ def _marcas_inicio_mes(anio, mes, eventos, cursos, tareas=None):
             and tarea.get("proceso") != "Mi Calendario"
             and tarea.get("fuente") != "Mi Calendario"
         ):
-            marcas.setdefault(fecha.day, []).append("L")
+            marca = "L" if tarea.get("certeza", "Confirmado") == "Confirmado" else "V"
+            marcas.setdefault(fecha.day, []).append(marca)
     return marcas
 
 
@@ -1176,6 +1177,7 @@ def render_inicio_calendario(cursos=None, tareas=None):
                         help="Marcas: " + ", ".join({
                             "A": "actividad", "L": "fecha límite",
                             "C": "inicio de curso", "T": "término de curso",
+                            "V": "aviso o verificación",
                         }[x] for x in claves) if claves else f"Seleccionar {_fecha_texto(fecha_dia)}",
                         use_container_width=True,
                     ):
@@ -1185,7 +1187,7 @@ def render_inicio_calendario(cursos=None, tareas=None):
                         leyenda = " · ".join(dict.fromkeys(claves))
                         st.caption(leyenda)
 
-        st.caption("A · Actividad   L · Fecha límite   C · Inicio de curso   T · Término de curso")
+        st.caption("A · Actividad   L · Fecha objetivo confirmada   V · Aviso / verificación   C · Inicio   T · Término")
 
     seleccionado = _fecha(st.session_state.get("inicio_cal_fecha"), hoy)
     with lado_agenda:
@@ -1233,9 +1235,14 @@ def render_inicio_calendario(cursos=None, tareas=None):
 
         for indice, tarea in enumerate(tareas_dia):
             estado = str(tarea.get("estado") or "Pendiente")
+            tipo_fecha = (
+                "Fecha objetivo"
+                if tarea.get("certeza", "Confirmado") == "Confirmado"
+                else "Aviso / verificación"
+            )
             st.markdown(
                 f'<div class="atrio-event-card">'
-                f'<span class="atrio-pill">Fecha límite · {_esc(tarea.get("proceso", "Seguimiento"))}</span>'
+                f'<span class="atrio-pill">{_esc(tipo_fecha)} · {_esc(tarea.get("proceso", "Seguimiento"))}</span>'
                 f'<div class="atrio-event-title">{_esc(tarea.get("curso", "Actividad"))}</div>'
                 f'<div class="atrio-event-meta">{_esc(estado)} · {_esc(tarea.get("docente", ""))}</div>'
                 f'<div class="atrio-event-meta">{_esc(tarea.get("motivo", ""))}</div>'
