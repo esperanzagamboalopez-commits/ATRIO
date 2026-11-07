@@ -188,7 +188,7 @@ def recuperar_programacion():
             temp=Path(name)
             try:
                 shutil.copy2(backup,temp)
-                _fsync_archivo(temp)
+                # El helper sincroniza el temporal una sola vez antes del reemplazo.
                 _reemplazar_archivo_durable(temp,excel)
             finally:
                 temp.unlink(missing_ok=True)
