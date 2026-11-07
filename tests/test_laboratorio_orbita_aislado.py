@@ -48,3 +48,28 @@ def test_inicio_no_muestra_panel_informativo_ni_accion_simulada():
     assert "pea-mce-band" not in template
     assert "__ALERT_TEXT__" not in preview
     assert "__ALERT_TEXT__" not in interface
+
+
+def test_inicio_va_primero_y_el_resumen_del_laboratorio_queda_al_pie():
+    source = (Path(__file__).resolve().parents[1] / "laboratorio_orbita_streamlit.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert source.index("components.html(inicio") < source.index(
+        'st.subheader("ATRIO · Vista previa de integración")'
+    )
+    assert 'st.metric("Grupos de muestra"' in source
+    assert 'st.metric("PEA por revisar"' in source
+    assert 'st.metric("Corte SISAE"' in source
+    assert 'st.info("Vista aislada:' in source
+
+
+def test_no_se_muestran_componentes_genericos_sin_contexto():
+    source = (Path(__file__).resolve().parents[1] / "laboratorio_orbita_streamlit.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Componentes de interfaz" not in source
+    assert "Acción de muestra" not in source
+    assert "Campo de ejemplo" not in source
+    assert "Selector de muestra" not in source
