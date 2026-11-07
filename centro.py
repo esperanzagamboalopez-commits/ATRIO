@@ -10,7 +10,7 @@ DATA=ROOT/'datos'; RES=DATA/'recursos'; OUT=DATA/'salidas'; ARCH=DATA/'versiones
 for p in (RES,OUT,ARCH):p.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0,str(ROOT/'motor'))
 import generador_pea_extension_v6_4 as motor
-from identidad_programacion import planificar_conciliacion, grupos_operativos as filtrar_grupos_operativos
+from identidad_programacion import planificar_conciliacion, grupos_operativos as filtrar_grupos_operativos, grupo_incluido_en_actualizacion
 
 def ruta_dias_sin_clase():
     """Primera ruta existente de DIAS_SIN_CLASE.json (datos/recursos y luego raíz). None si no existe."""
@@ -180,6 +180,23 @@ def operational_groups(groups=None):
  """Grupos incluidos en la actualización actual; excluye pendientes conservados."""
  return filtrar_grupos_operativos(groups if groups is not None else globals()['groups']())
 
+def validate_group_current(group, conn=None):
+ """Rechaza generación basada en un grupo que cambió o dejó de estar incluido."""
+ def check(db):
+  row=db.execute('SELECT fingerprint,payload,active FROM groups WHERE id=?',
+                 (group.get('id'),)).fetchone()
+  if not row or not row['active']:
+   raise ValueError('El curso ya no está vigente en la programación. Actualiza la selección antes de generar el PEA.')
+  if not group.get('fingerprint') or row['fingerprint'] != group.get('fingerprint'):
+   raise ValueError('La programación de este curso cambió mientras el PEA estaba seleccionado. Vuelve a abrir el curso y revisa sus datos antes de generar.')
+  current=json.loads(row['payload'])
+  if not grupo_incluido_en_actualizacion(current):
+   raise ValueError('Este curso quedó pendiente de reprogramación y no participa en la jornada actual. Consérvalo y selecciónalo cuando se incluya en una nueva actualización.')
+  return True
+ if conn is not None:return check(conn)
+ with connect() as db:return check(db)
+
+
 def profiles():
  w=load_workbook(RES/'Plantilla_Datos_Docentes_PEA_CECATI31.xlsx',read_only=True,data_only=True)
  if 'DOCENTES' not in w:raise ValueError('El padrón requiere hoja DOCENTES')
@@ -258,6 +275,7 @@ def sisae_bytes(raw):
   return {n:dbf(z.read(names[n])) for n in ['PROG_CURSOS1.DBF','INSCRIPCION.DBF']}
 
 def generate(g,participants,mode='cache',academic=None,progress=None,job_id=None):
+ validate_group_current(g)
  if g['tipo']!='Extensión':raise ValueError('Generación Word disponible solo para extensión. Regular no requiere PEA; repositorio necesita su original y adaptación.')
  if participants<1:raise ValueError('Confirma participantes previstos')
  if not setting('calendario_confirmado',False):raise ValueError('Revisa y confirma el calendario en Ajustes')
@@ -286,9 +304,19 @@ def generate(g,participants,mode='cache',academic=None,progress=None,job_id=None
   result=Document(out)
   if len(result.tables)!=28:raise ValueError('El documento generado no conserva las 28 tablas institucionales')
   (folder/'datos_generacion.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2,default=str))
- with connect() as c:c.execute('INSERT INTO artifacts VALUES(?,?,?,?,?,?,0)',(aid,g['id'],now(),str(out.relative_to(ROOT)),str(content_path.relative_to(ROOT)),g['fingerprint']))
- st=status(g['id']);update_status(g['id'],'Generado',st['mce'],'Archivo generado; pendiente de revisión')
- event(g['id'],'PEA generado',{'archivo':str(out.relative_to(ROOT)),'id':aid,'calendario':report})
+ try:
+  with connect() as c:
+   c.execute('BEGIN IMMEDIATE')
+   validate_group_current(g,c)
+   c.execute('INSERT INTO artifacts VALUES(?,?,?,?,?,?,0)',(aid,g['id'],now(),str(out.relative_to(ROOT)),str(content_path.relative_to(ROOT)),g['fingerprint']))
+   st=c.execute('SELECT mce FROM status WHERE group_id=?',(g['id'],)).fetchone()
+   mce=st['mce'] if st else 'Sin verificar'
+   c.execute('INSERT OR REPLACE INTO status VALUES(?,?,?,?)',(g['id'],'Generado',mce,'Archivo generado; pendiente de revisión'))
+   c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',
+             (now(),g['id'],'PEA generado',json.dumps({'archivo':str(out.relative_to(ROOT)),'id':aid,'calendario':report},ensure_ascii=False,default=str)))
+ except Exception:
+  shutil.rmtree(folder,ignore_errors=True)
+  raise
  return out
 
 def mark_reviewed(aid):
