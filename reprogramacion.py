@@ -232,7 +232,6 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
     journal = C._ruta_journal_programacion()
     try:
         wb.save(temp)
-        C._fsync_archivo(temp)
         wb.close()
         shutil.copy2(excel, backup)
         C._fsync_archivo(backup)
