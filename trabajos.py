@@ -31,6 +31,7 @@ def recover():
                 c.execute("UPDATE pea_jobs SET status=?,detail=?,finished=? WHERE id=? AND status IN ('En cola','En proceso')",('Listo' if ok else 'Interrumpido','Word guardado' if ok else 'El proceso se detuvo. Puedes volver a solicitar el borrador.',time.time(),jid))
 
 def start(group,participants,academic):
+    C.validate_group_current(group)
     recover()
     jid=str(uuid.uuid4())
     with lockpath(jid).open('a') as lock:
