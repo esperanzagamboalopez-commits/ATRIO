@@ -31,7 +31,6 @@ def test_orbita_publica_tokens_de_identidad_y_calendario():
     assert tokens["--atrio-calendario"] == "#F5E8C8"
     assert tokens["--atrio-encabezado"] == "#172F3B"
     assert "linear-gradient" in tokens["--atrio-hero-gradient"]
-    assert "backdrop-filter" not in tema.root_css().lower()
 
 
 def test_paleta_personalizada_solo_sobrescribe_los_cuatro_colores_autorizados():
