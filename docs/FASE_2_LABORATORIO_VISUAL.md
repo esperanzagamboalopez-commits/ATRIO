@@ -116,6 +116,8 @@ Los valores se validan como hexadecimal de seis dígitos. La tipografía, las su
 ### Vista previa independiente
 - Inicio conserva la franja oscura `PEA y trámites en MCE` como título de identidad, sin el bloque `Lo que requiere tu atención`, texto de aviso demostrativo ni botón `Ver cursos para revisar`.
 - El resumen informativo no se presenta como acción pendiente ni duplica el seguimiento que corresponde a sus módulos.
+- Inicio conserva la franja oscura `PEA y trámites en MCE` como título de identidad, sin el bloque `Lo que requiere tu atención`, texto de aviso demostrativo ni botón `Ver cursos para revisar`.
+- El resumen informativo no se presenta como acción pendiente ni duplica el seguimiento que corresponde a sus módulos.
 - `laboratorio_orbita_streamlit.py`: muestra el tema y la composición real de `inicio.html` con tres cursos ficticios.
 - No importa `app.py` ni `centro.py`; no abre SQLite, Excel, SISAE, expedientes o documentos.
 - Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
@@ -146,7 +148,7 @@ Se abrirá el puerto 8502 de Codespaces. Esta ejecución no equivale a iniciar A
 La identidad ATRIO Órbita está aprobada por la usuaria y su integración está preparada en la rama `pruebas/fase2-funcional-aislada`.
 
 - Se incorpora como opción de tema; Editorial Rosa continúa como valor predeterminado y los temas anteriores no se eliminan.
-- El Inicio consume los mismos tokens compartidos para el degradado de bienvenida, calendario en arena clara y franja oscura `PEA y trámites en MCE`. La franja es ahora un elemento de identidad sin panel informativo, aviso o botón simulado.
+- El Inicio consume los mismos tokens compartidos para el degradado de bienvenida, calendario en arena clara y franja oscura `PEA y trámites en MCE`. La franja es ahora un elemento de identidad sin panel informativo, aviso o botón simulado. La franja es ahora un elemento de identidad sin panel informativo, aviso o botón simulado.
 - Ajustes permite personalizar los cuatro colores aprobados y guardar la paleta en la configuración ya existente.
 - La personalización no cambia tipografía, superficies de lectura, color de texto ni estados semánticos.
 - No se han modificado `main`, Excel institucional, SISAE, documentos PEA, plantillas ni la base de datos del entorno operativo.
