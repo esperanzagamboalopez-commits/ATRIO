@@ -226,10 +226,10 @@ def construir_pendientes(
                 ))
             elif doc in ESTADOS_PEA_LISTO and mce in {"sin verificar", ""}:
                 agregar(_crear(
-                    proceso="Por verificar", grupo=g,
+                    proceso="Subir PEAs al MCE", grupo=g,
                     fecha_objetivo=None,
-                    motivo="El PEA está listo, pero el estado de su carga al MCE no está confirmado.",
-                    accion="Comprobar el estado de carga antes de considerarlo pendiente.",
+                    motivo="El PEA ya está elaborado/revisado, pero no hay confirmación del estado de su carga al MCE.",
+                    accion="Verificar primero si ya fue subido; si no, completar la carga y registrar el estado.",
                     modulo="Seguimiento y MCE", hoy=hoy, certeza="Por verificar",
                     sufijo="verificar-carga-pea",
                 ))
@@ -247,10 +247,10 @@ def construir_pendientes(
                 ))
             elif mce in {"sin verificar", ""} and inicio <= hoy + timedelta(days=20):
                 agregar(_crear(
-                    proceso="Por verificar", grupo=g,
+                    proceso="Altas de cursos regulares en MCE", grupo=g,
                     fecha_objetivo=inicio,
                     motivo="No hay confirmación del alta de este curso regular en el MCE.",
-                    accion="Verificar el alta; no se marca como atraso mientras siga sin confirmar.",
+                    accion="Verificar el alta y, si todavía no se realizó, registrarlo antes del inicio.",
                     modulo="Seguimiento y MCE", hoy=hoy, certeza="Por verificar",
                     sufijo="verificar-regular-mce",
                 ))
@@ -306,7 +306,7 @@ def construir_pendientes(
                     ))
             elif estado_acred in {"sin verificar", ""} and fin <= hoy + timedelta(days=10):
                 agregar(_crear(
-                    proceso="Por verificar", grupo=g,
+                    proceso="Acreditaciones", grupo=g,
                     fecha_objetivo=fin,
                     motivo="El curso se aproxima a su término o ya terminó, pero la acreditación no tiene estado confirmado.",
                     accion="Verificar el estado real de la acreditación en Control escolar.",
