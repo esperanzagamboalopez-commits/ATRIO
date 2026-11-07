@@ -244,17 +244,17 @@ class TestReprogramacion(unittest.TestCase):
                 (C.now(), None, "Reprogramación aplicada",
                  json.dumps({"operation_id": operation_id})),
             )
-        self.excel.write_bytes(b"archivo xlsx dañado")
+        self.excel.write_bytes("archivo xlsx dañado".encode("utf-8"))
 
         with self.assertRaisesRegex(RuntimeError, "no se pudo validar como XLSX"):
             C.recuperar_programacion()
 
         self.assertTrue(C._ruta_journal_programacion().is_file())
-        self.assertEqual(self.excel.read_bytes(), b"archivo xlsx dañado")
+        self.assertEqual(self.excel.read_bytes(), "archivo xlsx dañado".encode("utf-8"))
 
     def test_no_restaurar_respaldo_corrupto_ni_limpiar_journal(self):
         backup = self.archive / "backup_corrupto.xlsx"
-        backup.write_bytes(b"respaldo dañado")
+        backup.write_bytes("respaldo dañado".encode("utf-8"))
         workbook = load_workbook(self.excel)
         workbook["DOCENTE A"].cell(15, 6).value = date(2027, 1, 15)
         workbook.save(self.excel)
