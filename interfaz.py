@@ -10,7 +10,7 @@ import tema
 
 MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
-# Paleta Editorial Rosa (tema claro). Los colores llegan por variables CSS desde tema.py.
+# Tokens de presentación compartidos. Los colores llegan por variables CSS desde tema.py.
 NEON = '#FF1493'
 ORO = '#D4AF37'
 
@@ -25,7 +25,7 @@ GLASS_CSS = """
 
 /* Fondo hueso y tipografía base */
 html,body,.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background:var(--atrio-bg)!important;color:var(--atrio-tinta)!important;font-family:'Inter',system-ui,sans-serif}
-[data-testid="stHeader"]{background:rgba(251,247,242,0.9)!important;backdrop-filter:blur(12px)}
+[data-testid="stHeader"]{background:rgba(var(--atrio-bg-rgb),0.9)!important;backdrop-filter:blur(12px)}
 [data-testid="stMain"] p,[data-testid="stMain"] label,[data-testid="stMain"] li,[data-testid="stMain"] span,[data-testid="stMain"] [data-testid="stMetricValue"],[data-testid="stMain"] [data-testid="stMetricLabel"]{color:var(--atrio-tinta)}
 [data-testid="stCaptionContainer"] p,[data-testid="stMain"] small{color:var(--atrio-tenue)!important}
 h1,h2,h3,h4{font-family:'Playfair Display',Georgia,serif!important;color:var(--atrio-titulo)!important;letter-spacing:.2px}
@@ -66,7 +66,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',Georgia,serif!important;color:var(--a
 [data-testid="stAlert"] svg{color:var(--atrio-neon)!important;fill:var(--atrio-neon)!important}
 
 /* Encabezado tipo héroe */
-.atrio-hero{background:var(--atrio-surface);box-shadow:var(--atrio-sombra);border:1px solid var(--atrio-borde);border-left:6px solid var(--atrio-neon);padding:28px 32px;border-radius:16px;margin-bottom:24px;color:var(--atrio-tinta)}
+.atrio-hero{background:var(--atrio-hero-gradient);box-shadow:var(--atrio-sombra);border:1px solid var(--atrio-borde);border-left:6px solid var(--atrio-neon);padding:28px 32px;border-radius:16px;margin-bottom:24px;color:var(--atrio-tinta)}
 .atrio-hero small{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--atrio-oro);font-weight:700;margin-bottom:6px}
 .atrio-hero h1{font-family:'Playfair Display',Georgia,serif!important;font-size:40px;line-height:1.15;color:var(--atrio-titulo)!important;margin:4px 0 8px}
 .atrio-hero p{color:var(--atrio-tenue)!important;margin:0}
@@ -202,7 +202,6 @@ def home_html(data, alerts, dark, soft, strong, today):
         '__COUNT__': str(len(rows)),
         '__TODAY__': today.isoformat(),
         '__GREETING__': 'Buenos días' if now.hour < 12 else 'Buenas tardes' if now.hour < 20 else 'Buenas noches',
-        '__ALERT_TEXT__': f'{len(alerts)} pendientes confirmados · consulta y atiende su seguimiento.' if alerts else 'Sin pendientes confirmados. Los estados sin verificar requieren revisión.',
         '__SISAE_SUMMARY__': sisae_resume(),
         '__DARK_CSS__': dark_css,
         '__TEMA_CSS__': tema.root_css(),
@@ -215,7 +214,9 @@ def home_html(data, alerts, dark, soft, strong, today):
 
 
 def home(data, alerts, dark, soft, strong, today):
-    st.iframe(home_html(data, alerts, dark, soft, strong, today), height=1250)
+    # Inicio operativo usa la misma fuente de pendientes que Centro de Pendientes.
+    import tablero_inicio as TI
+    TI.render(data, today)
 
 
 # ATRIO · Navegación visual nativa de Streamlit.

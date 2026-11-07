@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATRIO · Laboratorio visual Fase 2</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#F5EFEC;--surface:#FFFCFA;--surface-2:#F8F1EF;--ink:#30262B;--muted:#796D70;
+  --line:rgba(76,52,60,.14);--accent:#A64F70;--accent-2:#D7A0B2;--gold:#B58B50;
+  --sidebar:#EEE3E5;--sidebar-ink:#34282E;--shadow:0 14px 38px rgba(63,38,48,.09);
+  --soft-accent:rgba(166,79,112,.11);--hero-grad:linear-gradient(118deg,#EED6DE 0%,#FBF7F4 54%,#D8A6B6 100%);
+  --calendar:#F3E0E6;--calendar-ink:#593344;--calendar-line:rgba(166,79,112,.22);
+  --font-head:Georgia,"Times New Roman",serif;--font-body:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --glass:0;--sidebar-border:var(--line);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:var(--font-body);background:var(--page);color:var(--ink)}
+body{padding:22px;background:
+ radial-gradient(circle at 8% 5%,rgba(214,160,178,.16),transparent 27rem),
+ radial-gradient(circle at 94% 92%,rgba(181,139,80,.10),transparent 24rem),#F5EFEC;transition:background .2s}
+body[data-theme="oro"]{background:radial-gradient(circle at 8% 5%,rgba(199,169,108,.18),transparent 28rem),#EDE9E2}
+body[data-theme="terracota"]{background:radial-gradient(circle at 8% 5%,rgba(201,129,99,.2),transparent 28rem),#F0E8E1}
+body[data-theme="glass-renovado"]{background:radial-gradient(circle at 15% 17%,rgba(184,121,153,.40),transparent 28rem),radial-gradient(circle at 88% 16%,rgba(63,126,154,.35),transparent 31rem),radial-gradient(circle at 72% 90%,rgba(177,139,82,.24),transparent 27rem),#111923}
+button{font:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.lab{max-width:1510px;margin:0 auto}
+.labbar{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px}
+.labidentity{display:flex;gap:12px;align-items:center}
+.labmark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--ink);color:#F7EEDC;font:22px var(--font-head);box-shadow:var(--shadow)}
+.labtitle{font-weight:750;letter-spacing:.02em}
+.labsub{font-size:11px;color:var(--muted);margin-top:3px}
+.labflag{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--accent);border:1px solid var(--line);padding:8px 11px;border-radius:999px;background:var(--surface)}
+.themechooser{display:flex;gap:7px;flex-wrap:wrap}
+.theme-btn{border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:9px 13px;font-size:12px;font-weight:650;cursor:pointer;transition:.18s}
+.theme-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.theme-btn[aria-pressed="true"]{background:var(--ink);color:#FFF;border-color:var(--ink);box-shadow:0 5px 15px rgba(0,0,0,.12)}
+.frame{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:900px;border:1px solid var(--line);border-radius:23px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.sidebar{background:var(--sidebar);color:var(--sidebar-ink);padding:24px 16px;display:flex;flex-direction:column;border-right:1px solid var(--sidebar-border)}
+.brand{font:30px var(--font-head);letter-spacing:.18em;color:var(--accent);padding:3px 10px}
+.brand-caption{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:3px 11px 24px}
+.navlabel{font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:0 11px 9px}
+.nav{display:grid;gap:4px}
+.navitem{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;color:var(--sidebar-ink);font-size:12px;font-weight:570}
+.navitem .ico{width:18px;text-align:center;color:var(--gold);font-size:15px}
+.navitem.active{background:var(--surface);color:var(--ink);box-shadow:0 5px 15px rgba(0,0,0,.05);border-left:3px solid var(--accent);padding-left:9px;font-weight:750}
+.navnote{margin-top:auto;padding:15px 10px 0;border-top:1px solid var(--line);font-size:10px;color:var(--muted);line-height:1.5}
+.navnote strong{display:block;color:var(--accent);font-size:11px;margin-bottom:4px}
+.main{padding:25px 30px 34px;min-width:0}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:19px}
+.eyebrow{font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.topright{display:flex;gap:10px;align-items:center}
+.demo-date{font-size:11px;color:var(--muted);padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--soft-accent);color:var(--accent);font:14px var(--font-head);border:1px solid var(--line)}
+.welcome{display:grid;grid-template-columns:minmax(0,1fr) 306px;gap:19px;align-items:stretch;background:var(--hero-grad);border:1px solid var(--line);border-radius:19px;padding:22px;position:relative;overflow:hidden}
+.welcome:after{content:"";position:absolute;width:300px;height:220px;border-radius:50%;right:160px;top:-150px;background:rgba(255,255,255,.23);filter:blur(22px);pointer-events:none}
+.welcome-copy{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;min-height:214px}
+.welcome-kicker{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:850}
+.welcome h1{font:clamp(29px,3.2vw,43px)/1.08 var(--font-head);font-weight:500;letter-spacing:-.035em;margin:13px 0 9px;color:var(--ink)}
+.welcome p{margin:0;color:var(--muted);font-size:13px;max-width:560px;line-height:1.65}
+.welcome-foot{margin-top:18px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:750}
+.calendar{position:relative;z-index:1;background:var(--calendar);border:1px solid var(--calendar-line);border-radius:15px;padding:15px;color:var(--calendar-ink);box-shadow:0 10px 22px rgba(90,50,65,.08)}
+.cal-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.cal-title{font:18px var(--font-head)}
+.cal-year{font-size:10px;letter-spacing:.12em;color:var(--accent);font-weight:800}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calendar-grid span{font-size:10px;padding:6px 0;border-radius:8px}
+.calendar-grid .weekday{font-size:9px;font-weight:850;color:var(--accent);padding-bottom:7px}
+.calendar-grid .faded{opacity:.28}
+.calendar-grid .today{background:var(--accent);color:white;font-weight:850;box-shadow:0 4px 10px rgba(91,42,62,.2)}
+.cal-foot{border-top:1px solid var(--calendar-line);margin-top:10px;padding-top:9px;display:flex;justify-content:space-between;font-size:10px;color:var(--calendar-ink)}
+.title-strip{margin-top:19px;border-radius:13px;padding:15px 19px;background:#171516;color:#FFF;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 8px 21px rgba(22,18,19,.16)}
+.title-strip .strip-label{font:19px var(--font-head);letter-spacing:.01em}
+.title-strip .strip-label strong{color:#D8BD83;font-weight:500}
+.title-strip .strip-meta{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#D4C8C3}
+.title-strip .gold-dot{width:7px;height:7px;border-radius:50%;background:#D8BD83;display:inline-block;margin-right:7px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:0 5px 17px rgba(35,25,26,.035);min-width:0}
+.metric-head{display:flex;align-items:center;justify-content:space-between;gap:9px;color:var(--muted);font-size:10px;font-weight:700}
+.metric-icon{height:30px;width:30px;border-radius:9px;background:var(--soft-accent);color:var(--accent);display:grid;place-items:center;font-size:14px}
+.metric-value{font:32px var(--font-head);margin-top:10px;letter-spacing:-.03em}
+.metric-note{font-size:10px;color:var(--muted);margin-top:4px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:24px 0 12px}
+.section-head h2{font:21px var(--font-head);font-weight:500;margin:0}
+.section-head small{font-size:10px;color:var(--muted)}
+.workgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 6px 20px rgba(35,25,26,.035);min-width:0}
+.panel-title{font-weight:760;font-size:12px;margin-bottom:5px}
+.panel-sub{font-size:10px;color:var(--muted);margin-bottom:15px}
+.progress-row{display:grid;grid-template-columns:100px 1fr 36px;gap:10px;align-items:center;margin:13px 0;font-size:10px}
+.progress-label{font-weight:700}
+.track{height:7px;border-radius:99px;background:var(--soft-accent);overflow:hidden}
+.fill{height:100%;border-radius:99px;background:var(--accent)}
+.progress-num{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.priority{display:grid;grid-template-columns:36px 1fr auto;gap:11px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.priority:first-of-type{border-top:0}
+.priority-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--soft-accent);color:var(--accent)}
+.priority strong{display:block;font-size:11px;margin-bottom:4px}
+.priority small{display:block;color:var(--muted);font-size:9px}
+.tag{border-radius:999px;padding:5px 8px;font-size:9px;font-weight:800;white-space:nowrap;color:var(--accent);background:var(--soft-accent)}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:10px}
+th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;background:var(--surface-2);padding:12px}
+td{padding:13px 12px;border-top:1px solid var(--line);white-space:nowrap}
+td:first-child{font-weight:750}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.status.ok:before{background:#39865B}
+.status.review:before{background:#C08B3C}
+.footer-note{font-size:9px;color:var(--muted);margin-top:18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.palette{display:flex;gap:5px;align-items:center}
+.swatch{width:15px;height:15px;border-radius:5px;border:1px solid rgba(0,0,0,.08)}
+/* Editorial Oro */
+[data-theme="oro"]{--page:#EDE9E2;--surface:#FFFCF6;--surface-2:#F5F0E7;--ink:#28241F;--muted:#6E675D;--line:rgba(55,44,30,.17);--accent:#987342;--accent-2:#C7A96C;--gold:#C7A96C;--sidebar:#28241F;--sidebar-ink:#F5EFE4;--shadow:0 15px 40px rgba(37,29,19,.13);--soft-accent:rgba(152,115,66,.13);--hero-grad:linear-gradient(118deg,#E7DCCB 0%,#FBF8F1 52%,#D9C39C 100%);--calendar:#F2E1E5;--calendar-ink:#563A42;--calendar-line:rgba(166,79,112,.22)}
+[data-theme="terracota"]{--page:#F0E8E1;--surface:#FFFBF7;--surface-2:#F6EEE7;--ink:#382A25;--muted:#76635A;--line:rgba(78,49,38,.16);--accent:#A6533C;--accent-2:#C98163;--gold:#B88C60;--sidebar:#382A25;--sidebar-ink:#F7EEE7;--shadow:0 14px 36px rgba(74,42,31,.10);--soft-accent:rgba(166,83,60,.12);--hero-grad:linear-gradient(118deg,#E8C9B9 0%,#FCF7F1 54%,#D5A18A 100%);--calendar:#F3E0E5;--calendar-ink:#5D3940;--calendar-line:rgba(166,79,112,.22)}
+/* Glass Executive: transparencia visible, capas de fondo y blur real */
+[data-theme="glass-renovado"]{--page:#111923;--surface:rgba(236,243,248,.105);--surface-2:rgba(236,243,248,.075);--ink:#F4F1EC;--muted:#B6C2CC;--line:rgba(255,255,255,.19);--accent:#D5A9BE;--accent-2:#D5A9BE;--gold:#D9BD83;--sidebar:rgba(15,24,34,.55);--sidebar-ink:#EDF1F3;--shadow:0 18px 46px rgba(0,0,0,.27);--soft-accent:rgba(213,169,190,.15);--hero-grad:linear-gradient(125deg,rgba(213,169,190,.20),rgba(255,255,255,.06) 54%,rgba(217,189,131,.16));--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25);--glass:1}
+[data-theme="glass-renovado"] .frame,[data-theme="glass-renovado"] .sidebar,[data-theme="glass-renovado"] .metric,[data-theme="glass-renovado"] .panel,[data-theme="glass-renovado"] .tablewrap{backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}
+[data-theme="glass-renovado"] .frame{background:rgba(12,20,29,.38);border-color:rgba(255,255,255,.18)}
+[data-theme="glass-renovado"] .sidebar{border-right:1px solid rgba(255,255,255,.16)}
+[data-theme="glass-renovado"] .metric,[data-theme="glass-renovado"] .panel,[data-theme="glass-renovado"] .tablewrap{background:rgba(239,245,249,.075);border-color:rgba(255,255,255,.16)}
+[data-theme="glass-renovado"] th{background:rgba(255,255,255,.08);color:#D8E1E8}
+[data-theme="glass-renovado"] td{border-color:rgba(255,255,255,.12)}
+[data-theme="glass-renovado"] .theme-btn{background:rgba(255,255,255,.08);color:#F4F1EC;border-color:rgba(255,255,255,.18);backdrop-filter:blur(15px)}
+[data-theme="glass-renovado"] .theme-btn[aria-pressed="true"]{background:rgba(255,255,255,.22);border-color:#D9BD83}
+[data-theme="glass-renovado"] .labflag{background:rgba(255,255,255,.08);color:#F1D8E2;border-color:rgba(255,255,255,.2)}
+[data-theme="glass-renovado"] .labmark{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2)}
+[data-theme="glass-renovado"] .welcome{border-color:rgba(255,255,255,.2)}
+[data-theme="glass-renovado"] .title-strip{background:rgba(5,8,12,.7);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(15px)}
+[data-theme="glass-renovado"] .tablewrap{background:rgba(239,245,249,.06)}
+
+/* Temas existentes en tema.py: reproducción de sus tokens originales */
+[data-theme="rosa-anterior"]{--page:#FBF7F2;--surface:#FFFFFF;--surface-2:#F7F0E8;--ink:#2A2326;--muted:#6B6063;--line:rgba(42,35,38,.14);--accent:#FF1493;--accent-2:#FF1493;--gold:#D4AF37;--sidebar:#F4EDE4;--sidebar-ink:#2A2326;--shadow:0 6px 24px rgba(42,35,38,.08);--soft-accent:rgba(255,20,147,.14);--hero-grad:linear-gradient(118deg,#F8E8EF 0%,#FBF7F2 54%,#E9C5D4 100%);--calendar:#F3E0E6;--calendar-ink:#593344;--calendar-line:rgba(255,20,147,.22)}
+[data-theme="premium"]{--page:#FBF7F2;--surface:#FFFFFF;--surface-2:#F7F0E8;--ink:#2A2326;--muted:#6B6063;--line:rgba(42,35,38,.14);--accent:#6D1F2F;--accent-2:#9A4050;--gold:#9A7A45;--sidebar:#F4EDE4;--sidebar-ink:#2A2326;--shadow:0 6px 24px rgba(42,35,38,.08);--soft-accent:rgba(109,31,47,.13);--hero-grad:linear-gradient(118deg,#EAD9D5 0%,#FBF7F2 54%,#D9C4B7 100%);--calendar:#F0E3DF;--calendar-ink:#4C3030;--calendar-line:rgba(109,31,47,.22)}
+[data-theme="japandi"]{--page:#FAFAF9;--surface:#FFFFFF;--surface-2:#F1F1EC;--ink:#1C1917;--muted:#57534E;--line:rgba(28,25,23,.14);--accent:#5F7A5E;--accent-2:#7D9678;--gold:#8A7F5B;--sidebar:#F1F1EC;--sidebar-ink:#1C1917;--shadow:0 6px 24px rgba(28,25,23,.07);--soft-accent:rgba(95,122,94,.13);--hero-grad:linear-gradient(118deg,#E6EAE2 0%,#FAFAF9 54%,#D8DFD2 100%);--calendar:#E9EDE5;--calendar-ink:#354635;--calendar-line:rgba(95,122,94,.22)}
+[data-theme="cyber"]{--page:#0F172A;--surface:#1E293B;--surface-2:#26364A;--ink:#F8FAFC;--muted:#CBD5E1;--line:rgba(255,255,255,.16);--accent:#22D3EE;--accent-2:#38BDF8;--gold:#38BDF8;--sidebar:#0B1222;--sidebar-ink:#F8FAFC;--shadow:0 10px 30px rgba(0,0,0,.28);--soft-accent:rgba(34,211,238,.15);--hero-grad:linear-gradient(118deg,#17354A 0%,#1E293B 54%,#1C3D55 100%);--calendar:#243B50;--calendar-ink:#F1F7FA;--calendar-line:rgba(34,211,238,.28)}
+[data-theme="glass-anterior"]{--page:#09090B;--surface:#18181B;--surface-2:#202024;--ink:#F5F1EA;--muted:#A1A1AA;--line:rgba(255,255,255,.12);--accent:#FF1493;--accent-2:#FF1493;--gold:#D4AF37;--sidebar:#09090B;--sidebar-ink:#F5F1EA;--shadow:0 0 20px rgba(255,20,147,.25);--soft-accent:rgba(255,20,147,.14);--hero-grad:linear-gradient(118deg,#272027 0%,#18181B 54%,#30222C 100%);--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25)}
+body[data-theme="rosa-anterior"]{background:radial-gradient(circle at 8% 5%,rgba(255,20,147,.12),transparent 27rem),#FBF7F2}
+body[data-theme="premium"]{background:radial-gradient(circle at 8% 5%,rgba(109,31,47,.12),transparent 27rem),#FBF7F2}
+body[data-theme="japandi"]{background:radial-gradient(circle at 8% 5%,rgba(95,122,94,.13),transparent 27rem),#FAFAF9}
+body[data-theme="cyber"]{background:radial-gradient(circle at 8% 5%,rgba(34,211,238,.18),transparent 27rem),#0F172A}
+body[data-theme="glass-anterior"]{background:radial-gradient(circle at 12% 10%,rgba(255,20,147,.18),transparent 28rem),#09090B}
+[data-theme="cyber"] .sidebar,[data-theme="cyber"] .metric,[data-theme="cyber"] .panel{background:#1E293B}
+[data-theme="glass-anterior"] .sidebar{background:#09090B}
+
+
+/* ATRIO Órbita: identidad exclusiva basada en gestión, precisión y movimiento */
+[data-theme="orbita"]{--page:#F1F0E8;--surface:#FFFEF8;--surface-2:#E8EEE9;--ink:#172F3B;--muted:#586C70;--line:rgba(23,47,59,.16);--accent:#087E83;--accent-2:#D4E36A;--gold:#D4E36A;--sidebar:#172F3B;--sidebar-ink:#F5F4EA;--shadow:0 16px 42px rgba(18,49,57,.13);--soft-accent:rgba(8,126,131,.13);--hero-grad:linear-gradient(118deg,#D6E9E2 0%,#F7F5E9 53%,#D4E36A 125%);--calendar:#F5E8C8;--calendar-ink:#243E43;--calendar-line:rgba(8,126,131,.25)}
+body[data-theme="orbita"]{background:radial-gradient(circle at 7% 8%,rgba(8,126,131,.19),transparent 28rem),radial-gradient(circle at 92% 88%,rgba(212,227,106,.22),transparent 25rem),#E9EDE5}
+[data-theme="orbita"] .title-strip{background:#172F3B;border:1px solid rgba(212,227,106,.25)}
+[data-theme="orbita"] .title-strip .strip-label strong,[data-theme="orbita"] .title-strip .gold-dot{color:#D4E36A;background:#D4E36A}
+[data-theme="orbita"] .brand{color:#087E83}
+[data-theme="orbita"] .navitem.active{box-shadow:inset 3px 0 #D4E36A,0 5px 15px rgba(0,0,0,.07)}
+[data-theme="orbita"] .metric-icon{border-radius:50%}
+[data-theme="orbita"] .calendar{box-shadow:0 12px 25px rgba(8,66,71,.12)}
+.customizer{margin:0 0 16px;padding:18px 20px;border:1px solid var(--line);border-radius:17px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink)}
+.customizer[hidden]{display:none}
+.customizer-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.customizer-heading strong{font:20px var(--font-head)}
+.customizer-heading p,.customizer-hint{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
+.color-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.color-controls label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);font-size:11px;font-weight:700}
+.color-controls input{width:43px;height:34px;border:0;background:transparent;padding:0;cursor:pointer}
+.reset-btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:9px 13px;font-size:11px;font-weight:750;cursor:pointer}
+.customizer-hint{margin-top:12px}
+[data-theme="personalizado"]{--page:var(--user-page,#F1F0E8);--surface:#FFFEF8;--surface-2:color-mix(in srgb,var(--user-accent) 8%,#FFFFFF);--ink:#172F3B;--muted:#586C70;--line:rgba(23,47,59,.16);--accent:var(--user-accent,#087E83);--accent-2:var(--user-secondary,#D4E36A);--gold:var(--user-secondary,#D4E36A);--sidebar:#172F3B;--sidebar-ink:#F5F4EA;--shadow:0 16px 42px rgba(18,49,57,.13);--soft-accent:color-mix(in srgb,var(--user-accent) 13%,transparent);--hero-grad:linear-gradient(118deg,color-mix(in srgb,var(--user-accent) 17%,white),#F7F5E9 55%,color-mix(in srgb,var(--user-secondary) 35%,white));--calendar:var(--user-calendar,#F5E8C8);--calendar-ink:#243E43;--calendar-line:color-mix(in srgb,var(--user-accent) 25%,transparent)}
+body[data-theme="personalizado"]{background:radial-gradient(circle at 7% 8%,color-mix(in srgb,var(--user-accent) 18%,transparent),transparent 28rem),var(--user-page,#F1F0E8)}
+[data-theme="personalizado"] .title-strip{background:#172F3B;border:1px solid color-mix(in srgb,var(--user-secondary) 35%,transparent)}
+[data-theme="personalizado"] .title-strip .strip-label strong,[data-theme="personalizado"] .title-strip .gold-dot{color:var(--user-secondary);background:var(--user-secondary)}
+@media(max-width:760px){.color-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.color-controls{grid-template-columns:1fr}}
+
+@media(max-width:1080px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.welcome{grid-template-columns:minmax(0,1fr) 280px}.main{padding:21px}}
+@media(max-width:760px){body{padding:10px}.frame{grid-template-columns:1fr}.sidebar{padding:13px 14px;display:block}.brand{font-size:23px;padding:0 7px}.brand-caption,.navlabel,.navnote{display:none}.nav{display:flex;overflow-x:auto;padding:9px 0 1px;gap:5px}.navitem{white-space:nowrap;padding:9px 10px;font-size:10px}.navitem.active{border-left:0;border-bottom:2px solid var(--accent)}.main{padding:16px}.welcome{grid-template-columns:1fr}.welcome-copy{min-height:145px}.calendar{max-width:380px;width:100%}.workgrid{grid-template-columns:1fr}.title-strip{align-items:flex-start;flex-direction:column}.labbar{align-items:flex-start}.themechooser{width:100%}.theme-btn{flex:1 1 42%}}
+@media(max-width:440px){.metrics{grid-template-columns:1fr 1fr;gap:8px}.metric{padding:12px}.metric-value{font-size:27px}.welcome{padding:16px}.welcome h1{font-size:30px}.topline{align-items:flex-start}.demo-date{font-size:9px}.labflag{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="lab" id="laboratorio" data-theme="orbita">
+  <header class="labbar">
+    <div class="labidentity">
+      <div class="labmark" aria-hidden="true">A</div>
+      <div><div class="labtitle">ATRIO · Laboratorio visual</div><div class="labsub">Fase 2 · Identidad visual propia y personalizable</div></div>
+      <span class="labflag">10 VARIANTES · SOLO DEMOSTRACIÓN · DATOS FICTICIOS</span>
+    </div>
+    <div class="themechooser" role="group" aria-label="Seleccionar tema visual">
+      <button class="theme-btn" type="button" data-select-theme="orbita" aria-pressed="true">ATRIO Órbita · Exclusivo</button>
+      <button class="theme-btn" type="button" data-select-theme="rosa-renovado" aria-pressed="false">Rosa · Renovado</button>
+      <button class="theme-btn" type="button" data-select-theme="rosa-anterior" aria-pressed="false">Rosa · Anterior</button>
+      <button class="theme-btn" type="button" data-select-theme="premium" aria-pressed="false">Editorial Premium</button>
+      <button class="theme-btn" type="button" data-select-theme="japandi" aria-pressed="false">Japandi</button>
+      <button class="theme-btn" type="button" data-select-theme="cyber" aria-pressed="false">Cyber-Neon</button>
+      <button class="theme-btn" type="button" data-select-theme="glass-anterior" aria-pressed="false">Glass · Anterior</button>
+      <button class="theme-btn" type="button" data-select-theme="glass-renovado" aria-pressed="false">Glass · Renovado</button>
+      <button class="theme-btn" type="button" data-select-theme="oro" aria-pressed="false">Editorial Oro · Nuevo</button>
+      <button class="theme-btn" type="button" data-select-theme="terracota" aria-pressed="false">Editorial Terracota · Nuevo</button>
+      <button class="theme-btn" type="button" data-select-theme="personalizado" aria-pressed="false">Personalizar · Mi paleta</button>
+    </div>
+  </header>
+
+
+  <section class="customizer" id="personalizador" hidden aria-label="Personalizar colores de ATRIO">
+    <div class="customizer-heading">
+      <div><strong>Tu identidad, tus colores</strong><p>Modifica la paleta y observa el resultado al instante. Esta prueba no guarda cambios en ATRIO.</p></div>
+      <button class="reset-btn" id="reset-colors" type="button">Restablecer paleta</button>
+    </div>
+    <div class="color-controls">
+      <label>Fondo general <input type="color" id="pick-page" value="#F1F0E8"></label>
+      <label>Color principal <input type="color" id="pick-accent" value="#087E83"></label>
+      <label>Color secundario <input type="color" id="pick-secondary" value="#D4E36A"></label>
+      <label>Calendario <input type="color" id="pick-calendar" value="#F5E8C8"></label>
+    </div>
+    <p class="customizer-hint">La tipografía y los fondos de lectura permanecen controlados para conservar contraste. Puedes probar combinaciones sin alterar información ni archivos.</p>
+  </section>
+
+  <div class="frame">
+    <aside class="sidebar">
+      <div class="brand">ATRIO</div>
+      <div class="brand-caption">CECATI 31 · Gestión académica</div>
+      <div class="navlabel">Espacio de trabajo</div>
+      <nav class="nav" aria-label="Navegación demostrativa">
+        <div class="navitem active"><span class="ico">⌂</span>Inicio</div>
+        <div class="navitem"><span class="ico">▦</span>Programación</div>
+        <div class="navitem"><span class="ico">◷</span>Mi Calendario</div>
+        <div class="navitem"><span class="ico">◇</span>Pendientes</div>
+        <div class="navitem"><span class="ico">▤</span>Preparar PEA</div>
+        <div class="navitem"><span class="ico">▣</span>Mis PEA</div>
+        <div class="navitem"><span class="ico">⌕</span>Revisor</div>
+        <div class="navitem"><span class="ico">⚙</span>Ajustes</div>
+      </nav>
+      <div class="navnote"><strong>Vista de laboratorio</strong>Los apartados son ilustrativos. No abren módulos ni realizan operaciones.</div>
+    </aside>
+
+    <main class="main">
+      <div class="topline">
+        <div class="eyebrow">Jefatura de Capacitación · Panel de control</div>
+        <div class="topright"><span class="demo-date">VIERNES · 06 NOV 2026</span><span class="avatar">E</span></div>
+      </div>
+
+      <section class="welcome">
+        <div class="welcome-copy">
+          <div class="welcome-kicker">CECATI N.º 31 · COATZACOALCOS</div>
+          <h1>Bienvenida a tu espacio de gestión.</h1>
+          <p>Una visión clara de la programación, los documentos y el seguimiento académico del plantel.</p>
+          <div class="welcome-foot">Habilidades reales · Oportunidades reales</div>
+        </div>
+        <div class="calendar" aria-label="Calendario demostrativo de noviembre de 2026">
+          <div class="cal-top"><span class="cal-title">Noviembre</span><span class="cal-year">2026</span></div>
+          <div class="calendar-grid">
+            <span class="weekday">L</span><span class="weekday">M</span><span class="weekday">M</span><span class="weekday">J</span><span class="weekday">V</span><span class="weekday">S</span><span class="weekday">D</span>
+            <span class="faded">26</span><span class="faded">27</span><span class="faded">28</span><span class="faded">29</span><span class="faded">30</span><span class="faded">31</span><span>1</span>
+            <span>2</span><span>3</span><span>4</span><span>5</span><span class="today">6</span><span>7</span><span>8</span>
+            <span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+            <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
+            <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+            <span>30</span>
+          </div>
+          <div class="cal-foot"><span>Hoy · 6 de noviembre</span><strong>Coatzacoalcos</strong></div>
+        </div>
+      </section>
+
+      <section class="title-strip">
+        <div class="strip-label"><span class="gold-dot"></span><strong>PEA</strong> y trámites en MCE</div>
+        <div class="strip-meta">Seguimiento académico · Ciclo 2026–2027</div>
+      </section>
+
+      <section class="metrics" aria-label="Indicadores demostrativos">
+        <article class="metric"><div class="metric-head"><span>Grupos programados</span><span class="metric-icon">▦</span></div><div class="metric-value">24</div><div class="metric-note">Datos ficticios de demostración</div></article>
+        <article class="metric"><div class="metric-head"><span>PEA en revisión</span><span class="metric-icon">✎</span></div><div class="metric-value">08</div><div class="metric-note">Documentos de ejemplo</div></article>
+        <article class="metric"><div class="metric-head"><span>Trámites MCE</span><span class="metric-icon">▤</span></div><div class="metric-value">05</div><div class="metric-note">Seguimientos ilustrativos</div></article>
+        <article class="metric"><div class="metric-head"><span>Próximos cierres</span><span class="metric-icon">◷</span></div><div class="metric-value">03</div><div class="metric-note">Fechas simuladas</div></article>
+      </section>
+
+      <div class="section-head"><h2>Panorama de trabajo</h2><small>Resumen ilustrativo · No conectado a registros</small></div>
+      <section class="workgrid">
+        <article class="panel">
+          <div class="panel-title">Programación por modalidad</div><div class="panel-sub">Distribución ficticia de los grupos del ciclo</div>
+          <div class="progress-row"><span class="progress-label">Extensión</span><div class="track"><div class="fill" style="width:72%"></div></div><span class="progress-num">72%</span></div>
+          <div class="progress-row"><span class="progress-label">Regulares</span><div class="track"><div class="fill" style="width:48%"></div></div><span class="progress-num">48%</span></div>
+          <div class="progress-row"><span class="progress-label">Repositorio</span><div class="track"><div class="fill" style="width:31%"></div></div><span class="progress-num">31%</span></div>
+          <div class="footer-note"><span>Indicadores de muestra</span><span>Actualización simulada</span></div>
+        </article>
+        <article class="panel">
+          <div class="panel-title">Atención prioritaria</div><div class="panel-sub">Ejemplos de tareas y estados</div>
+          <div class="priority"><span class="priority-icon">◷</span><div><strong>Revisión de PEA</strong><small>Curso de ejemplo · Docente A</small></div><span class="tag">Revisar</span></div>
+          <div class="priority"><span class="priority-icon">▤</span><div><strong>Trámite MCE</strong><small>Expediente de demostración</small></div><span class="tag">En proceso</span></div>
+          <div class="priority"><span class="priority-icon">✓</span><div><strong>Validación documental</strong><small>Registro ficticio · Sin vencimiento</small></div><span class="tag">Listo</span></div>
+        </article>
+      </section>
+
+      <div class="section-head"><h2>Programación de ejemplo</h2><small>Información inventada para comparar estilos</small></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Curso</th><th>Docente</th><th>Inicio</th><th>Término</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td>Informática básica</td><td>Docente de prueba A</td><td>10 nov 2026</td><td>10 dic 2026</td><td><span class="status review">En revisión</span></td></tr>
+            <tr><td>Electricidad residencial</td><td>Docente de prueba B</td><td>17 nov 2026</td><td>18 dic 2026</td><td><span class="status">Programado</span></td></tr>
+            <tr><td>Diseño de presentaciones</td><td>Docente de prueba C</td><td>24 nov 2026</td><td>19 dic 2026</td><td><span class="status ok">Documentación lista</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        <span>ATRIO · Laboratorio visual independiente</span>
+        <span>Los temas anteriores reproducen la paleta definida en tema.py; las variantes renovadas y los temas nuevos son propuestas visuales. La selección solo cambia esta maqueta.</span>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('laboratorio');
+  const buttons = Array.from(document.querySelectorAll('[data-select-theme]'));
+  const panel = document.getElementById('personalizador');
+  const defaults = {page:'#F1F0E8',accent:'#087E83',secondary:'#D4E36A',calendar:'#F5E8C8'};
+  const fields = {
+    page:document.getElementById('pick-page'),
+    accent:document.getElementById('pick-accent'),
+    secondary:document.getElementById('pick-secondary'),
+    calendar:document.getElementById('pick-calendar')
+  };
+  function setTheme(name){
+    root.dataset.theme=name;
+    document.body.dataset.theme=name;
+    panel.hidden=name!=='personalizado';
+    for(const button of buttons) button.setAttribute('aria-pressed',String(button.dataset.selectTheme===name));
+  }
+  function applyColors(){
+    document.documentElement.style.setProperty('--user-page',fields.page.value);
+    document.documentElement.style.setProperty('--user-accent',fields.accent.value);
+    document.documentElement.style.setProperty('--user-secondary',fields.secondary.value);
+    document.documentElement.style.setProperty('--user-calendar',fields.calendar.value);
+  }
+  for(const button of buttons){
+    button.addEventListener('click',()=>setTheme(button.dataset.selectTheme));
+  }
+  for(const field of Object.values(fields)){
+    field.addEventListener('input',applyColors);
+    field.addEventListener('change',applyColors);
+  }
+  document.getElementById('reset-colors').addEventListener('click',()=>{
+    for(const [key,value] of Object.entries(defaults)) fields[key].value=value;
+    applyColors();
+  });
+  applyColors();
+})();
+</script>
+</body>
+</html>

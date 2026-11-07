@@ -31,7 +31,17 @@ DARK=False
 if not C.setting('tema_migrado_claro',False):
  C.set_setting('tema_visual',tema.DEFECTO)
  C.set_setting('tema_migrado_claro',True)
-tema.fijar(C.setting('tema_visual',tema.DEFECTO))
+# La paleta de Órbita se conserva en Ajustes y se previsualiza en vivo desde los color pickers.
+_PALETA_KEY_PREFIX = '_atrio_orbita_paleta_'
+_paleta_base = tema.paleta_predeterminada()
+_paleta_guardada = tema.validar_paleta(C.setting('tema_paleta_personalizada',{}))
+for _campo, _valor in _paleta_base.items():
+ st.session_state.setdefault(_PALETA_KEY_PREFIX + _campo, _paleta_guardada.get(_campo,_valor))
+_paleta_previa = {
+ _campo: st.session_state.get(_PALETA_KEY_PREFIX + _campo,_valor)
+ for _campo,_valor in _paleta_base.items()
+}
+tema.fijar(C.setting('tema_visual',tema.DEFECTO),_paleta_previa)
 UI.theme(DARK)
 AC.exigir()  # Acceso privado: nada se muestra antes de la contraseña.
 try:
@@ -59,17 +69,7 @@ if query:
   found=st.selectbox('Resultados',hits,format_func=lambda g:f"{g['hoja']} · {g['nombre']} · {g['inicio']}")
   if st.button('Abrir curso'):
    st.session_state['selected']=found['id'];st.session_state['teacher']=found['hoja'];st.session_state['editor_group']=found['id'];st.session_state['pea110_stage']='contenido';st.session_state['jump']='Preparar PEA';st.rerun()
-alerts=[]
-for g in data_operativos:
- s=C.status(g['id'])
- if s['mce']=='Observado':alerts.append((g,'PEA devuelto con observaciones'))
- elif g['tipo']!='Regular' and s['mce']=='No subido':alerts.append((g,'PEA pendiente de subir al MCE'))
- elif s['doc']=='Sin PEA':alerts.append((g,'PEA confirmado por elaborar'))
-st.sidebar.caption(f'{len(alerts)} pendientes confirmados · los sin verificar no se cuentan como atrasos')
-if alerts:
- st.markdown(f'<div class="floating">● {len(alerts)} pendientes por atender</div>',unsafe_allow_html=True)
- with st.sidebar.expander('Ver pendientes',expanded=False):
-  for g,msg in alerts:st.write(f"{g['nombre']} · {msg}")
+alerts=[]  # El seguimiento se concentra en Inicio y Centro de Pendientes.
 if nav not in ('Inicio','Programación','Mi Calendario','Pendientes','Reprogramación','Adaptar PDF','Acciones Móviles','Preparar PEA','PEA históricos','Preparar documento','Seguimiento y MCE','Control escolar','Constancias y folios','Revisor','Asistente virtual','Auditoría histórica'):UI.heading(nav,a,b)
 def show_group(g):
  st.subheader(g['nombre']);st.caption(f"{g['hoja']} · {g['tipo']} · {g['duracion']:g} horas")
@@ -84,8 +84,6 @@ def select_group(key='select'):
 
 if nav=='Inicio':
  UI.home(data_operativos,alerts,DARK,a,b,today)
- if st.button('Abrir seguimiento de PEA y MCE →',key='home_follow'):
-  st.session_state['jump']='Seguimiento y MCE';st.rerun()
 
 elif nav in ('Programación','Preparar PEA','Control escolar','Constancias y folios','Seguimiento y MCE'):
  number={'Programación':2,'Preparar PEA':3,'Seguimiento y MCE':3,'Control escolar':4,'Constancias y folios':5}[nav]
@@ -146,6 +144,8 @@ elif nav=='Auditoría histórica':
 
 elif nav=='Ajustes':
  OM.panel_ajustes(PAGES,C)
+ if st.session_state.pop('_atrio_orbita_palette_saved',False):
+  st.success('Paleta guardada y ATRIO Órbita aplicado.')
  with st.expander('Instituciones y sedes ACM · Catálogo editable',expanded=False):
   ACM.panel_catalogo(C)
  if st.button('Actualizar o comparar respaldos SISAE →'):st.session_state['jump']='SISAE · Cortes';st.rerun()
@@ -217,6 +217,35 @@ elif nav=='Ajustes':
    except Exception as e:st.error(str(e))
   checked=st.checkbox('Confirmo que estos días corresponden al calendario que usaré',value=C.setting('calendario_confirmado',False))
   if st.button('Guardar confirmación del calendario'):C.set_setting('calendario_confirmado',checked);st.success('Confirmación guardada.')
+ with st.expander('Personalizar · Mi paleta',expanded=False):
+  st.caption('Ajusta cuatro colores de ATRIO Órbita. Los cambios se previsualizan en vivo cuando ese tema está activo; la tipografía y las superficies de lectura se mantienen controladas para conservar el contraste.')
+  if tema.activo()!=tema.ORBITA:
+   st.info('Para ver los cambios en la aplicación, selecciona «ATRIO Órbita» en el apartado Autoridades y presentación.')
+  if st.button('Restablecer paleta original de Órbita',key='orbita_palette_reset'):
+   C.set_setting('tema_paleta_personalizada',{})
+   for _campo in _paleta_base:
+    st.session_state.pop(_PALETA_KEY_PREFIX + _campo,None)
+   st.rerun()
+  _cols_paleta=st.columns(4)
+  _etiquetas_paleta=[
+   ('fondo','Fondo general'),
+   ('acento','Color principal'),
+   ('secundario','Color secundario'),
+   ('calendario','Calendario'),
+  ]
+  _paleta_borrador={}
+  for _col,(_campo,_etiqueta) in zip(_cols_paleta,_etiquetas_paleta):
+   with _col:
+    _paleta_borrador[_campo]=st.color_picker(
+     _etiqueta,
+     value=st.session_state.get(_PALETA_KEY_PREFIX + _campo,_paleta_base[_campo]),
+     key=_PALETA_KEY_PREFIX + _campo,
+    )
+  if st.button('Guardar paleta y aplicar ATRIO Órbita',key='orbita_palette_save',type='primary'):
+   C.set_setting('tema_paleta_personalizada',tema.validar_paleta(_paleta_borrador))
+   C.set_setting('tema_visual',tema.ORBITA)
+   st.session_state['_atrio_orbita_palette_saved']=True
+   st.rerun()
  with st.expander('Autoridades y presentación',expanded=False):
   with st.form('settings'):
    valida=st.text_input('Valida',C.setting('valida','Lila Inurreta Fernández'));visto=st.text_input('Visto bueno',C.setting('visto','Lila Inurreta Fernández'));autoriza=st.text_input('Autoriza',C.setting('autoriza','Sergio López Hernández'))
