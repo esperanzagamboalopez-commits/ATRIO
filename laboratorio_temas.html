@@ -19,8 +19,12 @@
 html,body{margin:0;min-height:100%;font-family:var(--font-body);background:var(--page);color:var(--ink)}
 body{padding:22px;background:
  radial-gradient(circle at 8% 5%,rgba(214,160,178,.16),transparent 27rem),
- radial-gradient(circle at 94% 92%,rgba(181,139,80,.10),transparent 24rem),var(--page)}
+ radial-gradient(circle at 94% 92%,rgba(181,139,80,.10),transparent 24rem),#F5EFEC;transition:background .2s}
+body[data-theme="oro"]{background:radial-gradient(circle at 8% 5%,rgba(199,169,108,.18),transparent 28rem),#EDE9E2}
+body[data-theme="terracota"]{background:radial-gradient(circle at 8% 5%,rgba(201,129,99,.2),transparent 28rem),#F0E8E1}
+body[data-theme="glass"]{background:radial-gradient(circle at 15% 17%,rgba(184,121,153,.40),transparent 28rem),radial-gradient(circle at 88% 16%,rgba(63,126,154,.35),transparent 31rem),radial-gradient(circle at 72% 90%,rgba(177,139,82,.24),transparent 27rem),#111923}
 button{font:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .lab{max-width:1510px;margin:0 auto}
 .labbar{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px}
 .labidentity{display:flex;gap:12px;align-items:center}
@@ -112,7 +116,6 @@ td:first-child{font-weight:750}
 [data-theme="terracota"]{--page:#F0E8E1;--surface:#FFFBF7;--surface-2:#F6EEE7;--ink:#382A25;--muted:#76635A;--line:rgba(78,49,38,.16);--accent:#A6533C;--accent-2:#C98163;--gold:#B88C60;--sidebar:#382A25;--sidebar-ink:#F7EEE7;--shadow:0 14px 36px rgba(74,42,31,.10);--soft-accent:rgba(166,83,60,.12);--hero-grad:linear-gradient(118deg,#E8C9B9 0%,#FCF7F1 54%,#D5A18A 100%);--calendar:#F3E0E5;--calendar-ink:#5D3940;--calendar-line:rgba(166,79,112,.22)}
 /* Glass Executive: transparencia visible, capas de fondo y blur real */
 [data-theme="glass"]{--page:#111923;--surface:rgba(236,243,248,.105);--surface-2:rgba(236,243,248,.075);--ink:#F4F1EC;--muted:#B6C2CC;--line:rgba(255,255,255,.19);--accent:#D5A9BE;--accent-2:#D5A9BE;--gold:#D9BD83;--sidebar:rgba(15,24,34,.55);--sidebar-ink:#EDF1F3;--shadow:0 18px 46px rgba(0,0,0,.27);--soft-accent:rgba(213,169,190,.15);--hero-grad:linear-gradient(125deg,rgba(213,169,190,.20),rgba(255,255,255,.06) 54%,rgba(217,189,131,.16));--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25);--glass:1}
-[data-theme="glass"] body{background:radial-gradient(circle at 15% 17%,rgba(184,121,153,.40),transparent 28rem),radial-gradient(circle at 88% 16%,rgba(63,126,154,.35),transparent 31rem),radial-gradient(circle at 72% 90%,rgba(177,139,82,.24),transparent 27rem),#111923}
 [data-theme="glass"] .frame,[data-theme="glass"] .sidebar,[data-theme="glass"] .metric,[data-theme="glass"] .panel,[data-theme="glass"] .tablewrap{backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}
 [data-theme="glass"] .frame{background:rgba(12,20,29,.38);border-color:rgba(255,255,255,.18)}
 [data-theme="glass"] .sidebar{border-right:1px solid rgba(255,255,255,.16)}
@@ -250,6 +253,7 @@ td:first-child{font-weight:750}
     button.addEventListener('click', () => {
       const selected = button.dataset.selectTheme;
       root.dataset.theme = selected;
+      document.body.dataset.theme = selected;
       for (const item of buttons) {
         item.setAttribute('aria-pressed', String(item === button));
       }
