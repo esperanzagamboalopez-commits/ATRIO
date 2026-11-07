@@ -59,6 +59,15 @@ def _meses_entre(inicio, fin):
             actual = date(actual.year, actual.month + 1, 1)
 
 
+def identificador_control_escolar(grupo):
+    """Reproduce el identificador estable que usa hojas.snapshot para su UI."""
+    raw = str(grupo.get("id", "")).replace("-", "")
+    try:
+        return str(int(raw[:13], 16))
+    except (TypeError, ValueError):
+        return str(grupo.get("id", ""))
+
+
 def _norm(value):
     return re.sub(r"\s+", " ", str(value or "").strip().casefold())
 
@@ -151,6 +160,7 @@ def construir_pendientes(
         inicio = como_fecha(g.get("inicio"))
         fin = como_fecha(g.get("fin"))
         gid = str(g.get("id", ""))
+        control_id = identificador_control_escolar(g)
         if not inicio or not fin or not gid or fin < inicio:
             continue
         status = estados.get(gid) or {}
@@ -235,7 +245,7 @@ def construir_pendientes(
             ultimo = date(anio, mes, calendar.monthrange(anio, mes)[1])
             if inicio > ultimo or fin < primero:
                 continue
-            clave = f"{gid}|{anio:04d}-{mes:02d}|lists"
+            clave = f"{control_id}|{anio:04d}-{mes:02d}|lists"
             estado_lista = _norm(school.get(clave))
             if estado_lista == "entregada":
                 continue
@@ -253,7 +263,7 @@ def construir_pendientes(
             ))
 
         # 4. Acreditación: distinta del término del curso y del cierre de constancias.
-        clave_acred = f"{gid}|course|ends"
+        clave_acred = f"{control_id}|course|ends"
         estado_acred = _norm(school.get(clave_acred))
         if estado_acred not in CERRADO_ACREDITACION:
             if estado_acred in ESTADOS_ACREDITACION_EN_CURSO:
@@ -278,10 +288,10 @@ def construir_pendientes(
                 ))
 
         # 5. Credenciales: una semana máxima desde el inicio, con evidencia firmada.
-        registro_cred = credenciales.get(gid) or {}
+        registro_cred = credenciales.get(control_id) or {}
         estado_cred = _norm(registro_cred.get("estado") or registro_cred.get("status"))
         limite_cred = inicio + timedelta(days=7)
-        cantidad_alumnos = alumnos.get(gid)
+        cantidad_alumnos = alumnos.get(control_id)
         if estado_cred == "elaboradas" and hoy <= limite_cred:
             agregar(_crear(
                 proceso="Credenciales", grupo=g,
