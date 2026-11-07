@@ -431,3 +431,47 @@ def test_journal_con_rutas_fuera_de_directorios_permitidos_no_modifica_archivos(
     assert outside.read_bytes() == b"CONTENIDO EXTERNO INTACTO"
     assert journal.exists()
 
+@pytest.mark.parametrize("campo_faltante", ["operation_id", "excel", "backup"])
+def test_journal_incompleto_no_modifica_programacion(isolated, campo_faltante):
+    """Un journal JSON válido pero incompleto se conserva y no altera la programación."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    journal = C._ruta_journal_programacion()
+    data = {
+        "operation_id": "journal-incompleto",
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str((C.ARCH / "respaldo_ausente.xlsx").resolve()),
+        "created": C.now(),
+    }
+    data.pop(campo_faltante)
+    C._escribir_journal_programacion(data)
+
+    with pytest.raises(RuntimeError, match="no pudo completar su recuperación"):
+        C.recuperar_programacion()
+
+    assert resource.read_bytes() == original
+    assert journal.exists()
+
+
+def test_excel_ausente_se_restaura_desde_respaldo(isolated):
+    """Si no hubo confirmación y falta el Excel, la recuperación lo repone desde backup."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    backup = C.ARCH / "respaldo_programacion.xlsx"
+    shutil.copy2(resource, backup)
+    expected = backup.read_bytes()
+    resource.unlink()
+    journal = C._ruta_journal_programacion()
+    C._escribir_journal_programacion({
+        "operation_id": "excel-ausente-sin-confirmar",
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str(backup.resolve()),
+        "created": C.now(),
+    })
+
+    assert C.recuperar_programacion() is True
+    assert resource.is_file()
+    assert resource.read_bytes() == expected
+    assert not journal.exists()
+
