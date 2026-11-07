@@ -475,3 +475,30 @@ def test_excel_ausente_se_restaura_desde_respaldo(isolated):
     assert resource.read_bytes() == expected
     assert not journal.exists()
 
+def test_excel_ausente_tras_confirmacion_conserva_journal(isolated):
+    """No se declara recuperada una operación confirmada si desapareció su Excel."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    backup = C.ARCH / "respaldo_programacion_confirmada.xlsx"
+    shutil.copy2(resource, backup)
+    journal = C._ruta_journal_programacion()
+    operation_id = "excel-ausente-tras-confirmacion"
+    C._escribir_journal_programacion({
+        "operation_id": operation_id,
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str(backup.resolve()),
+        "created": C.now(),
+    })
+    with C.connect() as db:
+        db.execute(
+            "INSERT INTO events(at,action,payload) VALUES(?,?,?)",
+            (C.now(), "Importación programación",
+             json.dumps({"operation_id": operation_id}, ensure_ascii=False)),
+        )
+    resource.unlink()
+
+    with pytest.raises(RuntimeError, match="Excel de programación no existe"):
+        C.recuperar_programacion()
+
+    assert not resource.exists()
+    assert journal.exists()
