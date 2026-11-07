@@ -148,3 +148,26 @@ def test_tareas_de_fecha_no_duplica_actividades_personales_del_calendario():
 
     assert len(resultado) == 1
     assert resultado[0]["proceso"] == "Elaboración de PEAs"
+
+
+
+def test_aviso_y_verificacion_no_se_presentan_como_fecha_limite_confirmada():
+    tareas = [
+        {
+            "proceso": "Cursos ACM",
+            "fecha": "2026-11-12",
+            "fuente": "Programación",
+            "certeza": "Aviso",
+        },
+        {
+            "proceso": "Subir PEAs al MCE",
+            "fecha": "2026-11-13",
+            "fuente": "Programación",
+            "certeza": "Por verificar",
+        },
+    ]
+
+    marcas = CAL._marcas_inicio_mes(2026, 11, [], [], tareas=tareas)
+
+    assert marcas[12] == ["V"]
+    assert marcas[13] == ["V"]
