@@ -281,7 +281,7 @@ class TestReprogramacion(unittest.TestCase):
             raise OSError("fallo simulado de restauración")
 
         with patch.object(R.shutil, "copy2", side_effect=fallar_durante_restauracion):
-            with self.assertRaisesRegex(OSError, "fallo simulado de restauración"):
+            with self.assertRaisesRegex(RuntimeError, "fallo simulado de restauración"):
                 R._actualizar_excel_y_db([self._change()], self.excel)
 
         journal = C._ruta_journal_programacion()
