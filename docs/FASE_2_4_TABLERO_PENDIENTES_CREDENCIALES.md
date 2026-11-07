@@ -48,7 +48,7 @@ La jornada personal para las listas es martes a viernes. Esta regla de trabajo n
 - Bloqueado, vencido, pendiente, aviso, en espera y por verificar se distinguen.
 - «Sin verificar» no se convierte en atraso confirmado.
 - Las tareas que esperan respuesta quedan separadas de las que corresponden a la responsable.
-- El orden prioriza bloqueos, atrasos confirmados, cercanía de fechas y después avisos.
+- El orden prioriza primero los plazos oficiales vencidos o próximos confirmados; después los bloqueos; finalmente la prioridad de gestión y los avisos. Los registros sin verificar nunca se elevan como atrasos.
 - Se conservan los identificadores de Control Escolar que utiliza \`hojas.snapshot\`, por lo que los estados de listas y credenciales coinciden con la misma tarjeta del grupo.
 
 ## 4. Mi Calendario y fechas objetivo automáticas
