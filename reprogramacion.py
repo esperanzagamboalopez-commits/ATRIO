@@ -326,6 +326,12 @@ def render_reprogramacion(data, today):
             st.error(str(exc))
 
     cambios = st.session_state.get("reprog_propuesta", [])
+    if cambios and (
+        st.session_state.get("reprog_origen") != curso["id"]
+        or cambios[0]["fin_nuevo"] != nueva_fin.isoformat()
+    ):
+        st.info("La selección o la fecha cambió después de la simulación. Vuelve a simular antes de aplicar.")
+        cambios = []
     if cambios:
         st.markdown("### Resultado de la simulación")
         st.caption(f"{len(cambios)} curso(s) incluidos en la cascada. Los grupos pendientes y otros carriles quedan intactos.")
