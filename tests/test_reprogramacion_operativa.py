@@ -170,6 +170,44 @@ class TestReprogramacion(unittest.TestCase):
             self.assertEqual(after_payload, before_payload)
             self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
 
+    def test_reprogramacion_sincroniza_respaldo_excel_y_directorios(self):
+        with patch.object(C, "_fsync_archivo", wraps=C._fsync_archivo) as sync_file, \
+             patch.object(C, "_fsync_directorio", wraps=C._fsync_directorio) as sync_dir:
+            backup, archivo = R._actualizar_excel_y_db([self._change()], self.excel)
+
+        self.assertTrue(backup.is_file())
+        self.assertEqual(archivo, self.excel)
+        self.assertIn(self.archive, [call.args[0] for call in sync_dir.call_args_list])
+        self.assertIn(self.resources, [call.args[0] for call in sync_dir.call_args_list])
+        synced_files = [Path(call.args[0]) for call in sync_file.call_args_list]
+        self.assertTrue(any(path.parent == self.archive for path in synced_files))
+        self.assertTrue(any(path.parent == self.resources for path in synced_files))
+
+    def test_reprogramacion_recupera_si_falla_fsync_del_directorio_excel(self):
+        original = self.excel.read_bytes()
+        fsync_real = C._fsync_directorio
+        failed = {"value": False}
+
+        def fail_once(path):
+            if Path(path) == self.resources and not failed["value"]:
+                failed["value"] = True
+                raise OSError("fallo fsync simulado")
+            return fsync_real(path)
+
+        with patch.object(C, "_fsync_directorio", side_effect=fail_once):
+            with self.assertRaisesRegex(OSError, "fallo fsync simulado"):
+                R._actualizar_excel_y_db([self._change()], self.excel)
+
+        self.assertTrue(failed["value"])
+        self.assertEqual(self.excel.read_bytes(), original)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+        with self._connect() as db:
+            payload = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+            self.assertEqual(json.loads(payload)["fin"], "2026-11-30")
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
+
     def test_journal_y_recuperacion_sincronizan_archivo_y_directorios(self):
         backup = self.archive / "backup_durabilidad.xlsx"
         backup.write_bytes(self.excel.read_bytes())
