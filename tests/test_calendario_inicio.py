@@ -103,3 +103,48 @@ def test_actividad_con_limite_el_mismo_dia_aparece_una_sola_vez():
     assert len(resultado) == 1
     assert resultado[0][0] == "Actividad · fecha límite"
     assert resultado[0][1]["id"] == 7
+
+
+
+def test_marcas_del_inicio_incluyen_fechas_objetivo_del_motor_de_pendientes():
+    tareas = [
+        {
+            "id": "t-1",
+            "proceso": "Elaboración de PEAs",
+            "fecha": "2026-11-05",
+            "fuente": "Programación",
+        },
+        {
+            "id": "t-2",
+            "proceso": "Mi Calendario",
+            "fecha": "2026-11-06",
+            "fuente": "Mi Calendario",
+        },
+    ]
+
+    marcas = CAL._marcas_inicio_mes(2026, 11, [], [], tareas=tareas)
+
+    assert marcas[5].count("L") == 1
+    assert 6 not in marcas
+
+
+def test_tareas_de_fecha_no_duplica_actividades_personales_del_calendario():
+    from datetime import date
+
+    tareas = [
+        {
+            "proceso": "Elaboración de PEAs",
+            "fuente": "Programación",
+            "fecha": "2026-11-05",
+        },
+        {
+            "proceso": "Mi Calendario",
+            "fuente": "Mi Calendario",
+            "fecha": "2026-11-05",
+        },
+    ]
+
+    resultado = CAL._tareas_de_fecha(tareas, date(2026, 11, 5))
+
+    assert len(resultado) == 1
+    assert resultado[0]["proceso"] == "Elaboración de PEAs"
