@@ -562,7 +562,7 @@ def test_journal_con_rutas_fuera_de_directorios_permitidos_no_modifica_archivos(
         data["backup"] = str(outside.resolve())
     C._escribir_journal_programacion(data)
 
-    with pytest.raises(RuntimeError, match="rutas fuera de los directorios permitidos"):
+    with pytest.raises(RuntimeError, match="El journal debe apuntar al Excel de programación y a un respaldo directo de versiones"):
         C.recuperar_programacion()
 
     assert resource.read_bytes() == original
