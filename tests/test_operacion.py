@@ -399,3 +399,35 @@ def test_generation_pipeline_uses_word_output_without_network(isolated, monkeypa
     artifact = C.artifacts(group["id"])[0]
     C.mark_reviewed(artifact["id"])
     assert C.status(group["id"])["doc"] == "Revisado"
+
+@pytest.mark.parametrize("ruta_insegura", ["excel", "backup"])
+def test_journal_con_rutas_fuera_de_directorios_permitidos_no_modifica_archivos(
+    isolated, tmp_path, ruta_insegura
+):
+    """Las rutas externas a RES/ARCH se rechazan antes de leer o sustituir archivos."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    outside = tmp_path / "archivo_externo.xlsx"
+    outside.write_bytes(b"CONTENIDO EXTERNO INTACTO")
+    journal = C._ruta_journal_programacion()
+
+    data = {
+        "operation_id": f"ruta-externa-{ruta_insegura}",
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str((C.ARCH / "respaldo_valido.xlsx").resolve()),
+        "created": C.now(),
+    }
+    if ruta_insegura == "excel":
+        data["excel"] = str(outside.resolve())
+    else:
+        data["backup"] = str(outside.resolve())
+    C._escribir_journal_programacion(data)
+
+    with pytest.raises(RuntimeError, match="rutas fuera de los directorios permitidos"):
+        C.recuperar_programacion()
+
+    assert resource.read_bytes() == original
+    assert outside.read_bytes() == b"CONTENIDO EXTERNO INTACTO"
+    assert journal.exists()
+
