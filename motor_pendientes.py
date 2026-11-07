@@ -21,6 +21,11 @@ ESTADOS_ACREDITACION_EN_CURSO = {
     "recibida del docente", "revisada",
 }
 
+MESES_ES = (
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+)
+
 
 def como_fecha(value):
     """Convierte valores ISO/fecha a date; devuelve None si no son válidos."""
@@ -266,7 +271,7 @@ def construir_pendientes(
             agregar(_crear(
                 proceso="Listas de asistencia", grupo=g,
                 fecha_objetivo=limite,
-                motivo=f"El curso tiene actividad durante {calendar.month_name[mes].capitalize()} y requiere su lista de asistencia.",
+                motivo=f"El curso tiene actividad durante {MESES_ES[mes - 1]} y requiere su lista de asistencia.",
                 accion=f"Entregar la lista del mes a partir del primer día de trabajo personal ({limite:%d/%m/%Y}).",
                 modulo="Control escolar", hoy=hoy,
                 prioridad="Alta" if limite <= hoy + timedelta(days=2) else "Normal",
