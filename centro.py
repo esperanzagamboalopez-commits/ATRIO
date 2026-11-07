@@ -92,14 +92,25 @@ def recuperar_programacion():
             backup=Path(data['backup']).resolve()
             if not _es_ruta_segura_programacion(excel) or not _es_ruta_segura_programacion(backup):
                 raise ValueError('El journal contiene rutas fuera de los directorios permitidos.')
-            if not backup.is_file():
-                raise FileNotFoundError('No se encuentra el respaldo necesario para recuperar la programación.')
+            # Buscar la confirmación por coincidencia exacta del operation_id en el JSON.
+            # No se necesita el respaldo si SQLite ya confirmó: el Excel nuevo es el estado válido.
             with connect() as conn:
-                row=conn.execute("SELECT 1 FROM events WHERE action=? AND payload LIKE ?",(commit_action,'%'+operation_id+'%')).fetchone()
-            if row:
+                rows=conn.execute("SELECT payload FROM events WHERE action=?",(commit_action,)).fetchall()
+            committed=False
+            for event_row in rows:
+                try:
+                    payload=json.loads(event_row['payload'] or '{}')
+                except (TypeError,ValueError):
+                    continue
+                if isinstance(payload,dict) and payload.get('operation_id')==operation_id:
+                    committed=True
+                    break
+            if committed:
                 # SQLite confirmó: conservar el Excel nuevo y retirar solo el journal.
                 journal.unlink()
                 return True
+            if not backup.is_file():
+                raise FileNotFoundError('No se encuentra el respaldo necesario para restaurar la programación no confirmada.')
             # SQLite no confirmó: restaurar el Excel anterior antes de permitir otra operación.
             fd,name=tempfile.mkstemp(prefix='RECUPERACION_',suffix='.xlsx',dir=str(excel.parent))
             os.close(fd)
