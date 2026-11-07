@@ -260,6 +260,43 @@ class TestReprogramacion(unittest.TestCase):
         self.assertEqual(self.excel.read_bytes(), nuevo_excel)
         self.assertFalse(C._ruta_journal_programacion().exists())
 
+
+    def test_conserva_journal_si_falla_la_restauracion_automatica(self):
+        """Si falla el rollback del Excel, el journal permite recuperar en el siguiente intento."""
+        original = self.excel.read_bytes()
+        with self._connect() as db:
+            db.execute("""
+                CREATE TRIGGER provocar_fallo_evento
+                BEFORE INSERT ON events
+                BEGIN SELECT RAISE(ABORT, 'fallo simulado de SQLite'); END;
+            """)
+
+        copy2_real = R.shutil.copy2
+        llamadas = {"total": 0}
+
+        def fallar_durante_restauracion(origen, destino, *args, **kwargs):
+            llamadas["total"] += 1
+            if llamadas["total"] == 1:
+                return copy2_real(origen, destino)
+            raise OSError("fallo simulado de restauración")
+
+        with patch.object(R.shutil, "copy2", side_effect=fallar_durante_restauracion):
+            with self.assertRaisesRegex(OSError, "fallo simulado de restauración"):
+                R._actualizar_excel_y_db([self._change()], self.excel)
+
+        journal = C._ruta_journal_programacion()
+        self.assertTrue(journal.is_file())
+        self.assertNotEqual(self.excel.read_bytes(), original)
+
+        self.assertTrue(C.recuperar_programacion())
+        self.assertEqual(self.excel.read_bytes(), original)
+        self.assertFalse(journal.exists())
+        with self._connect() as db:
+            payload = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+            self.assertEqual(json.loads(payload)["fin"], "2026-11-30")
+
     def test_rechaza_huella_obsoleta_sin_modificar_excel(self):
         change = self._change()
         change["fingerprint"] = "huella-obsoleta"
