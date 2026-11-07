@@ -66,19 +66,21 @@ def render_pendientes(data, today):
         st.caption("No se muestran pendientes simulados ni se alteraron estados.")
         return
 
-    urgentes = sum(1 for t in tareas if t.get("estado") in {"Bloqueado", "Vencido"})
+    vencidos = sum(1 for t in tareas if t.get("estado") == "Vencido")
+    bloqueados = sum(1 for t in tareas if t.get("estado") == "Bloqueado")
     por_verificar = sum(1 for t in tareas if t.get("estado") == "Por verificar")
     en_espera = sum(1 for t in tareas if t.get("responsable") == "Esperando respuesta")
     me_corresponde = sum(
         1 for t in tareas
         if t.get("responsable") == "Me corresponde"
-        and t.get("estado") not in {"Por verificar", "Aviso"}
+        and t.get("estado") not in {"Por verificar", "Aviso", "En espera"}
     )
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Urgentes / bloqueados", urgentes)
-    c2.metric("Me corresponde", me_corresponde)
-    c3.metric("Esperando respuesta", en_espera)
-    c4.metric("Por verificar", por_verificar)
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Vencidos", vencidos)
+    c2.metric("Bloqueados", bloqueados)
+    c3.metric("Me corresponde", me_corresponde)
+    c4.metric("Esperando respuesta", en_espera)
+    c5.metric("Por verificar", por_verificar)
     st.caption(
         "Los registros sin confirmar se separan de los atrasos. "
         "El término de un curso no significa que su acreditación o constancias estén cerradas."
@@ -125,6 +127,7 @@ def render_pendientes(data, today):
 
     orden_preferido = [
         "Elaboración de PEAs",
+        "Preparación de PEA de Repositorio",
         "Subir PEAs al MCE",
         "Altas de cursos regulares en MCE",
         "Listas de asistencia",
@@ -178,18 +181,40 @@ def render_pendientes(data, today):
                     if st.button(f"Ir a {modulo} →", key=key):
                         _ir_a(modulo)
 
-    # El calendario conserva su propio historial; no se mezcla con pendientes activos.
+    # El historial consulta eventos ya registrados; no modifica ni reabre procesos.
+    try:
+        import centro as C
+        grupos_por_id = {str(g.get("id")): g for g in data}
+        with st.expander("Historial reciente de gestión", expanded=False):
+            with C.connect() as db:
+                historial = db.execute(
+                    "SELECT at, group_id, action FROM events ORDER BY id DESC LIMIT 40"
+                ).fetchall()
+            if not historial:
+                st.caption("Todavía no hay movimientos registrados.")
+            else:
+                for registro in historial:
+                    grupo = grupos_por_id.get(str(registro["group_id"] or ""))
+                    referencia = grupo.get("nombre") if grupo else "ATRIO · movimiento general"
+                    st.write(
+                        f'{_fecha_legible(str(registro["at"] or "")[:10])} · '
+                        f'{referencia} · {registro["action"]}'
+                    )
+    except Exception:
+        st.caption("No fue posible consultar el historial de movimientos.")
+    
+    # El historial personal de Mi Calendario permanece separado.
     try:
         import calendario as CAL
         with st.expander("Historial de actividades de Mi Calendario", expanded=False):
-            historial = CAL.obtener_historial(limite=30)
-            if not historial:
+            historial_cal = CAL.obtener_historial(limite=30)
+            if not historial_cal:
                 st.caption("No hay actividades concluidas o canceladas registradas.")
             else:
-                for evento in historial:
+                for evento in historial_cal:
                     st.write(
                         f'{_fecha_legible(evento.get("fecha_inicio"))} · '
                         f'{evento.get("titulo", "Actividad")} · {evento.get("estado", "")}'
                     )
     except Exception:
-        pass
+        st.caption("No fue posible consultar el historial del calendario.")
