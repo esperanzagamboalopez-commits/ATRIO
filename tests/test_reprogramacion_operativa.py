@@ -3,6 +3,8 @@ import json
 import sqlite3
 import tempfile
 import unittest
+import subprocess
+import sys
 from datetime import date
 from pathlib import Path
 from unittest.mock import patch
@@ -60,6 +62,7 @@ class TestReprogramacion(unittest.TestCase):
         db.close()
 
         self.patchers = [
+            patch.object(C, "DATA", self.root / "datos"),
             patch.object(C, "RES", self.resources),
             patch.object(C, "ARCH", self.archive),
             patch.object(C, "connect", self._connect),
@@ -85,6 +88,34 @@ class TestReprogramacion(unittest.TestCase):
             "fin_anterior": "2026-11-30", "inicio_nuevo": "2026-11-02",
             "fin_nuevo": "2026-12-07", "horario": self.payload["horario"],
         }
+
+    def test_bloqueo_interproceso_impide_entrada_simultanea(self):
+        lock_script = (
+            "import sys; from pathlib import Path; import centro as C; "
+            "C.DATA=Path(sys.argv[1]); "
+            "ctx=C.programacion_lock(timeout=0.25); "
+            "ctx.__enter__()"
+        )
+        with C.programacion_lock():
+            result = subprocess.run(
+                [sys.executable, "-c", lock_script, str(C.DATA)],
+                capture_output=True, text=True, timeout=5,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("TimeoutError", result.stderr)
+
+    def test_bloqueo_interproceso_se_libera_al_terminar(self):
+        lock_script = (
+            "import sys; from pathlib import Path; import centro as C; "
+            "C.DATA=Path(sys.argv[1]); "
+            "with_lock=C.programacion_lock(timeout=1); "
+            "with_lock.__enter__(); with_lock.__exit__(None,None,None)"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", lock_script, str(C.DATA)],
+            capture_output=True, text=True, timeout=5,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_aplica_excel_sqlite_y_conserva_identidad_y_expediente(self):
         backup, archivo = R._actualizar_excel_y_db([self._change()], self.excel)
