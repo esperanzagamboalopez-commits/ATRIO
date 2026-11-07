@@ -140,6 +140,11 @@ def test_resource_validation_is_atomic(isolated):
     assert C.setting("calendario_confirmado") is False
 
 
+def test_sqlite_usa_synchronous_full(isolated):
+    with C.connect() as db:
+        assert db.execute("PRAGMA synchronous").fetchone()[0] == 2
+
+
 def test_save_programacion_confirma_importacion_y_limpia_journal(isolated):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     raw = resource.read_bytes()
