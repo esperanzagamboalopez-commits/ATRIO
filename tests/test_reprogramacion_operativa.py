@@ -139,6 +139,48 @@ class TestReprogramacion(unittest.TestCase):
             self.assertEqual(after_payload, before_payload)
             self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
 
+    def test_recupera_excel_si_hubo_interrupcion_antes_del_commit_sqlite(self):
+        original = self.excel.read_bytes()
+        backup = self.archive / "backup_interrupcion.xlsx"
+        backup.write_bytes(original)
+        wb = load_workbook(self.excel)
+        wb["DOCENTE A"].cell(15, 6).value = date(2027, 1, 15)
+        wb.save(self.excel)
+        wb.close()
+        operation_id = "operacion-sin-commit"
+        C._escribir_journal_programacion({
+            "operation_id": operation_id, "excel": str(self.excel.resolve()),
+            "backup": str(backup.resolve()), "created": C.now(),
+        })
+
+        self.assertTrue(C.recuperar_programacion())
+        self.assertEqual(self.excel.read_bytes(), original)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+
+    def test_conserva_excel_si_sqlite_ya_confirmo_antes_de_limpiar_journal(self):
+        backup = self.archive / "backup_confirmado.xlsx"
+        backup.write_bytes(self.excel.read_bytes())
+        wb = load_workbook(self.excel)
+        wb["DOCENTE A"].cell(15, 6).value = date(2027, 1, 15)
+        wb.save(self.excel)
+        wb.close()
+        nuevo_excel = self.excel.read_bytes()
+        operation_id = "operacion-confirmada"
+        C._escribir_journal_programacion({
+            "operation_id": operation_id, "excel": str(self.excel.resolve()),
+            "backup": str(backup.resolve()), "created": C.now(),
+        })
+        with self._connect() as db:
+            db.execute(
+                "INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)",
+                (C.now(), None, "Reprogramación aplicada",
+                 json.dumps({"operation_id": operation_id})),
+            )
+
+        self.assertTrue(C.recuperar_programacion())
+        self.assertEqual(self.excel.read_bytes(), nuevo_excel)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+
     def test_rechaza_huella_obsoleta_sin_modificar_excel(self):
         change = self._change()
         change["fingerprint"] = "huella-obsoleta"
