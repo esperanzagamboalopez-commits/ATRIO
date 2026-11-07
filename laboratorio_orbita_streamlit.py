@@ -69,20 +69,10 @@ c2.metric("PEA por revisar", "1", "Demostración")
 c3.metric("Corte SISAE", "No conectado", "Sin consulta")
 st.info("Vista aislada: ningún botón ejecuta procesos ni guarda cambios.")
 
-with st.container(border=True):
-    st.subheader("Componentes de interfaz")
-    a, b = st.columns(2)
-    with a:
-        st.button("Acción de muestra", disabled=True, type="primary")
-        st.text_input("Campo de ejemplo", value="Solo demostración", disabled=True)
-    with b:
-        st.button("Acción secundaria", disabled=True)
-        st.selectbox("Selector de muestra", ["Opción demostrativa"], disabled=True)
-
-st.divider()
+# La composición real de Inicio se muestra antes que los componentes de ejemplo.
 st.subheader("Inicio · composición real con información ficticia")
 st.caption(
-    "Saludo, calendario, métricas y franja PEA/MCE proceden de inicio.html. "
+    "Saludo, calendario y métricas proceden de inicio.html. "
     "Los cursos y el resumen SISAE de esta vista son ejemplos inventados."
 )
 
@@ -153,3 +143,13 @@ st.caption(
     "Laboratorio de presentación solamente. Para ejecutar la aplicación real "
     "y conectar recursos institucionales se requiere una autorización separada."
 )
+
+with st.container(border=True):
+    st.subheader("Componentes de interfaz")
+    a, b = st.columns(2)
+    with a:
+        st.button("Acción de muestra", disabled=True, type="primary")
+        st.text_input("Campo de ejemplo", value="Solo demostración", disabled=True)
+    with b:
+        st.button("Acción secundaria", disabled=True)
+        st.selectbox("Selector de muestra", ["Opción demostrativa"], disabled=True)
