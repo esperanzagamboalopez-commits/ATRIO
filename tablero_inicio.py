@@ -24,14 +24,13 @@ def _saludo():
 
 
 def _metricas_sisae():
-    """Cuenta alumnos únicos e inscripciones del corte SISAE activo, sin PII."""
+    """Cuenta las inscripciones del corte SISAE activo, sin mostrar datos personales."""
     import centro as C
 
     ruta = C.RES / "SISAE.zip"
     if not ruta.is_file():
         return {
             "disponible": False,
-            "alumnos_unicos": None,
             "inscripciones": None,
             "corte": "Sin corte cargado",
         }
@@ -39,23 +38,16 @@ def _metricas_sisae():
         raw = ruta.read_bytes()
         tablas = C.sisae_bytes(raw)
         inscripciones = tablas["INSCRIPCION.DBF"]
-        alumnos = {
-            str(r.get("ID_ALUMNO", "")).strip()
-            for r in inscripciones
-            if str(r.get("ID_ALUMNO", "")).strip()
-        }
         digest = C.sha(raw)
         fecha = C.setting("corte_" + digest, {}).get("date") or "Fecha sin verificar"
         return {
             "disponible": True,
-            "alumnos_unicos": len(alumnos),
             "inscripciones": len(inscripciones),
             "corte": str(fecha),
         }
     except Exception:
         return {
             "disponible": False,
-            "alumnos_unicos": None,
             "inscripciones": None,
             "corte": "No se pudo leer el corte",
         }
@@ -204,7 +196,95 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
           border-radius:12px;background:var(--atrio-surface);
           padding:13px 15px;margin:9px 0;box-shadow:var(--atrio-sombra)
         }
-        .atrio-progress-label{font-size:13px;font-weight:650;color:var(--atrio-titulo)}
+        .atrio-panorama-heading{
+          margin:0 0 5px;color:var(--atrio-titulo);
+          font-family:Georgia,serif;font-size:26px;font-weight:600;
+        }
+        .atrio-panorama-subheading{
+          margin:18px 0 8px;color:var(--atrio-titulo);
+          font-family:Georgia,serif;font-size:20px;font-weight:600;
+        }
+        .atrio-panorama-grid{
+          display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+          gap:12px;margin:14px 0 18px;
+        }
+        .atrio-panorama-card{
+          min-width:0;background:var(--atrio-surface);
+          border:1px solid rgba(var(--atrio-oro-rgb),.48);
+          border-radius:11px;padding:16px 17px;
+          box-shadow:var(--atrio-sombra);
+          transition:transform .2s,box-shadow .2s;
+        }
+        .atrio-panorama-card:hover{
+          transform:translateY(-2px);
+          box-shadow:0 10px 24px rgba(42,35,38,.12);
+        }
+        .atrio-panorama-card-head{
+          display:flex;justify-content:space-between;align-items:center;gap:8px;
+          color:var(--atrio-tenue);font:700 10px/1.35 Inter,system-ui,sans-serif;
+          letter-spacing:.7px;text-transform:uppercase;
+        }
+        .atrio-panorama-icon{
+          width:36px;height:36px;display:grid;place-items:center;flex:0 0 36px;
+          border-radius:11px;background:rgba(var(--atrio-neon-rgb),.12);
+          border:1px solid rgba(var(--atrio-neon-rgb),.32);
+          color:var(--atrio-neon);font:20px Georgia,serif;
+        }
+        .atrio-panorama-icon svg{
+          width:21px;height:21px;stroke:currentColor;fill:none;
+          stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+        }
+        .atrio-panorama-value{
+          display:block;margin:9px 0 3px;color:var(--atrio-neon);
+          font:44px/1.05 Georgia,serif;font-weight:400;
+          font-variant-numeric:tabular-nums;
+        }
+        .atrio-panorama-note{
+          margin:0;color:var(--atrio-tenue);
+          font:11px/1.4 Inter,system-ui,sans-serif;
+        }
+        .atrio-panorama-progress-card{
+          background:var(--atrio-surface);
+          border:1px solid rgba(var(--atrio-oro-rgb),.48);
+          border-radius:11px;padding:16px 18px;margin:11px 0 0;
+          box-shadow:var(--atrio-sombra);
+        }
+        .atrio-panorama-progress-head{
+          display:flex;justify-content:space-between;align-items:center;
+          gap:10px;flex-wrap:wrap;color:var(--atrio-tinta);
+          font:600 14px Inter,system-ui,sans-serif;
+        }
+        .atrio-panorama-progress-name{
+          display:flex;align-items:center;font:600 18px Georgia,serif;
+          color:var(--atrio-titulo);
+        }
+        .atrio-panorama-dot{
+          display:inline-block;width:9px;height:9px;border-radius:50%;
+          margin-right:9px;background:var(--tipo-color);
+        }
+        .atrio-panorama-track{
+          height:7px;margin:12px 0 10px;overflow:hidden;
+          background:rgba(var(--atrio-oro-rgb),.16);border-radius:9px;
+        }
+        .atrio-panorama-fill{
+          height:100%;border-radius:9px;background:var(--tipo-color);
+          transition:width .25s ease;
+        }
+        .atrio-panorama-states{
+          display:flex;justify-content:space-between;align-items:center;
+          flex-wrap:wrap;gap:6px 14px;color:var(--atrio-tenue);
+          font:11px/1.4 Inter,system-ui,sans-serif;
+        }
+        @media(max-width:1100px){
+          .atrio-panorama-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+        }
+        @media(max-width:700px){
+          .atrio-panorama-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+          .atrio-panorama-value{font-size:38px}
+        }
+        @media(max-width:430px){
+          .atrio-panorama-grid{grid-template-columns:1fr}
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -287,45 +367,128 @@ html,body{margin:0;padding:0;background:transparent}
         import calendario as CAL
         CAL.render_inicio_calendario(grupos, tareas=tareas)
 
-    st.markdown("## Panorama de capacitación")
-    st.caption("Programación activa y corte SISAE. Los cursos terminados se cuentan por su fecha de término, no por el cierre de constancias.")
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-    c1.metric("Programados", resumen["total"])
-    c2.metric("Terminados", resumen["terminados"])
-    c3.metric("En curso", resumen["vigentes"])
-    c4.metric("Por iniciar", resumen["por_iniciar"])
-    if metricas.get("disponible"):
-        c5.metric("Alumnos únicos", f'{metricas["alumnos_unicos"]:,}')
-        c6.metric("Inscripciones", f'{metricas["inscripciones"]:,}')
-    else:
-        c5.metric("Alumnos únicos", "—")
-        c6.metric("Inscripciones", "—")
+    st.markdown(
+        '<div class="atrio-panorama-heading">Panorama de capacitación</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Programación activa y corte SISAE. Los cursos terminados se cuentan "
+        "por su fecha de término, no por el cierre de constancias."
+    )
+
+    inscripciones = (
+        f'{metricas["inscripciones"]:,}'
+        if metricas.get("disponible") and metricas.get("inscripciones") is not None
+        else "—"
+    )
+    tarjetas = [
+        (
+            "Programados",
+            f'{resumen["total"]:,}',
+            "Grupos en la programación",
+            '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+        ),
+        (
+            "Terminados",
+            f'{resumen["terminados"]:,}',
+            "Por fecha de término",
+            '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m7.5 12 3 3 6-6"/></svg>',
+        ),
+        (
+            "En curso",
+            f'{resumen["vigentes"]:,}',
+            "Activos a la fecha de corte",
+            '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+        ),
+        (
+            "Por iniciar",
+            f'{resumen["por_iniciar"]:,}',
+            "Con inicio en fecha futura",
+            '<svg viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7"/></svg>',
+        ),
+        (
+            "Inscripciones",
+            inscripciones,
+            "Registros del corte SISAE",
+            '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+        ),
+    ]
+    tarjetas_html = "".join(
+        (
+            '<article class="atrio-panorama-card">'
+            '<div class="atrio-panorama-card-head">'
+            f'<span>{html.escape(titulo)}</span>'
+            f'<span class="atrio-panorama-icon" aria-hidden="true">{icono}</span>'
+            '</div>'
+            f'<strong class="atrio-panorama-value">{html.escape(valor)}</strong>'
+            f'<p class="atrio-panorama-note">{html.escape(nota)}</p>'
+            '</article>'
+        )
+        for titulo, valor, nota, icono in tarjetas
+    )
+    st.markdown(
+        f'<div class="atrio-panorama-grid">{tarjetas_html}</div>',
+        unsafe_allow_html=True,
+    )
     st.caption(f'SISAE · {metricas.get("corte", "Sin corte cargado")}')
 
-    st.markdown("### Avance por tipo de curso")
+    st.markdown(
+        '<div class="atrio-panorama-subheading">Avance por tipo de curso</div>',
+        unsafe_allow_html=True,
+    )
+    colores_tipo = {
+        "Extensión": "#C77D9E",
+        "Repositorio": "#5B9188",
+        "Regular": "#C39A50",
+    }
     for etiqueta in ("Extensión", "Repositorio", "Regular"):
-        registros = resumen["tipos"][etiqueta]
-        total = len(registros)
+        total = len(resumen["tipos"][etiqueta])
         estados = resumen["por_tipo"][etiqueta]
-        concluidos = estados["terminados"]
-        porcentaje = concluidos / total if total else 0
-        st.markdown(
-            f'<div class="atrio-progress-label">{html.escape(etiqueta)}'
-            f'<span style="float:right">{total} curso(s)</span></div>',
-            unsafe_allow_html=True,
-        )
+        porcentaje = estados["terminados"] / total if total else 0
+        color_tipo = colores_tipo[etiqueta]
         if total:
-            st.progress(
-                porcentaje,
-                text=(
-                    f'{estados["terminados"]} terminados · '
-                    f'{estados["en_curso"]} en curso · '
-                    f'{estados["por_iniciar"]} por iniciar · {porcentaje:.0%}'
-                ),
+            ancho = porcentaje * 100
+            detalle = (
+                f'<div class="atrio-panorama-track" role="progressbar" '
+                f'aria-label="{html.escape(etiqueta)} terminados" '
+                f'aria-valuenow="{estados["terminados"]}" '
+                f'aria-valuemin="0" aria-valuemax="{total}">'
+                f'<div class="atrio-panorama-fill" '
+                f'style="width:{ancho:.2f}%;--tipo-color:{color_tipo}"></div></div>'
+            )
+            estados_html = (
+                f'<span>Terminados: <strong>{estados["terminados"]}</strong></span>'
+                f'<span>En curso: <strong>{estados["en_curso"]}</strong></span>'
+                f'<span>Por iniciar: <strong>{estados["por_iniciar"]}</strong></span>'
+                f'<span>{porcentaje:.0%} completado</span>'
             )
         else:
-            st.progress(0.0, text="Sin cursos programados")
-    st.caption("El avance se calcula por fecha de término; el cierre de constancias se gestiona por separado.")
+            detalle = (
+                '<div class="atrio-panorama-track" role="progressbar" '
+                f'aria-label="{html.escape(etiqueta)} sin cursos" '
+                'aria-valuenow="0" aria-valuemin="0" aria-valuemax="0">'
+                '<div class="atrio-panorama-fill" style="width:0%"></div></div>'
+            )
+            estados_html = '<span>Sin cursos programados</span>'
+        st.markdown(
+            (
+                f'<article class="atrio-panorama-progress-card" '
+                f'style="--tipo-color:{color_tipo}">'
+                '<div class="atrio-panorama-progress-head">'
+                f'<span class="atrio-panorama-progress-name">'
+                f'<i class="atrio-panorama-dot"></i>{html.escape(etiqueta)}</span>'
+                f'<span>{total} curso(s)</span>'
+                '</div>'
+                f'{detalle}'
+                f'<div class="atrio-panorama-states">{estados_html}</div>'
+                '</article>'
+            ),
+            unsafe_allow_html=True,
+        )
+    st.caption(
+        "El avance se calcula por fecha de término; el cierre de constancias "
+        "se gestiona por separado."
+    )
 
     st.markdown("## Prioridades de hoy")
     prioridades = prioridades_del_dia(tareas, hoy, limite=3)
