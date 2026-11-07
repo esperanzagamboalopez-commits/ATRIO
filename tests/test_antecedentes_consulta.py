@@ -69,6 +69,43 @@ class TestAntecedentesConservados(unittest.TestCase):
         self.assertEqual(rows[0]["docente"], "DOCENTE DE PRUEBA")
         self.assertIn("antecedente conservado", P109._label(rows[0]))
 
+
+    def test_marca_pea_del_mismo_grupo_con_huella_anterior(self):
+        current_payload = {
+            "hoja": "DOCENTE ACTUAL",
+            "fila": 15,
+            "tipo": "Extensión",
+            "nombre": "CURSO CON MISMO NOMBRE",
+            "inicio": "2026-11-15",
+            "fin": "2026-12-15",
+            "duracion": 72,
+            "_atrio": {"estado_programacion": "Vigente"},
+        }
+        word = C.OUT / "pea_anterior" / "PEA_VERSION_ANTERIOR.docx"
+        word.write_bytes(b"documento ficticio")
+        db = C.connect()
+        db.execute(
+            "INSERT INTO groups(id,rowkey,fingerprint,payload,active) VALUES(?,?,?,?,1)",
+            ("grupo-reprogramado", "DOCENTE ACTUAL|15", "fp-actual",
+             json.dumps(current_payload, ensure_ascii=False)),
+        )
+        db.execute(
+            "INSERT INTO artifacts(id,group_id,created,path,content_path,fingerprint,reviewed) "
+            "VALUES(?,?,?,?,?,?,1)",
+            ("pea-version-anterior", "grupo-reprogramado", C.now(),
+             str(word.relative_to(C.ROOT)), "", "fp-anterior"),
+        )
+        db.commit()
+        db.close()
+
+        rows = [
+            row for row in P109.candidatos()
+            if row.get("id") == "atrio:pea-version-anterior"
+        ]
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(rows[0]["es_version_anterior"])
+        self.assertIn("Versión anterior de programación", P109._label(rows[0]))
+
     def test_consulta_lectura_identifica_documento_del_antecedente(self):
         db = N.conectar(C.ROOT)
         try:
