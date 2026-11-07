@@ -368,6 +368,25 @@ class TestReprogramacion(unittest.TestCase):
         self.assertEqual(self.excel.read_bytes(), excel_actual)
         self.assertTrue(C._ruta_journal_programacion().is_file())
 
+    def test_rechaza_journal_que_apunta_a_otro_archivo_dentro_de_recursos(self):
+        otro = self.resources / "Plantilla_Datos_Docentes_PEA_CECATI31.xlsx"
+        otro.write_bytes(b"contenido ficticio de otra plantilla")
+        backup = self.archive / "backup_ruta_alterna.xlsx"
+        backup.write_bytes(self.excel.read_bytes())
+        original_otro = otro.read_bytes()
+        C._escribir_journal_programacion({
+            "operation_id": "operacion-ruta-alterna",
+            "excel": str(otro.resolve()),
+            "backup": str(backup.resolve()),
+            "created": C.now(),
+        })
+
+        with self.assertRaisesRegex(RuntimeError, "debe apuntar al Excel de programación"):
+            C.recuperar_programacion()
+
+        self.assertEqual(otro.read_bytes(), original_otro)
+        self.assertTrue(C._ruta_journal_programacion().exists())
+
     def test_recupera_excel_si_hubo_interrupcion_antes_del_commit_sqlite(self):
         original = self.excel.read_bytes()
         backup = self.archive / "backup_interrupcion.xlsx"
