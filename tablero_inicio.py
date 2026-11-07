@@ -407,7 +407,7 @@ html,body{margin:0;padding:0;background:transparent}
             '<svg viewBox="0 0 24 24"><path d="M4 12h15M13 5l7 7-7 7"/></svg>',
         ),
         (
-            "Inscripciones",
+            "Total de inscritos",
             inscripciones,
             "Registros del corte SISAE",
             '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
