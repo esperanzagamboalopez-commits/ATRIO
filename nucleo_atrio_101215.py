@@ -83,10 +83,19 @@ def conteo(db, ids=None, detalle=False, root=None):
             if "no such" not in str(exc): raise
             parts.append("Descargas de Extensión: no se pudo verificar la lista de trabajos.")
     if detalle:
-        names = {g["id"]:g for g in grupos(db)}
+        # Para identificar documentos anteriores se incluyen grupos inactivos como
+        # antecedentes; esta consulta es de solo lectura y no los reactiva.
+        names = {}
+        for stored in db.execute("SELECT id,payload FROM groups"):
+            try:
+                names[stored["id"]] = json.loads(stored["payload"] or "{}")
+            except (TypeError, ValueError):
+                continue
         for r in generated:
             g = names.get(r["group_id"], {})
-            parts.append(f"• {r['tipo_doc']} · {g.get('nombre','Grupo fuera de la programación activa')} · {g.get('hoja','')} · registro {r['id']}.")
+            state = str((g.get("_atrio") or {}).get("estado_programacion") or "").strip()
+            suffix = f" · {state}" if state and state != "Vigente" else ""
+            parts.append(f"• {r['tipo_doc']} · {g.get('nombre','Grupo sin ficha conservada')} · {g.get('hoja','')} · registro {r['id']}{suffix}.")
     parts.append("Para cotejar, abre Mis PEA con los filtros en Todos. Cada adaptación de repositorio cuenta una vez aunque incluya PDF y Word.")
     return "\n\n".join(parts)
 

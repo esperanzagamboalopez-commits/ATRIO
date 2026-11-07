@@ -2,7 +2,7 @@
 from pathlib import Path
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
-import contextlib, hashlib, io, json, os, re, shutil, sqlite3, struct, sys, uuid, zipfile
+import contextlib, hashlib, io, json, os, re, shutil, sqlite3, struct, sys, uuid, zipfile, threading, time, tempfile
 from openpyxl import load_workbook, Workbook
 from docx import Document
 ROOT=Path(__file__).resolve().parent
@@ -10,6 +10,7 @@ DATA=ROOT/'datos'; RES=DATA/'recursos'; OUT=DATA/'salidas'; ARCH=DATA/'versiones
 for p in (RES,OUT,ARCH):p.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0,str(ROOT/'motor'))
 import generador_pea_extension_v6_4 as motor
+from identidad_programacion import planificar_conciliacion, grupos_operativos as filtrar_grupos_operativos, grupo_incluido_en_actualizacion
 
 def ruta_dias_sin_clase():
     """Primera ruta existente de DIAS_SIN_CLASE.json (datos/recursos y luego raíz). None si no existe."""
@@ -19,11 +20,203 @@ def ruta_dias_sin_clase():
 def now():return datetime.now(ZoneInfo('America/Mexico_City')).isoformat(timespec='seconds')
 def connect():
  c=sqlite3.connect(DATA/'atrio.sqlite3');c.row_factory=sqlite3.Row
+ # El journal de programación solo es seguro si el commit SQLite se fuerza a almacenamiento.
+ c.execute('PRAGMA synchronous=FULL')
  c.executescript('''CREATE TABLE IF NOT EXISTS groups(id TEXT PRIMARY KEY, rowkey TEXT, fingerprint TEXT, payload TEXT, active INTEGER DEFAULT 1);
  CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, at TEXT, group_id TEXT, action TEXT, payload TEXT);
  CREATE TABLE IF NOT EXISTS status(group_id TEXT PRIMARY KEY, doc TEXT DEFAULT 'Sin verificar', mce TEXT DEFAULT 'Sin verificar', note TEXT DEFAULT '');
  CREATE TABLE IF NOT EXISTS artifacts(id TEXT PRIMARY KEY, group_id TEXT, created TEXT, path TEXT, content_path TEXT, fingerprint TEXT, reviewed INTEGER DEFAULT 0);
  CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT);''');return c
+
+_PROGRAM_LOCK_LOCAL=threading.local()
+
+@contextlib.contextmanager
+def programacion_lock(timeout=60):
+    """Bloqueo interproceso de la programación; flock se libera si el proceso termina."""
+    ARCH.mkdir(parents=True,exist_ok=True)
+    depth=getattr(_PROGRAM_LOCK_LOCAL,'depth',0)
+    if depth:
+        _PROGRAM_LOCK_LOCAL.depth=depth+1
+        try: yield
+        finally: _PROGRAM_LOCK_LOCAL.depth-=1
+        return
+    lock_key=hashlib.sha256(str(DATA.resolve()).encode('utf-8')).hexdigest()[:20]
+    lock_path=Path(tempfile.gettempdir())/f'atrio_programacion_{lock_key}.lock'
+    handle=open(lock_path,'a+b')
+    try:
+        try:
+            import fcntl
+        except ImportError as exc:
+            raise RuntimeError('El bloqueo seguro de programación requiere soporte fcntl en este entorno.') from exc
+        deadline=time.monotonic()+timeout
+        while True:
+            try:
+                fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic()>=deadline:
+                    raise TimeoutError('La programación está siendo utilizada por otro proceso. Intenta nuevamente.')
+                time.sleep(.1)
+        _PROGRAM_LOCK_LOCAL.depth=1
+        try: yield
+        finally:
+            _PROGRAM_LOCK_LOCAL.depth=0
+            fcntl.flock(handle.fileno(),fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+def _ruta_journal_programacion():
+    return ARCH/'PROGRAMACION_PENDING.json'
+
+def _es_ruta_segura_programacion(path):
+    candidate=Path(path).resolve()
+    allowed=(RES.resolve(),ARCH.resolve())
+    return any(candidate==base or base in candidate.parents for base in allowed)
+
+def _programacion_confirmada(operation_id):
+    """Busca la confirmación transaccional exacta de una operación de importación."""
+    if not isinstance(operation_id,str) or not operation_id.strip():
+        return False
+    with connect() as conn:
+        rows=conn.execute(
+            "SELECT payload FROM events WHERE action='Importación programación'"
+        ).fetchall()
+    for row in rows:
+        try:
+            payload=json.loads(row['payload'] or '{}')
+        except (TypeError,ValueError):
+            continue
+        if isinstance(payload,dict) and payload.get('operation_id')==operation_id:
+            return True
+    return False
+
+def _validar_excel_programacion(path):
+    """Comprueba que el XLSX existe, supera CRC ZIP y puede leerse completo."""
+    path=Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f'No existe el archivo Excel de programación: {path}')
+    try:
+        with zipfile.ZipFile(path) as archive:
+            corrupt=archive.testzip()
+            if corrupt:
+                raise ValueError(f'El componente {corrupt} está dañado.')
+        workbook=load_workbook(path,read_only=True,data_only=True)
+        try:
+            if not workbook.sheetnames:
+                raise ValueError('El libro no contiene hojas.')
+            for sheet in workbook.worksheets:
+                for _ in sheet.iter_rows(values_only=True):
+                    pass
+        finally:
+            workbook.close()
+    except Exception as exc:
+        raise ValueError(f'El archivo de programación no se pudo validar como XLSX válido: {exc}') from exc
+    return True
+
+def _fsync_archivo(path):
+    """Fuerza a disco el contenido de un archivo ya escrito."""
+    with open(path,'rb') as stream:
+        os.fsync(stream.fileno())
+
+def _fsync_directorio(path):
+    """Fuerza a disco los cambios de nombres de archivo del directorio (POSIX)."""
+    flags=os.O_RDONLY|getattr(os,'O_DIRECTORY',0)
+    fd=os.open(os.fspath(path),flags)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+def _reemplazar_archivo_durable(origen,destino):
+    """Sincroniza el archivo fuente, lo sustituye y sincroniza el directorio destino."""
+    _fsync_archivo(origen)
+    os.replace(origen,destino)
+    _fsync_directorio(Path(destino).parent)
+
+def _eliminar_journal_programacion():
+    """Elimina el journal y sincroniza su directorio; devuelve si existía."""
+    journal=_ruta_journal_programacion()
+    try:
+        journal.unlink()
+    except FileNotFoundError:
+        return False
+    _fsync_directorio(journal.parent)
+    return True
+
+def _escribir_journal_programacion(data):
+    journal=_ruta_journal_programacion()
+    journal.parent.mkdir(parents=True,exist_ok=True)
+    tmp=journal.with_suffix('.json.tmp')
+    raw=json.dumps(data,ensure_ascii=False).encode('utf-8')
+    with open(tmp,'wb') as stream:
+        stream.write(raw);stream.flush()
+    _fsync_archivo(tmp)
+    os.replace(tmp,journal)
+    _fsync_directorio(journal.parent)
+
+def recuperar_programacion():
+    """Resuelve una operación interrumpida según el evento de confirmación en SQLite."""
+    with programacion_lock():
+        journal=_ruta_journal_programacion()
+        if not journal.exists(): return False
+        try:
+            data=json.loads(journal.read_text(encoding='utf-8'))
+            operation_id=data['operation_id']
+            if not isinstance(operation_id,str) or not operation_id.strip():
+                raise ValueError('El journal contiene un operation_id vacío o inválido.')
+            commit_action=data.get('commit_action','Reprogramación aplicada')
+            acciones_permitidas={'Reprogramación aplicada','Importación programación'}
+            if commit_action not in acciones_permitidas:
+                raise ValueError('El journal contiene un commit_action no permitido.')
+            excel=Path(data['excel']).resolve()
+            backup=Path(data['backup']).resolve()
+            excel_objetivo=(RES/'PROGRAMACION DE CURSOS.xlsx')
+            if excel_objetivo.is_symlink() or excel!=excel_objetivo.resolve() or backup.parent!=ARCH.resolve():
+                raise ValueError('El journal debe apuntar al Excel de programación y a un respaldo directo de versiones.')
+            if not _es_ruta_segura_programacion(excel) or not _es_ruta_segura_programacion(backup):
+                raise ValueError('El journal contiene rutas fuera de los directorios permitidos.')
+            # Buscar la confirmación por coincidencia exacta del operation_id en el JSON.
+            # No se necesita el respaldo si SQLite ya confirmó: el Excel nuevo es el estado válido.
+            with connect() as conn:
+                rows=conn.execute("SELECT payload FROM events WHERE action=?",(commit_action,)).fetchall()
+            committed=False
+            for event_row in rows:
+                try:
+                    payload=json.loads(event_row['payload'] or '{}')
+                except (TypeError,ValueError):
+                    continue
+                if isinstance(payload,dict) and payload.get('operation_id')==operation_id:
+                    committed=True
+                    break
+            if committed:
+                # SQLite confirmó, pero no se puede dar por recuperado un Excel ausente.
+                # Conservar el journal permite investigar/restaurar el archivo sin ocultar la incidencia.
+                if not excel.is_file():
+                    raise FileNotFoundError(
+                        'SQLite confirmó la operación, pero el Excel de programación no existe; '
+                        'se conserva el journal para recuperación manual.'
+                    )
+                _validar_excel_programacion(excel)
+                _eliminar_journal_programacion()
+                return True
+            if not backup.is_file():
+                raise FileNotFoundError('No se encuentra el respaldo necesario para restaurar la programación no confirmada.')
+            _validar_excel_programacion(backup)
+            # SQLite no confirmó: restaurar el Excel anterior antes de permitir otra operación.
+            fd,name=tempfile.mkstemp(prefix='RECUPERACION_',suffix='.xlsx',dir=str(excel.parent))
+            os.close(fd)
+            temp=Path(name)
+            try:
+                shutil.copy2(backup,temp)
+                # El helper sincroniza el temporal una sola vez antes del reemplazo.
+                _reemplazar_archivo_durable(temp,excel)
+            finally:
+                temp.unlink(missing_ok=True)
+            _eliminar_journal_programacion()
+            return True
+        except Exception as exc:
+            raise RuntimeError(f'ATRIO detectó una reprogramación interrumpida y no pudo completar su recuperación: {exc}') from exc
+
 
 def setting(k,default=None):
  with connect() as c:r=c.execute('SELECT value FROM settings WHERE key=?',(k,)).fetchone()
@@ -60,25 +253,149 @@ def parse_program(path):
  return out
 
 def fingerprint(g):return sha(json.dumps({k:g.get(k) for k in ['hoja','nombre','tipo','inicio','fin','duracion','horario','poblacion','aula','especialidad_programada']},sort_keys=True,default=str).encode())
-def import_program(path):
- rows=parse_program(path);warnings=[]
+def _import_program_impl(path, operation_id=None):
+ rows=parse_program(path)
+ previous=[]
  with connect() as c:
-  old=[dict(x) for x in c.execute('SELECT * FROM groups WHERE active=1')];used=set();c.execute('UPDATE groups SET active=0')
-  for g in rows:
-   fp=fingerprint(g);key=f"{g['hoja']}|{g['fila']}";exact=[x for x in old if x['fingerprint']==fp and x['id'] not in used]
-   fallback=[x for x in old if x['rowkey']==key and x['id'] not in used and json.loads(x['payload'])['nombre']==g['nombre']]
-   found=exact if len(exact)==1 else fallback
-   uid=found[0]['id'] if len(found)==1 else str(uuid.uuid4());used.add(uid)
-   if len(found)!=1 and old:warnings.append(f"Nuevo registro: {g['hoja']} / {g['nombre']}. Revisar si reemplaza un grupo anterior.")
-   if len(found)==1 and found[0]['fingerprint']!=fp:
-    c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(now(),uid,'Programación actualizada',json.dumps({'antes':json.loads(found[0]['payload']),'despues':g},ensure_ascii=False)))
-   c.execute('INSERT OR REPLACE INTO groups VALUES(?,?,?,?,1)',(uid,key,fp,json.dumps(g,ensure_ascii=False,default=str)))
-  c.execute('INSERT INTO events(at,action,payload) VALUES(?,?,?)',(now(),'Importación programación',json.dumps({'grupos':len(rows),'avisos':warnings})))
+  previous=[dict(x) for x in c.execute('SELECT * FROM groups WHERE active=1')]
+ prepared=[]
+ for g in rows:
+  item=dict(g);item['fingerprint']=fingerprint(g);prepared.append(item)
+ plan=planificar_conciliacion(previous,prepared)
+ warnings=list(plan['avisos'])
+ possible_replacements={}
+ for item in plan['nuevos']:
+  old_id=item.get('posible_grupo_anterior')
+  if old_id:
+   possible_replacements[old_id]=item
+ new_ids={}
+ with connect() as c:
+  c.execute('BEGIN IMMEDIATE')
+  for match in plan['vinculados']:
+   g=dict(match['actual']);g.pop('fingerprint',None)
+   meta={
+    'estado_programacion':'Vigente',
+    'incluido_en_ultima_actualizacion':True,
+    'ultima_conciliacion':now(),
+    'motivo_conciliacion':match['motivo_vinculo'],
+    'accion_pea_sugerida':match['accion_pea'],
+    'requiere_revision_horas':bool(match['horas_cambiaron']),
+    'requiere_revision_docente':bool(match['docente_cambio']),
+    'requiere_pea_nuevo':False,
+   }
+   g['_atrio']=meta
+   key=f"{g['hoja']}|{g['fila']}"
+   c.execute('INSERT OR REPLACE INTO groups VALUES(?,?,?,?,1)',(
+    match['id'],key,fingerprint(g),json.dumps(g,ensure_ascii=False,default=str)))
+   if match['cambios']:
+    c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(
+     now(),match['id'],'Programación actualizada',
+     json.dumps({'antes':match['anterior'],'despues':g,
+                 'campos_modificados':match['cambios'],
+                 'accion_pea_sugerida':match['accion_pea']},
+                ensure_ascii=False,default=str)))
+  for item in plan['nuevos']:
+   g=dict(item['actual']);g.pop('fingerprint',None)
+   uid=str(uuid.uuid4());new_ids[uid]=item
+   pea_required=bool(item['requiere_pea_nuevo'] and g.get('tipo')=='Extensión')
+   g['_atrio']={
+    'estado_programacion':'Revisar identidad' if item['requiere_revision_manual'] else 'Vigente',
+    'incluido_en_ultima_actualizacion':True,
+    'ultima_conciliacion':now(),
+    'motivo_conciliacion':item['motivo'],
+    'accion_pea_sugerida':item['accion_pea'],
+    'requiere_pea_nuevo':pea_required,
+    'posible_grupo_anterior':item.get('posible_grupo_anterior'),
+   }
+   key=f"{g['hoja']}|{g['fila']}"
+   c.execute('INSERT INTO groups(id,rowkey,fingerprint,payload,active) VALUES(?,?,?,?,1)',(
+    uid,key,fingerprint(g),json.dumps(g,ensure_ascii=False,default=str)))
+   if pea_required:
+    c.execute('INSERT OR IGNORE INTO status(group_id,doc,mce,note) VALUES(?,?,?,?)',(
+     uid,'Sin PEA','Sin verificar',
+     'Curso nuevo o nombre cambiado. Se requiere un PEA nuevo; no reutilizar el PEA del nombre anterior.'))
+   action=('Identidad pendiente de revisión' if item['requiere_revision_manual']
+           else 'PEA nuevo requerido por cambio de nombre' if item['motivo']=='nombre_cambiado'
+           else 'Curso nuevo incorporado')
+   c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(
+    now(),uid,action,json.dumps({
+     'grupo':g,'posible_grupo_anterior':item.get('posible_grupo_anterior'),
+     'requiere_pea_nuevo':pea_required,
+     'requiere_revision_manual':item['requiere_revision_manual']},
+     ensure_ascii=False,default=str)))
+  no_included=0
+  for item in plan['no_incluidos']:
+   uid=item['id'];g=dict(item['grupo']);old_meta=dict(g.get('_atrio') or {})
+   prior_replacement=possible_replacements.get(uid)
+   if prior_replacement:
+    new_uid=next((new_id for new_id,new_item in new_ids.items()
+                  if new_item is prior_replacement),None)
+    state='Sustituido por cambio de nombre · antecedente conservado'
+    meta=dict(old_meta,estado_programacion=state,
+              incluido_en_ultima_actualizacion=False,
+              sustituido_por_grupo=new_uid,ultima_conciliacion=now())
+    active=0
+   else:
+    state='Pendiente de reprogramación · no incluido en esta actualización'
+    meta=dict(old_meta,estado_programacion=state,
+              incluido_en_ultima_actualizacion=False,
+              ultima_conciliacion=now())
+    active=1
+    no_included+=1
+   g['_atrio']=meta
+   c.execute('UPDATE groups SET payload=?,active=? WHERE id=?',(
+    json.dumps(g,ensure_ascii=False,default=str),active,uid))
+   if old_meta.get('estado_programacion')!=state:
+    c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(
+     now(),uid,'Grupo conservado fuera de la actualización',
+     json.dumps({'estado':state,'sustituido_por_grupo':meta.get('sustituido_por_grupo'),
+                 'datos_anteriores_conservados':True},
+                ensure_ascii=False,default=str)))
+  summary=dict(plan['resumen'])
+  summary['pendientes_conservados']=no_included
+  summary['nombres_cambiados']=sum(1 for x in plan['nuevos'] if x['motivo']=='nombre_cambiado')
+  c.execute('INSERT INTO events(at,action,payload) VALUES(?,?,?)',(
+   now(),'Importación programación',json.dumps({'grupos_recibidos':len(rows),
+    'resumen':summary,'avisos':warnings,
+    'operation_id':operation_id,
+    'regla':'Los grupos no incluidos se conservan; no se interpretan como cancelados.'},
+    ensure_ascii=False,default=str)))
+ if no_included:
+  warnings.append(f"{no_included} grupo(s) no incluidos en esta actualización quedaron conservados como pendientes de reprogramación; no se eliminaron.")
  return len(rows),warnings
 
+def import_program(path, operation_id=None):
+ with programacion_lock():
+  recuperar_programacion()
+  return _import_program_impl(path, operation_id=operation_id)
+
 def groups():
- with connect() as c:rows=c.execute('SELECT * FROM groups WHERE active=1').fetchall()
+ """Devuelve todos los grupos activos, incluidos los pendientes para consulta y reprogramación."""
+ with programacion_lock():
+  recuperar_programacion()
+  with connect() as c:rows=c.execute('SELECT * FROM groups WHERE active=1').fetchall()
  return [dict(json.loads(x['payload']),id=x['id'],fingerprint=x['fingerprint']) for x in rows]
+
+def operational_groups(groups=None):
+ """Grupos incluidos en la actualización actual; excluye pendientes conservados."""
+ return filtrar_grupos_operativos(groups if groups is not None else globals()['groups']())
+
+def validate_group_current(group, conn=None):
+ """Rechaza generación basada en un grupo que cambió o dejó de estar incluido."""
+ def check(db):
+  row=db.execute('SELECT fingerprint,payload,active FROM groups WHERE id=?',
+                 (group.get('id'),)).fetchone()
+  if not row or not row['active']:
+   raise ValueError('El curso ya no está vigente en la programación. Actualiza la selección antes de generar el PEA.')
+  if not group.get('fingerprint') or row['fingerprint'] != group.get('fingerprint'):
+   raise ValueError('La programación de este curso cambió mientras el PEA estaba seleccionado. Vuelve a abrir el curso y revisa sus datos antes de generar.')
+  current=json.loads(row['payload'])
+  if not grupo_incluido_en_actualizacion(current):
+   raise ValueError('Este curso quedó pendiente de reprogramación y no participa en la jornada actual. Consérvalo y selecciónalo cuando se incluya en una nueva actualización.')
+  return True
+ if conn is not None:return check(conn)
+ with connect() as db:return check(db)
+
 
 def profiles():
  w=load_workbook(RES/'Plantilla_Datos_Docentes_PEA_CECATI31.xlsx',read_only=True,data_only=True)
@@ -107,7 +424,7 @@ def update_status(uid,doc,mce,note):
 def artifacts(uid):
  with connect() as c:return [dict(x) for x in c.execute('SELECT * FROM artifacts WHERE group_id=? ORDER BY created DESC',(uid,))]
 
-def save_resource(name,raw):
+def _save_resource_impl(name,raw):
  allowed={'PROGRAMACION DE CURSOS.xlsx','Plantilla_Datos_Docentes_PEA_CECATI31.xlsx','PEA_final en blanco.docx','DIAS_SIN_CLASE.json','SISAE.zip','MEMBRETE.docx','REPOSITORIO.pdf','CALENDARIO.pdf'}
  if name not in allowed:raise ValueError('Recurso no permitido')
  if len(raw)>100*1024*1024:raise ValueError('Máximo 100 MB')
@@ -129,11 +446,80 @@ def save_resource(name,raw):
  if name=='SISAE.zip':sisae_bytes(raw)
  if name.endswith('.pdf') and not raw.startswith(b'%PDF'):raise ValueError('PDF inválido')
  path=RES/name
+ if name=='PROGRAMACION DE CURSOS.xlsx' and path.is_symlink():
+  raise ValueError('La importación solo admite el Excel oficial como archivo normal; no se permiten enlaces simbólicos.')
+ backup=None
  if path.exists():
-  dest=ARCH/(datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+name);shutil.copy2(path,dest)
- tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_bytes(raw);os.replace(tmp,path);event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
- if name=='DIAS_SIN_CLASE.json':set_setting('calendario_confirmado',False)
- return import_program(path) if name.startswith('PROGRAMACION') else None
+  backup=ARCH/(datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+name)
+  shutil.copy2(path,backup)
+  if name=='PROGRAMACION DE CURSOS.xlsx':
+   _fsync_archivo(backup)
+   _fsync_directorio(backup.parent)
+ operation_id=None
+ if name=='PROGRAMACION DE CURSOS.xlsx':
+  if backup is None:
+   raise FileNotFoundError('No existe una programación anterior para respaldar; no se sustituirá el archivo.')
+  operation_id=str(uuid.uuid4())
+  _escribir_journal_programacion({
+   'operation_id':operation_id,'commit_action':'Importación programación',
+   'excel':str(path.resolve()),'backup':str(backup.resolve()),'created':now(),
+  })
+ tmp=path.with_suffix(path.suffix+'.tmp')
+ try:
+  tmp.write_bytes(raw)
+  if name=='PROGRAMACION DE CURSOS.xlsx':
+   _fsync_archivo(tmp)
+  os.replace(tmp,path)
+  if name=='PROGRAMACION DE CURSOS.xlsx':
+   _fsync_directorio(path.parent)
+   # La importación y su evento de confirmación comparten la transacción SQLite.
+   result=_import_program_impl(path,operation_id=operation_id)
+   try:
+    _eliminar_journal_programacion()
+   except Exception:
+    # Una falla del fsync final puede ocurrir después de unlink: el journal puede no existir.
+    # Si aún permanece, intentar recuperar; si ya desapareció, verificar el commit exacto.
+    try:
+     recuperar_programacion()
+    except RuntimeError:
+     if _ruta_journal_programacion().exists():
+      raise
+    confirmado=_programacion_confirmada(operation_id)
+    if not confirmado or _ruta_journal_programacion().exists():
+     raise
+    _validar_excel_programacion(path)
+  else:
+   result=None
+  try:
+   event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
+  except Exception:
+   # La importación tiene su propio evento transaccional; este registro es secundario.
+   if name!='PROGRAMACION DE CURSOS.xlsx' or not _programacion_confirmada(operation_id):
+    raise
+   _validar_excel_programacion(path)
+  if name=='DIAS_SIN_CLASE.json':set_setting('calendario_confirmado',False)
+  return result
+ finally:
+  try:
+   tmp.unlink(missing_ok=True)
+  except OSError:
+   # No ocultar fallos previos a la importación; un temporal residual posterior
+   # al commit no invalida la programación confirmada.
+   if name!='PROGRAMACION DE CURSOS.xlsx' or not _programacion_confirmada(operation_id):
+    raise
+
+def save_resource(name,raw):
+ if name=='PROGRAMACION DE CURSOS.xlsx':
+  with programacion_lock():
+   recuperar_programacion()
+   try:
+    return _save_resource_impl(name,raw)
+   except Exception:
+    # Si el proceso sigue vivo, intenta revertir ahora; ante cierre abrupto
+    # el journal se resolverá en la siguiente operación de programación.
+    recuperar_programacion()
+    raise
+ return _save_resource_impl(name,raw)
 
 def dbf(raw):
  count=struct.unpack_from('<I',raw,4)[0];head,length=struct.unpack_from('<HH',raw,8);fields=[];p=32
@@ -158,6 +544,7 @@ def sisae_bytes(raw):
   return {n:dbf(z.read(names[n])) for n in ['PROG_CURSOS1.DBF','INSCRIPCION.DBF']}
 
 def generate(g,participants,mode='cache',academic=None,progress=None,job_id=None):
+ validate_group_current(g)
  if g['tipo']!='Extensión':raise ValueError('Generación Word disponible solo para extensión. Regular no requiere PEA; repositorio necesita su original y adaptación.')
  if participants<1:raise ValueError('Confirma participantes previstos')
  if not setting('calendario_confirmado',False):raise ValueError('Revisa y confirma el calendario en Ajustes')
@@ -186,9 +573,19 @@ def generate(g,participants,mode='cache',academic=None,progress=None,job_id=None
   result=Document(out)
   if len(result.tables)!=28:raise ValueError('El documento generado no conserva las 28 tablas institucionales')
   (folder/'datos_generacion.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2,default=str))
- with connect() as c:c.execute('INSERT INTO artifacts VALUES(?,?,?,?,?,?,0)',(aid,g['id'],now(),str(out.relative_to(ROOT)),str(content_path.relative_to(ROOT)),g['fingerprint']))
- st=status(g['id']);update_status(g['id'],'Generado',st['mce'],'Archivo generado; pendiente de revisión')
- event(g['id'],'PEA generado',{'archivo':str(out.relative_to(ROOT)),'id':aid,'calendario':report})
+ try:
+  with connect() as c:
+   c.execute('BEGIN IMMEDIATE')
+   validate_group_current(g,c)
+   c.execute('INSERT INTO artifacts VALUES(?,?,?,?,?,?,0)',(aid,g['id'],now(),str(out.relative_to(ROOT)),str(content_path.relative_to(ROOT)),g['fingerprint']))
+   st=c.execute('SELECT mce FROM status WHERE group_id=?',(g['id'],)).fetchone()
+   mce=st['mce'] if st else 'Sin verificar'
+   c.execute('INSERT OR REPLACE INTO status VALUES(?,?,?,?)',(g['id'],'Generado',mce,'Archivo generado; pendiente de revisión'))
+   c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',
+             (now(),g['id'],'PEA generado',json.dumps({'archivo':str(out.relative_to(ROOT)),'id':aid,'calendario':report},ensure_ascii=False,default=str)))
+ except Exception:
+  shutil.rmtree(folder,ignore_errors=True)
+  raise
  return out
 
 def mark_reviewed(aid):

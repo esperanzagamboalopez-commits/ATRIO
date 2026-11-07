@@ -32,7 +32,7 @@ def _source(data):
     rows=P.candidatos()
     if not rows:
         st.caption('No se encontraron PEA disponibles en Mis PEA; utiliza Subir Word.');return g,None,None,None
-    def lab(x):return f"{x['origen']} · {x['curso']} · {x['docente']} · {str(x['creado'])[:10]}"
+    def lab(x):return f"{x['origen']} · {P._label(x)}"
     prefer=st.session_state.get('rv112_artifact')
     rid=[x.get('id') for x in rows]
     pref='atrio:'+str(prefer)

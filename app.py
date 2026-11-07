@@ -47,20 +47,20 @@ UI._ICONOS_MENU['Asistente virtual']=':material/auto_awesome:'
 nav=UI.menu_visual(OM.orden_actual(PAGES,C.setting('orden_menu',[])))
 if nav=='Preparar PEA' and st.session_state.get('pea110_stage') in ('validacion','contenido','salida'):
  nav='Preparar documento'  # Subetapa integrada: el menú sigue resaltando Preparar PEA.
-today=datetime.now(ZoneInfo('America/Mexico_City')).date();data=C.groups()
+today=datetime.now(ZoneInfo('America/Mexico_City')).date();data=C.groups();data_operativos=C.operational_groups(data)
 query=st.text_input('Buscar curso, docente o acción',placeholder='PEA, calendario, nombre…',key='atrio_buscador')
 if query:
  actions={'Generar PEA':'Preparar PEA','Alta de regulares y exportación MCE':'Seguimiento y MCE','Subir ZIP SISAE':'SISAE · Cortes','Cambiar calendario y días inhábiles':'Ajustes','Actualizar plantilla Word':'Ajustes','Editar perfil docente':'Ajustes','Cambiar colores de títulos':'Ajustes','Descargar respaldo':'Respaldos'}
  for label,target in actions.items():
   if C.motor.normal(query) in C.motor.normal(label):
    if st.button(label,key='search_action_'+label):st.session_state['jump']=target;st.rerun()
- hits=[g for g in data if C.motor.normal(query) in C.motor.normal(g['nombre']+' '+g['hoja'])]
+ hits=[g for g in data_operativos if C.motor.normal(query) in C.motor.normal(g['nombre']+' '+g['hoja'])]
  if hits:
   found=st.selectbox('Resultados',hits,format_func=lambda g:f"{g['hoja']} · {g['nombre']} · {g['inicio']}")
   if st.button('Abrir curso'):
    st.session_state['selected']=found['id'];st.session_state['teacher']=found['hoja'];st.session_state['editor_group']=found['id'];st.session_state['pea110_stage']='contenido';st.session_state['jump']='Preparar PEA';st.rerun()
 alerts=[]
-for g in data:
+for g in data_operativos:
  s=C.status(g['id'])
  if s['mce']=='Observado':alerts.append((g,'PEA devuelto con observaciones'))
  elif g['tipo']!='Regular' and s['mce']=='No subido':alerts.append((g,'PEA pendiente de subir al MCE'))
@@ -83,13 +83,13 @@ def select_group(key='select'):
  return chosen
 
 if nav=='Inicio':
- UI.home(data,alerts,DARK,a,b,today)
+ UI.home(data_operativos,alerts,DARK,a,b,today)
  if st.button('Abrir seguimiento de PEA y MCE →',key='home_follow'):
   st.session_state['jump']='Seguimiento y MCE';st.rerun()
 
 elif nav in ('Programación','Preparar PEA','Control escolar','Constancias y folios','Seguimiento y MCE'):
  number={'Programación':2,'Preparar PEA':3,'Seguimiento y MCE':3,'Control escolar':4,'Constancias y folios':5}[nav]
- hojas.show(number,data,today,tracking=nav=='Seguimiento y MCE')
+ hojas.show(number,data_operativos if nav=='Preparar PEA' else data,today,tracking=nav=='Seguimiento y MCE')
 
 elif nav=='PEA históricos':
  H1212.panel_historicos()
@@ -98,7 +98,7 @@ elif nav=='Mi Calendario':
  CAL.render_calendario()
 
 elif nav=='Pendientes':
- PEND.render_pendientes(data,today)
+ PEND.render_pendientes(data_operativos,today)
 
 elif nav=='Reprogramación':
  REPRO.render_reprogramacion(data,today)
@@ -109,7 +109,7 @@ elif nav=='Adaptar PDF':
 elif nav=='Preparar documento':
  UI.heading('Preparar PEA',a,b)
  uid=st.session_state.get('editor_group')
- g=next((x for x in data if x['id']==uid),None)
+ g=next((x for x in data_operativos if x['id']==uid),None)
  if g is None:
   st.info('Selecciona primero un docente y un curso en Preparar PEA.')
   if st.button('Abrir selección de cursos',key='pea111_open'):

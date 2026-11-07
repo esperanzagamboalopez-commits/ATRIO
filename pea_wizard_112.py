@@ -128,6 +128,21 @@ def validation(g):
         if st.button('Continuar a Contenido →',type='primary',key='p112_go_content'): _go('contenido')
     bottom('validacion')
 
+def _previous_artifacts(g):
+    """Versiones Word del mismo grupo cuya huella ya no coincide con Programación."""
+    current=g.get('fingerprint')
+    if not current:
+        return []
+    rows=[]
+    for a in C.artifacts(g['id']):
+        if not a.get('fingerprint') or a.get('fingerprint')==current:
+            continue
+        path=(C.ROOT/a.get('path','')).resolve()
+        if C.OUT.resolve() in path.parents and path.is_file():
+            rows.append(a)
+    return sorted(rows,key=lambda a:str(a.get('created') or ''),reverse=True)
+
+
 def _artifact_and_content(g):
     arts=C.artifacts(g['id'])
     arts=[a for a in arts if a.get('fingerprint')==g.get('fingerprint')]
@@ -213,6 +228,18 @@ def _poll_job(g):
 
 def content(g):
     st.markdown('<div class="p112"><div class="ptitle">Contenido académico</div><p class="tiny">Elaboración según los prompts establecidos con Tema 1 y Tema 2. El revisor de documentos existentes se encuentra en otra hoja.</p></div>',unsafe_allow_html=True)
+    previous=_previous_artifacts(g)
+    if previous:
+        st.warning(
+            f"Hay {len(previous)} versión(es) PEA anterior(es) de este mismo grupo. "
+            "La programación cambió; no se tomarán como versión vigente ni se sobrescribirán."
+        )
+        if st.button("Revisar o reajustar PEA anterior →",key="p112_review_previous"):
+            st.session_state["rv112_group"]=g["id"]
+            st.session_state["rv112_artifact"]=previous[0]["id"]
+            st.session_state["rv112_source"]="Elegir de Mis PEA"
+            st.session_state["jump"]="Revisor"
+            st.rerun()
     art,acad=_artifact_and_content(g)
     left,right=st.columns([1.6,1],gap='medium')
     with left:
