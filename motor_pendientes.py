@@ -95,8 +95,10 @@ def _crear(
     gid = str(grupo.get("id", ""))
     fecha_iso = fecha_objetivo.isoformat() if fecha_objetivo else ""
     estado = estado_forzado or _estado_por_fecha(
-        fecha_objetivo, hoy, verificacion=(certeza != "Confirmado")
+        fecha_objetivo, hoy, verificacion=(certeza == "Por verificar")
     )
+    if certeza == "Por verificar" and responsable == "Me corresponde":
+        responsable = "Por verificar"
     if estado == "Bloqueado":
         prioridad = "Alta"
     elif estado == "Vencido":
@@ -332,14 +334,29 @@ def construir_pendientes(
                     fuente="Control escolar", sufijo="elaborar-credenciales",
                 ))
         elif estado_cred not in CERRADO_CREDENCIALES and hoy > limite_cred and hoy >= inicio:
-            agregar(_crear(
-                proceso="Credenciales", grupo=g,
-                fecha_objetivo=limite_cred,
-                motivo="Se rebasó la primera semana desde el inicio y no está documentada la entrega de credenciales.",
-                accion="Regularizar la entrega, recuperar firmas y registrar la evidencia.",
-                modulo="Control escolar", hoy=hoy, prioridad="Alta",
-                fuente="Control escolar", sufijo="credenciales-vencidas",
-            ))
+            if cantidad_alumnos is None:
+                agregar(_crear(
+                    proceso="Credenciales", grupo=g,
+                    fecha_objetivo=limite_cred,
+                    motivo="Se rebasó la primera semana, pero no existe vínculo confirmado con el padrón SISAE para determinar el lote.",
+                    accion="Verificar el padrón y el estado de entrega antes de registrar un atraso.",
+                    modulo="Control escolar", hoy=hoy, certeza="Por verificar",
+                    fuente="Control escolar", sufijo="verificar-credenciales-vencidas",
+                ))
+            elif cantidad_alumnos > 0:
+                motivo = (
+                    "Las credenciales están elaboradas, pero no se ha documentado su entrega y la primera semana ya concluyó."
+                    if estado_cred == "elaboradas" else
+                    "Se rebasó la primera semana desde el inicio y no está documentada la elaboración/entrega de credenciales."
+                )
+                agregar(_crear(
+                    proceso="Credenciales", grupo=g,
+                    fecha_objetivo=limite_cred,
+                    motivo=motivo,
+                    accion="Regularizar la entrega, recuperar firmas y registrar la evidencia.",
+                    modulo="Control escolar", hoy=hoy, prioridad="Alta",
+                    fuente="Control escolar", sufijo="credenciales-vencidas",
+                ))
 
         # 6. Cursos ACM: aviso preventivo, no fecha oficial ni atraso.
         if _es_acm(g):
@@ -430,10 +447,11 @@ def filtrar_pendientes(tareas, hoy, periodo="Todos", proceso="Todos", responsabl
 def prioridades_del_dia(tareas, hoy, limite=3):
     """Devuelve hasta N prioridades inmediatas, ordenadas por riesgo y fecha."""
     hoy = como_fecha(hoy) or date.today()
-    ventana = hoy + timedelta(days=1)
+    ventana = hoy + timedelta(days=7)
     candidatas = [
         t for t in tareas
         if t.get("estado") in {"Bloqueado", "Vencido", "Pendiente", "Aviso"}
+        and t.get("responsable") != "Por verificar"
         and (not como_fecha(t.get("fecha")) or como_fecha(t.get("fecha")) <= ventana)
     ]
     orden = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3}
