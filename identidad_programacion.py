@@ -206,11 +206,13 @@ def grupo_incluido_en_actualizacion(group):
     """True si el grupo participa en la programación vigente de la jornada.
 
     Los registros anteriores a esta regla se consideran incluidos para mantener
-    compatibilidad. Los pendientes y sustituidos quedan fuera de los procesos
-    operativos, aunque sigan disponibles para consulta.
+    compatibilidad. Las identidades sin resolver, los pendientes y los sustituidos
+    quedan fuera de los procesos operativos, aunque sigan disponibles para consulta.
     """
     meta = group.get("_atrio") or {}
     state = normalizar(meta.get("estado_programacion"))
+    if state.startswith("revisar identidad"):
+        return False
     if state.startswith("pendiente de reprogramacion"):
         return False
     if state.startswith("sustituido por cambio de nombre"):
