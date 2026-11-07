@@ -143,3 +143,39 @@ def test_prioridades_del_dia_prefiere_bloqueos_y_vencidos():
         {"id": "c", "estado": "Vencido", "prioridad": "Alta", "fecha": "2026-11-01"},
     ]
     assert [x["id"] for x in prioridades_del_dia(tareas, date(2026, 11, 6))] == ["b", "c", "a"]
+
+
+
+def test_repositorio_genera_tarea_de_adaptacion_no_de_elaboracion_desde_cero():
+    tareas = construir_pendientes(
+        [grupo(tipo="Repositorio")],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Sin PEA", "mce": "Sin verificar"}},
+    )
+    pea = next(t for t in tareas if t["proceso"] == "Preparación de PEA de Repositorio")
+    assert "Descargar y adaptar" in pea["accion"]
+    assert not any(t["proceso"] == "Elaboración de PEAs" for t in tareas)
+
+
+def test_carga_de_pea_al_mce_no_inventa_fecha_limite_oficial():
+    tareas = construir_pendientes(
+        [grupo(inicio="2026-12-10")],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Generado", "mce": "No subido"}},
+    )
+    carga = next(t for t in tareas if t["proceso"] == "Subir PEAs al MCE")
+    assert carga["fecha"] == ""
+    assert carga["estado"] == "Pendiente"
+    assert carga["prioridad"] in {"Alta", "Media"}
+    assert "MCE" in carga["accion"]
+
+
+def test_tarea_de_credenciales_sin_padron_confirmado_es_solo_verificacion():
+    tareas = construir_pendientes(
+        [grupo(inicio="2026-11-03", fin="2026-11-30")],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Generado", "mce": "Subido"}},
+    )
+    cred = next(t for t in tareas if t["proceso"] == "Por verificar" and "credenciales" in t["id"])
+    assert cred["estado"] == "Por verificar"
+    assert cred["responsable"] == "Por verificar"
