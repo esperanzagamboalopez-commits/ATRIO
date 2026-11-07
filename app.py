@@ -156,6 +156,8 @@ elif nav=='Auditoría histórica':
 
 elif nav=='Ajustes':
  OM.panel_ajustes(PAGES,C)
+ if st.session_state.pop('_atrio_orbita_palette_saved',False):
+  st.success('Paleta guardada y ATRIO Órbita aplicado.')
  with st.expander('Instituciones y sedes ACM · Catálogo editable',expanded=False):
   ACM.panel_catalogo(C)
  if st.button('Actualizar o comparar respaldos SISAE →'):st.session_state['jump']='SISAE · Cortes';st.rerun()
@@ -254,7 +256,7 @@ elif nav=='Ajustes':
   if st.button('Guardar paleta y aplicar ATRIO Órbita',key='orbita_palette_save',type='primary'):
    C.set_setting('tema_paleta_personalizada',tema.validar_paleta(_paleta_borrador))
    C.set_setting('tema_visual',tema.ORBITA)
-   st.success('Paleta guardada y ATRIO Órbita aplicado.')
+   st.session_state['_atrio_orbita_palette_saved']=True
    st.rerun()
  with st.expander('Autoridades y presentación',expanded=False):
   with st.form('settings'):
