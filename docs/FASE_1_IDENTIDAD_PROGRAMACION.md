@@ -54,3 +54,18 @@ Prueba añadida: `tests/test_antecedentes_consulta.py`, con base SQLite temporal
 Cuando el grupo conserva su identidad, pero cambian atributos de programación, los artefactos cuya huella no coincide con la vigente se presentan como versiones anteriores. Preparar PEA ofrece acceso directo a Revisor para comparar y reajustar el Word, conservando el original. Las versiones anteriores no se muestran como PEA vigente ni se reutilizan automáticamente.
 
 Prueba adicional: el selector de biblioteca marca la huella anterior y Preparar PEA recupera esos artefactos por group_id para enviarlos a revisión.
+
+
+## Separación entre grupos operativos y pendientes conservados
+
+La conciliación distingue la conservación del registro de su participación en la actualización actual:
+
+- **Vigente/incluido:** participa en alertas, Inicio, Centro de Pendientes y selección para preparar PEA.
+- **Pendiente de reprogramación:** permanece activo y consultable; puede volver a seleccionarse en Reprogramación, pero queda fuera de alertas y tareas de la jornada actual.
+- **Sustituido por cambio de nombre:** permanece como antecedente histórico y no participa en los procesos operativos.
+
+En `identidad_programacion.py`, `grupo_incluido_en_actualizacion()` aplica esta regla y `grupos_operativos()` filtra sin mutar ni borrar la colección original. En `centro.py`, `groups()` conserva su comportamiento de devolver todos los grupos activos, para que Programación, Reprogramación y las consultas no pierdan acceso a los pendientes. `operational_groups()` ofrece la vista filtrada.
+
+En `app.py`, Inicio, alertas, búsqueda que abre Preparar PEA, Centro de Pendientes y selección para generar PEA reciben solo grupos operativos. Programación, Reprogramación y las consultas generales conservan el conjunto completo. Los registros antiguos sin metadatos se consideran incluidos para mantener compatibilidad.
+
+Pruebas específicas: `tests/test_grupos_operativos.py` cubre pendientes, vigentes, sustituidos, compatibilidad histórica y no mutación de los registros originales.
