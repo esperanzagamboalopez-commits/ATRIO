@@ -246,7 +246,7 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
     st.markdown("## Prioridades de hoy")
     prioridades = prioridades_del_dia(tareas, hoy, limite=3)
     if not prioridades:
-        st.success("No se identifican plazos inmediatos ni tareas críticas para hoy.")
+        st.markdown("**Sin prioridades inmediatas.**")
         st.caption("Los demás seguimientos siguen disponibles en Centro de Pendientes.")
         return
 
