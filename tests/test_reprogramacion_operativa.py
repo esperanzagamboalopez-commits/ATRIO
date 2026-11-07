@@ -228,6 +228,51 @@ class TestReprogramacion(unittest.TestCase):
             self.assertIn(self.resources, [call.args[0] for call in sync_dir.call_args_list])
             self.assertGreaterEqual(sync_dir.call_count, 3)
 
+    def test_conserva_journal_si_excel_confirmado_existe_pero_esta_corrupto(self):
+        backup = self.archive / "backup_excel_valido.xlsx"
+        backup.write_bytes(self.excel.read_bytes())
+        operation_id = "operacion-excel-corrupto"
+        C._escribir_journal_programacion({
+            "operation_id": operation_id,
+            "excel": str(self.excel.resolve()),
+            "backup": str(backup.resolve()),
+            "created": C.now(),
+        })
+        with self._connect() as db:
+            db.execute(
+                "INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)",
+                (C.now(), None, "Reprogramación aplicada",
+                 json.dumps({"operation_id": operation_id})),
+            )
+        self.excel.write_bytes(b"archivo xlsx dañado")
+
+        with self.assertRaisesRegex(RuntimeError, "no se pudo validar como XLSX"):
+            C.recuperar_programacion()
+
+        self.assertTrue(C._ruta_journal_programacion().is_file())
+        self.assertEqual(self.excel.read_bytes(), b"archivo xlsx dañado")
+
+    def test_no_restaurar_respaldo_corrupto_ni_limpiar_journal(self):
+        backup = self.archive / "backup_corrupto.xlsx"
+        backup.write_bytes(b"respaldo dañado")
+        workbook = load_workbook(self.excel)
+        workbook["DOCENTE A"].cell(15, 6).value = date(2027, 1, 15)
+        workbook.save(self.excel)
+        workbook.close()
+        excel_actual = self.excel.read_bytes()
+        C._escribir_journal_programacion({
+            "operation_id": "operacion-respaldo-corrupto",
+            "excel": str(self.excel.resolve()),
+            "backup": str(backup.resolve()),
+            "created": C.now(),
+        })
+
+        with self.assertRaisesRegex(RuntimeError, "no se pudo validar como XLSX"):
+            C.recuperar_programacion()
+
+        self.assertEqual(self.excel.read_bytes(), excel_actual)
+        self.assertTrue(C._ruta_journal_programacion().is_file())
+
     def test_recupera_excel_si_hubo_interrupcion_antes_del_commit_sqlite(self):
         original = self.excel.read_bytes()
         backup = self.archive / "backup_interrupcion.xlsx"
