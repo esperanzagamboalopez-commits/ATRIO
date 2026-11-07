@@ -282,7 +282,16 @@ def construir_pendientes(
         estado_cred = _norm(registro_cred.get("estado") or registro_cred.get("status"))
         limite_cred = inicio + timedelta(days=7)
         cantidad_alumnos = alumnos.get(gid)
-        if estado_cred not in CERRADO_CREDENCIALES and hoy >= inicio and hoy <= limite_cred:
+        if estado_cred == "elaboradas" and hoy <= limite_cred:
+            agregar(_crear(
+                proceso="Credenciales", grupo=g,
+                fecha_objetivo=limite_cred,
+                motivo="Las credenciales ya están elaboradas; falta la entrega respaldada por la relación de firmas.",
+                accion="Entregar las credenciales, recuperar las firmas y registrar la evidencia.",
+                modulo="Control escolar", hoy=hoy, prioridad="Alta",
+                fuente="Control escolar", sufijo="entregar-credenciales",
+            ))
+        elif estado_cred not in CERRADO_CREDENCIALES and hoy >= inicio and hoy <= limite_cred:
             if cantidad_alumnos is None:
                 agregar(_crear(
                     proceso="Credenciales", grupo=g,
@@ -292,7 +301,7 @@ def construir_pendientes(
                     modulo="Control escolar", hoy=hoy, certeza="Por verificar",
                     fuente="Control escolar", sufijo="verificar-padron-credenciales",
                 ))
-            elif cantidad_alumnos > 0 and estado_cred != "elaboradas":
+            elif cantidad_alumnos > 0:
                 agregar(_crear(
                     proceso="Credenciales", grupo=g,
                     fecha_objetivo=limite_cred,
@@ -301,15 +310,6 @@ def construir_pendientes(
                     modulo="Control escolar", hoy=hoy, prioridad="Alta",
                     fuente="Control escolar", sufijo="elaborar-credenciales",
                 ))
-        elif estado_cred == "elaboradas" and hoy <= limite_cred:
-            agregar(_crear(
-                proceso="Credenciales", grupo=g,
-                fecha_objetivo=limite_cred,
-                motivo="Las credenciales ya están elaboradas; falta la entrega respaldada por la relación de firmas.",
-                accion="Entregar las credenciales, recuperar las firmas y registrar la evidencia.",
-                modulo="Control escolar", hoy=hoy, prioridad="Alta",
-                fuente="Control escolar", sufijo="entregar-credenciales",
-            ))
         elif estado_cred not in CERRADO_CREDENCIALES and hoy > limite_cred and hoy >= inicio:
             agregar(_crear(
                 proceso="Credenciales", grupo=g,
