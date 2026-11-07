@@ -77,6 +77,16 @@ def _norm(value):
     return re.sub(r"\s+", " ", str(value or "").strip().casefold())
 
 
+def normalizar_periodo_sisae(value):
+    texto = str(value or "").strip().upper()
+    if texto in {"P1", "P2", "P3", "P4"}:
+        return texto
+    if texto in {"1", "2", "3", "4"}:
+        return "P" + texto
+    coincidencia = re.search(r"(?<!\d)([1-4])(?!\d)", texto)
+    return "P" + coincidencia.group(1) if coincidencia else ""
+
+
 def _es_acm(grupo):
     campos = ("modalidad", "subtipo", "tipo_accion", "observaciones", "aula", "nombre", "poblacion", "especialidad_programada")
     texto = " ".join(str(grupo.get(k, "") or "") for k in campos).casefold()
@@ -142,6 +152,7 @@ def construir_pendientes(
     dias_inhabiles=(),
     alumnos_por_grupo=None,
     anticipacion_acm=10,
+    periodos_sisae=None,
 ):
     """Construye tareas confirmadas y verificaciones sin alterar datos.
 
@@ -154,12 +165,20 @@ def construir_pendientes(
     school = estados_control_escolar or {}
     credenciales = estados_credenciales or {}
     alumnos = alumnos_por_grupo or {}
+    periodos_sisae = periodos_sisae or {}
+    periodo_por_grupo = {
+        str(g.get("id", "")): normalizar_periodo_sisae(
+            periodos_sisae.get(identificador_control_escolar(g))
+        )
+        for g in (grupos or [])
+    }
     inh = {como_fecha(x) for x in (dias_inhabiles or ())}
     tareas = []
     vistos = set()
 
     def agregar(item):
         if item["id"] not in vistos:
+            item["periodo_sisae"] = periodo_por_grupo.get(item.get("grupo_id", ""), "")
             vistos.add(item["id"])
             tareas.append(item)
 
@@ -432,7 +451,10 @@ def construir_pendientes(
     return tareas
 
 
-def filtrar_pendientes(tareas, hoy, periodo="Todos", proceso="Todos", responsable="Todos", fecha_personal=None):
+def filtrar_pendientes(
+    tareas, hoy, periodo="Todos", proceso="Todos", responsable="Todos",
+    fecha_personal=None, periodo_sisae="Todos",
+):
     hoy = como_fecha(hoy) or date.today()
     manana = hoy + timedelta(days=1)
     fin_7 = hoy + timedelta(days=7)
@@ -453,6 +475,8 @@ def filtrar_pendientes(tareas, hoy, periodo="Todos", proceso="Todos", responsabl
         if proceso != "Todos" and tarea.get("proceso") != proceso:
             continue
         if responsable != "Todos" and tarea.get("responsable") != responsable:
+            continue
+        if periodo_sisae != "Todos" and tarea.get("periodo_sisae") != periodo_sisae:
             continue
         salida.append(tarea)
     return salida
