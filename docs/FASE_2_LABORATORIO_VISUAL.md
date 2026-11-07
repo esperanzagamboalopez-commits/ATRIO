@@ -78,7 +78,7 @@ Todas las vistas deben presentar la misma composición y los mismos datos fictic
 
 - Marca ATRIO y navegación lateral de muestra.
 - Encabezado de bienvenida.
-- Franja oscura con el título `PEA y trámites en MCE`, texto blanco y acento oro.
+- No añadir paneles de atención ni franjas decorativas de `PEA y trámites en MCE` a Inicio.
 - Calendario dentro de un panel rosa polvo (la variación de color debe adaptarse al tema, sin convertir el calendario en negro).
 - Métricas compactas y un ejemplo de tabla/listado.
 - Botones primario y secundario, pestañas, campos y estados de aviso.
@@ -107,15 +107,14 @@ Los valores se validan como hexadecimal de seis dígitos. La tipografía, las su
 ## 8. Archivos de integración y vista previa aislada
 
 ### Integración de tema
-- `tema.py`: preset ATRIO Órbita, tokens de gradiente/calendario/franja principal y validación de paleta.
+- `tema.py`: preset ATRIO Órbita, tokens de gradiente/calendario y validación de paleta.
 - `interfaz.py`: aplicación de variables compartidas a la interfaz Streamlit.
-- `inicio.html`: consumo de tokens para el saludo, calendario y franja `PEA y trámites en MCE`.
+- `inicio.html`: consumo de tokens para el saludo y el calendario; no incluye banda ni panel `PEA y trámites en MCE`.
 - `app.py`: selector de tema y personalización persistente en Ajustes.
 - `tests/test_tema_orbita.py`: pruebas de tokens, validación y separación entre temas.
 
 ### Vista previa independiente
-- Inicio conserva la franja oscura `PEA y trámites en MCE` como título de identidad, sin el bloque `Lo que requiere tu atención`, texto de aviso demostrativo ni botón `Ver cursos para revisar`.
-- El resumen informativo no se presenta como acción pendiente ni duplica el seguimiento que corresponde a sus módulos.
+- Inicio no muestra el bloque `Lo que requiere tu atención`, el aviso demostrativo, el botón `Ver cursos para revisar` ni la franja decorativa `PEA y trámites en MCE`. El seguimiento se consulta en sus módulos correspondientes.
 - `laboratorio_orbita_streamlit.py`: muestra el tema y la composición real de `inicio.html` con tres cursos ficticios.
 - No importa `app.py` ni `centro.py`; no abre SQLite, Excel, SISAE, expedientes o documentos.
 - Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
@@ -146,7 +145,7 @@ Se abrirá el puerto 8502 de Codespaces. Esta ejecución no equivale a iniciar A
 La identidad ATRIO Órbita está aprobada por la usuaria y su integración está preparada en la rama `pruebas/fase2-funcional-aislada`.
 
 - Se incorpora como opción de tema; Editorial Rosa continúa como valor predeterminado y los temas anteriores no se eliminan.
-- El Inicio consume los mismos tokens compartidos para el degradado de bienvenida, calendario en arena clara y franja oscura `PEA y trámites en MCE`. La franja es ahora un elemento de identidad sin panel informativo, aviso o botón simulado. La franja es ahora un elemento de identidad sin panel informativo, aviso o botón simulado.
+- Inicio consume los tokens compartidos para el degradado de bienvenida y el calendario en arena clara. No incluye panel de atención, franja `PEA y trámites en MCE`, aviso ni botón simulado.
 - Ajustes permite personalizar los cuatro colores aprobados y guardar la paleta en la configuración ya existente.
 - La personalización no cambia tipografía, superficies de lectura, color de texto ni estados semánticos.
 - No se han modificado `main`, Excel institucional, SISAE, documentos PEA, plantillas ni la base de datos del entorno operativo.
