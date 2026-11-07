@@ -1003,9 +1003,13 @@ def _eventos_de_fecha(fecha, eventos):
         fi = _fecha(ev.get("fecha_inicio"))
         ff = _fecha(ev.get("fecha_fin"), fi)
         limite = _fecha(ev.get("fecha_limite"))
-        if fi and ff and fi <= fecha <= ff:
+        es_actividad = bool(fi and ff and fi <= fecha <= ff)
+        es_limite = limite == fecha
+        if es_actividad and es_limite:
+            salida.append(("Actividad · fecha límite", ev))
+        elif es_actividad:
             salida.append(("Actividad", ev))
-        if limite == fecha:
+        elif es_limite:
             salida.append(("Fecha límite", ev))
     return salida
 
@@ -1173,7 +1177,7 @@ def render_inicio_calendario(cursos=None):
             )
 
         for tipo, ev in actividades_dia:
-            if tipo == "Fecha límite":
+            if "límite" in tipo.casefold():
                 st.warning(f"Fecha límite: **{ev.get('titulo') or 'Actividad'}**")
             _tarjeta_evento(ev, mostrar_detalle=True)
             acciones = st.columns(2)
