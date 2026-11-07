@@ -31,3 +31,20 @@ def test_vista_streamlit_usa_inicio_real_y_registros_ficticios():
     assert "__COURSES__" in template
     assert "__SISAE_SUMMARY__" in template
     assert tema.ORBITA in tema.OPCIONES
+
+
+def test_inicio_no_muestra_panel_informativo_ni_accion_simulada():
+    root = Path(__file__).resolve().parents[1]
+    template = (root / "inicio.html").read_text(encoding="utf-8")
+    preview = (root / "laboratorio_orbita_streamlit.py").read_text(encoding="utf-8")
+    interface = (root / "interfaz.py").read_text(encoding="utf-8")
+
+    assert "Lo que requiere tu atención" not in template
+    assert "__ALERT_TEXT__" not in template
+    assert 'id="check"' not in template
+    assert "q('#check')" not in template
+    assert "Ver cursos para revisar" not in template
+    assert "PEA y trámites en MCE" in template
+    assert "pea-mce-band" in template
+    assert "__ALERT_TEXT__" not in preview
+    assert "__ALERT_TEXT__" not in interface
