@@ -454,6 +454,37 @@ def test_journal_incompleto_no_modifica_programacion(isolated, campo_faltante):
     assert journal.exists()
 
 
+@pytest.mark.parametrize(
+    ("campo", "valor", "mensaje"),
+    [
+        ("operation_id", "", "operation_id vacío o inválido"),
+        ("commit_action", "Acción arbitraria", "commit_action no permitido"),
+    ],
+)
+def test_journal_rechaza_identificador_o_accion_invalidos(isolated, campo, valor, mensaje):
+    """No se acepta una confirmación SQLite basada en metadatos inválidos del journal."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    backup = C.ARCH / "respaldo_validacion_journal.xlsx"
+    shutil.copy2(resource, backup)
+    journal = C._ruta_journal_programacion()
+    data = {
+        "operation_id": "journal-validacion",
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str(backup.resolve()),
+        "created": C.now(),
+    }
+    data[campo] = valor
+    C._escribir_journal_programacion(data)
+
+    with pytest.raises(RuntimeError, match=mensaje):
+        C.recuperar_programacion()
+
+    assert resource.read_bytes() == original
+    assert journal.exists()
+
+
 def test_excel_ausente_se_restaura_desde_respaldo(isolated):
     """Si no hubo confirmación y falta el Excel, la recuperación lo repone desde backup."""
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
