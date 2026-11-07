@@ -256,43 +256,55 @@ def _actualizar_excel_y_db_impl(cambios, excel_path=None):
                 actuales[cambio["id"]] = payload
             os.replace(temp, excel)
             reemplazado = True
-            try:
-                for cambio in cambios:
-                    payload = actuales[cambio["id"]]
-                    payload["inicio"] = cambio["inicio_nuevo"]
-                    payload["fin"] = cambio["fin_nuevo"]
-                    nueva_huella = C.fingerprint(payload)
-                    conn.execute(
-                        "UPDATE groups SET fingerprint=?,payload=? WHERE id=?",
-                        (nueva_huella, json.dumps(payload, ensure_ascii=False, default=str), cambio["id"]),
-                    )
-                    conn.execute(
-                        "INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)",
-                        (C.now(), cambio["id"], "Curso reprogramado", json.dumps({
-                            "antes": {"inicio": cambio["inicio_anterior"], "fin": cambio["fin_anterior"]},
-                            "despues": {"inicio": cambio["inicio_nuevo"], "fin": cambio["fin_nuevo"]},
-                            "horas": cambio["horas"], "horario": cambio["horario"],
-                            "excel": str(excel), "respaldo": str(backup),
-                        }, ensure_ascii=False)),
-                    )
+            for cambio in cambios:
+                payload = actuales[cambio["id"]]
+                payload["inicio"] = cambio["inicio_nuevo"]
+                payload["fin"] = cambio["fin_nuevo"]
+                nueva_huella = C.fingerprint(payload)
+                conn.execute(
+                    "UPDATE groups SET fingerprint=?,payload=? WHERE id=?",
+                    (nueva_huella, json.dumps(payload, ensure_ascii=False, default=str), cambio["id"]),
+                )
                 conn.execute(
                     "INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)",
-                    (C.now(), None, "Reprogramación aplicada", json.dumps({
-                        "grupos_actualizados": len(cambios), "respaldo": str(backup),
-                        "archivo": str(excel), "operation_id": operation_id,
-                        "regla": "Se conservaron group_id, estados y documentos existentes.",
+                    (C.now(), cambio["id"], "Curso reprogramado", json.dumps({
+                        "antes": {"inicio": cambio["inicio_anterior"], "fin": cambio["fin_anterior"]},
+                        "despues": {"inicio": cambio["inicio_nuevo"], "fin": cambio["fin_nuevo"]},
+                        "horas": cambio["horas"], "horario": cambio["horario"],
+                        "excel": str(excel), "respaldo": str(backup),
                     }, ensure_ascii=False)),
                 )
-            except Exception:
-                shutil.copy2(backup, excel)
-                raise
+            conn.execute(
+                "INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)",
+                (C.now(), None, "Reprogramación aplicada", json.dumps({
+                    "grupos_actualizados": len(cambios), "respaldo": str(backup),
+                    "archivo": str(excel), "operation_id": operation_id,
+                    "regla": "Se conservaron group_id, estados y documentos existentes.",
+                }, ensure_ascii=False)),
+            )
         journal.unlink(missing_ok=True)
         return backup, excel
     except Exception:
+        # Resolver según el commit real de SQLite. Nunca restaurar el Excel anterior
+        # si la transacción ya confirmó, aunque haya fallado la limpieza del journal.
         if backup.exists() and journal.exists():
-            if reemplazado:
-                shutil.copy2(backup, excel)
-            journal.unlink(missing_ok=True)
+            C.recuperar_programacion()
+            with C.connect() as conn:
+                rows = conn.execute(
+                    "SELECT payload FROM events WHERE action=?",
+                    ("Reprogramación aplicada",),
+                ).fetchall()
+            confirmado = False
+            for row in rows:
+                try:
+                    payload = json.loads(row["payload"] or "{}")
+                except (TypeError, ValueError):
+                    continue
+                if isinstance(payload, dict) and payload.get("operation_id") == operation_id:
+                    confirmado = True
+                    break
+            if confirmado and excel.is_file() and not journal.exists():
+                return backup, excel
         raise
     finally:
         try:
