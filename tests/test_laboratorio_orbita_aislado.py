@@ -44,7 +44,7 @@ def test_inicio_no_muestra_panel_informativo_ni_accion_simulada():
     assert 'id="check"' not in template
     assert "q('#check')" not in template
     assert "Ver cursos para revisar" not in template
-    assert "PEA y trámites en MCE" in template
-    assert "pea-mce-band" in template
+    assert "PEA y trámites en MCE" not in template
+    assert "pea-mce-band" not in template
     assert "__ALERT_TEXT__" not in preview
     assert "__ALERT_TEXT__" not in interface
