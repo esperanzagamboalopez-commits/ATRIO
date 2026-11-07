@@ -98,23 +98,36 @@ La galería será demostrativa. Sus botones, campos y navegación no ejecutarán
 - Las modificaciones visuales de `Inicio` y `Ajustes` se limitan a consumir los tokens de tema; no se alteran flujos académicos ni operativos.
 - Después de cada cambio visual se ejecutan las pruebas funcionales para detectar regresiones.
 
-## 7. Personalización de paleta en el laboratorio
+## 7. Personalización de paleta integrada
 
-Se añade la opción `Personalizar · Mi paleta`, con controles de color para fondo general, acento principal, acento secundario y calendario. La vista se actualiza en el navegador, sin guardar preferencias, sin escribir archivos y sin modificar ATRIO. Tipografía y superficies de lectura se mantienen controladas para proteger la legibilidad. La persistencia de preferencias, si se aprueba en el futuro, se diseñará dentro de Ajustes de ATRIO y requerirá autorización separada.
+En la galería original, `Personalizar · Mi paleta` fue una prueba temporal. En la integración de Fase 2.2 se incorporan cuatro controles persistentes en `Ajustes`: fondo general, color principal, color secundario y calendario. Los cambios se previsualizan en vivo cuando ATRIO Órbita está activo. El botón `Guardar paleta y aplicar ATRIO Órbita` almacena los valores en la configuración existente (`settings`, clave `tema_paleta_personalizada`) mediante `C.set_setting`; no crea otra base de datos ni archivos. El botón de restablecimiento recupera la paleta base.
 
-## 8. Archivos previstos
+Los valores se validan como hexadecimal de seis dígitos. La tipografía, las superficies de lectura, la tinta y los estados semánticos permanecen controlados. La previsualización independiente descrita en la sección 8 no persiste cambios.
 
-### Primera entrega: laboratorio independiente
-- Nuevo `laboratorio_temas.py` o una página HTML autónoma servida en modo local.
-- Este archivo no importará módulos de operación, ni leerá recursos o bases de datos.
+## 8. Archivos de integración y vista previa aislada
 
-### Entrega posterior, solo después de la aprobación visual
-- `tema.py`: tokens y presets.
-- `interfaz.py`: aplicación consistente de variables y componentes.
-- `inicio.html`: composición de Inicio y consumo de variables compartidas.
-- Pruebas visuales o verificaciones automatizadas de tokens, contraste básico y no regresión funcional.
+### Integración de tema
+- `tema.py`: preset ATRIO Órbita, tokens de gradiente/calendario/franja principal y validación de paleta.
+- `interfaz.py`: aplicación de variables compartidas a la interfaz Streamlit.
+- `inicio.html`: consumo de tokens para el saludo, calendario y franja `PEA y trámites en MCE`.
+- `app.py`: selector de tema y personalización persistente en Ajustes.
+- `tests/test_tema_orbita.py`: pruebas de tokens, validación y separación entre temas.
 
-## 9. Criterios de aceptación
+### Vista previa independiente
+- `laboratorio_orbita_streamlit.py`: muestra el tema y la composición real de `inicio.html` con tres cursos ficticios.
+- No importa `app.py` ni `centro.py`; no abre SQLite, Excel, SISAE, expedientes o documentos.
+- Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
+- `tests/test_laboratorio_orbita_aislado.py`: verifica que la vista previa no incorpore conexiones con recursos operativos.
+
+Para abrir solamente la vista previa, nunca `app.py`, se usa:
+
+```bash
+streamlit run laboratorio_orbita_streamlit.py --server.address 0.0.0.0 --server.port 8502
+```
+
+Se abrirá el puerto 8502 de Codespaces. Esta ejecución no equivale a iniciar ATRIO operativo ni autoriza conectar sus recursos institucionales.
+
+## 9. Criterios de aceptación de identidad y separación
 
 - Los temas principales y ATRIO Órbita se distinguen claramente y conservan legibilidad.
 - Glass Executive se percibe translúcido y con desenfoque real.
