@@ -10,7 +10,7 @@ DATA=ROOT/'datos'; RES=DATA/'recursos'; OUT=DATA/'salidas'; ARCH=DATA/'versiones
 for p in (RES,OUT,ARCH):p.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0,str(ROOT/'motor'))
 import generador_pea_extension_v6_4 as motor
-from identidad_programacion import planificar_conciliacion
+from identidad_programacion import planificar_conciliacion, grupos_operativos as filtrar_grupos_operativos
 
 def ruta_dias_sin_clase():
     """Primera ruta existente de DIAS_SIN_CLASE.json (datos/recursos y luego raíz). None si no existe."""
@@ -172,8 +172,13 @@ def import_program(path):
  return len(rows),warnings
 
 def groups():
+ """Devuelve todos los grupos activos, incluidos los pendientes para consulta y reprogramación."""
  with connect() as c:rows=c.execute('SELECT * FROM groups WHERE active=1').fetchall()
  return [dict(json.loads(x['payload']),id=x['id'],fingerprint=x['fingerprint']) for x in rows]
+
+def operational_groups(groups=None):
+ """Grupos incluidos en la actualización actual; excluye pendientes conservados."""
+ return filtrar_grupos_operativos(groups if groups is not None else globals()['groups']())
 
 def profiles():
  w=load_workbook(RES/'Plantilla_Datos_Docentes_PEA_CECATI31.xlsx',read_only=True,data_only=True)
