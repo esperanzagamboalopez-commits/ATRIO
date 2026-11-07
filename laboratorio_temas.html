@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATRIO · Laboratorio visual Fase 2</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#F5EFEC;--surface:#FFFCFA;--surface-2:#F8F1EF;--ink:#30262B;--muted:#796D70;
+  --line:rgba(76,52,60,.14);--accent:#A64F70;--accent-2:#D7A0B2;--gold:#B58B50;
+  --sidebar:#EEE3E5;--sidebar-ink:#34282E;--shadow:0 14px 38px rgba(63,38,48,.09);
+  --soft-accent:rgba(166,79,112,.11);--hero-grad:linear-gradient(118deg,#EED6DE 0%,#FBF7F4 54%,#D8A6B6 100%);
+  --calendar:#F3E0E6;--calendar-ink:#593344;--calendar-line:rgba(166,79,112,.22);
+  --font-head:Georgia,"Times New Roman",serif;--font-body:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --glass:0;--sidebar-border:var(--line);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:var(--font-body);background:var(--page);color:var(--ink)}
+body{padding:22px;background:
+ radial-gradient(circle at 8% 5%,rgba(214,160,178,.16),transparent 27rem),
+ radial-gradient(circle at 94% 92%,rgba(181,139,80,.10),transparent 24rem),var(--page)}
+button{font:inherit}
+.lab{max-width:1510px;margin:0 auto}
+.labbar{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px}
+.labidentity{display:flex;gap:12px;align-items:center}
+.labmark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--ink);color:#F7EEDC;font:22px var(--font-head);box-shadow:var(--shadow)}
+.labtitle{font-weight:750;letter-spacing:.02em}
+.labsub{font-size:11px;color:var(--muted);margin-top:3px}
+.labflag{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--accent);border:1px solid var(--line);padding:8px 11px;border-radius:999px;background:var(--surface)}
+.themechooser{display:flex;gap:7px;flex-wrap:wrap}
+.theme-btn{border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:9px 13px;font-size:12px;font-weight:650;cursor:pointer;transition:.18s}
+.theme-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.theme-btn[aria-pressed="true"]{background:var(--ink);color:#FFF;border-color:var(--ink);box-shadow:0 5px 15px rgba(0,0,0,.12)}
+.frame{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:900px;border:1px solid var(--line);border-radius:23px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.sidebar{background:var(--sidebar);color:var(--sidebar-ink);padding:24px 16px;display:flex;flex-direction:column;border-right:1px solid var(--sidebar-border)}
+.brand{font:30px var(--font-head);letter-spacing:.18em;color:var(--accent);padding:3px 10px}
+.brand-caption{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:3px 11px 24px}
+.navlabel{font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:0 11px 9px}
+.nav{display:grid;gap:4px}
+.navitem{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;color:var(--sidebar-ink);font-size:12px;font-weight:570}
+.navitem .ico{width:18px;text-align:center;color:var(--gold);font-size:15px}
+.navitem.active{background:var(--surface);color:var(--ink);box-shadow:0 5px 15px rgba(0,0,0,.05);border-left:3px solid var(--accent);padding-left:9px;font-weight:750}
+.navnote{margin-top:auto;padding:15px 10px 0;border-top:1px solid var(--line);font-size:10px;color:var(--muted);line-height:1.5}
+.navnote strong{display:block;color:var(--accent);font-size:11px;margin-bottom:4px}
+.main{padding:25px 30px 34px;min-width:0}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:19px}
+.eyebrow{font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.topright{display:flex;gap:10px;align-items:center}
+.demo-date{font-size:11px;color:var(--muted);padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--soft-accent);color:var(--accent);font:14px var(--font-head);border:1px solid var(--line)}
+.welcome{display:grid;grid-template-columns:minmax(0,1fr) 306px;gap:19px;align-items:stretch;background:var(--hero-grad);border:1px solid var(--line);border-radius:19px;padding:22px;position:relative;overflow:hidden}
+.welcome:after{content:"";position:absolute;width:300px;height:220px;border-radius:50%;right:160px;top:-150px;background:rgba(255,255,255,.23);filter:blur(22px);pointer-events:none}
+.welcome-copy{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;min-height:214px}
+.welcome-kicker{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:850}
+.welcome h1{font:clamp(29px,3.2vw,43px)/1.08 var(--font-head);font-weight:500;letter-spacing:-.035em;margin:13px 0 9px;color:var(--ink)}
+.welcome p{margin:0;color:var(--muted);font-size:13px;max-width:560px;line-height:1.65}
+.welcome-foot{margin-top:18px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:750}
+.calendar{position:relative;z-index:1;background:var(--calendar);border:1px solid var(--calendar-line);border-radius:15px;padding:15px;color:var(--calendar-ink);box-shadow:0 10px 22px rgba(90,50,65,.08)}
+.cal-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.cal-title{font:18px var(--font-head)}
+.cal-year{font-size:10px;letter-spacing:.12em;color:var(--accent);font-weight:800}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calendar-grid span{font-size:10px;padding:6px 0;border-radius:8px}
+.calendar-grid .weekday{font-size:9px;font-weight:850;color:var(--accent);padding-bottom:7px}
+.calendar-grid .faded{opacity:.28}
+.calendar-grid .today{background:var(--accent);color:white;font-weight:850;box-shadow:0 4px 10px rgba(91,42,62,.2)}
+.cal-foot{border-top:1px solid var(--calendar-line);margin-top:10px;padding-top:9px;display:flex;justify-content:space-between;font-size:10px;color:var(--calendar-ink)}
+.title-strip{margin-top:19px;border-radius:13px;padding:15px 19px;background:#171516;color:#FFF;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 8px 21px rgba(22,18,19,.16)}
+.title-strip .strip-label{font:19px var(--font-head);letter-spacing:.01em}
+.title-strip .strip-label strong{color:#D8BD83;font-weight:500}
+.title-strip .strip-meta{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#D4C8C3}
+.title-strip .gold-dot{width:7px;height:7px;border-radius:50%;background:#D8BD83;display:inline-block;margin-right:7px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:0 5px 17px rgba(35,25,26,.035);min-width:0}
+.metric-head{display:flex;align-items:center;justify-content:space-between;gap:9px;color:var(--muted);font-size:10px;font-weight:700}
+.metric-icon{height:30px;width:30px;border-radius:9px;background:var(--soft-accent);color:var(--accent);display:grid;place-items:center;font-size:14px}
+.metric-value{font:32px var(--font-head);margin-top:10px;letter-spacing:-.03em}
+.metric-note{font-size:10px;color:var(--muted);margin-top:4px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:24px 0 12px}
+.section-head h2{font:21px var(--font-head);font-weight:500;margin:0}
+.section-head small{font-size:10px;color:var(--muted)}
+.workgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 6px 20px rgba(35,25,26,.035);min-width:0}
+.panel-title{font-weight:760;font-size:12px;margin-bottom:5px}
+.panel-sub{font-size:10px;color:var(--muted);margin-bottom:15px}
+.progress-row{display:grid;grid-template-columns:100px 1fr 36px;gap:10px;align-items:center;margin:13px 0;font-size:10px}
+.progress-label{font-weight:700}
+.track{height:7px;border-radius:99px;background:var(--soft-accent);overflow:hidden}
+.fill{height:100%;border-radius:99px;background:var(--accent)}
+.progress-num{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.priority{display:grid;grid-template-columns:36px 1fr auto;gap:11px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.priority:first-of-type{border-top:0}
+.priority-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--soft-accent);color:var(--accent)}
+.priority strong{display:block;font-size:11px;margin-bottom:4px}
+.priority small{display:block;color:var(--muted);font-size:9px}
+.tag{border-radius:999px;padding:5px 8px;font-size:9px;font-weight:800;white-space:nowrap;color:var(--accent);background:var(--soft-accent)}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:10px}
+th{text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;background:var(--surface-2);padding:12px}
+td{padding:13px 12px;border-top:1px solid var(--line);white-space:nowrap}
+td:first-child{font-weight:750}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.status.ok:before{background:#39865B}
+.status.review:before{background:#C08B3C}
+.footer-note{font-size:9px;color:var(--muted);margin-top:18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.palette{display:flex;gap:5px;align-items:center}
+.swatch{width:15px;height:15px;border-radius:5px;border:1px solid rgba(0,0,0,.08)}
+/* Editorial Oro */
+[data-theme="oro"]{--page:#EDE9E2;--surface:#FFFCF6;--surface-2:#F5F0E7;--ink:#28241F;--muted:#6E675D;--line:rgba(55,44,30,.17);--accent:#987342;--accent-2:#C7A96C;--gold:#C7A96C;--sidebar:#28241F;--sidebar-ink:#F5EFE4;--shadow:0 15px 40px rgba(37,29,19,.13);--soft-accent:rgba(152,115,66,.13);--hero-grad:linear-gradient(118deg,#E7DCCB 0%,#FBF8F1 52%,#D9C39C 100%);--calendar:#F2E1E5;--calendar-ink:#563A42;--calendar-line:rgba(166,79,112,.22)}
+[data-theme="terracota"]{--page:#F0E8E1;--surface:#FFFBF7;--surface-2:#F6EEE7;--ink:#382A25;--muted:#76635A;--line:rgba(78,49,38,.16);--accent:#A6533C;--accent-2:#C98163;--gold:#B88C60;--sidebar:#382A25;--sidebar-ink:#F7EEE7;--shadow:0 14px 36px rgba(74,42,31,.10);--soft-accent:rgba(166,83,60,.12);--hero-grad:linear-gradient(118deg,#E8C9B9 0%,#FCF7F1 54%,#D5A18A 100%);--calendar:#F3E0E5;--calendar-ink:#5D3940;--calendar-line:rgba(166,79,112,.22)}
+/* Glass Executive: transparencia visible, capas de fondo y blur real */
+[data-theme="glass"]{--page:#111923;--surface:rgba(236,243,248,.105);--surface-2:rgba(236,243,248,.075);--ink:#F4F1EC;--muted:#B6C2CC;--line:rgba(255,255,255,.19);--accent:#D5A9BE;--accent-2:#D5A9BE;--gold:#D9BD83;--sidebar:rgba(15,24,34,.55);--sidebar-ink:#EDF1F3;--shadow:0 18px 46px rgba(0,0,0,.27);--soft-accent:rgba(213,169,190,.15);--hero-grad:linear-gradient(125deg,rgba(213,169,190,.20),rgba(255,255,255,.06) 54%,rgba(217,189,131,.16));--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25);--glass:1}
+[data-theme="glass"] body{background:radial-gradient(circle at 15% 17%,rgba(184,121,153,.40),transparent 28rem),radial-gradient(circle at 88% 16%,rgba(63,126,154,.35),transparent 31rem),radial-gradient(circle at 72% 90%,rgba(177,139,82,.24),transparent 27rem),#111923}
+[data-theme="glass"] .frame,[data-theme="glass"] .sidebar,[data-theme="glass"] .metric,[data-theme="glass"] .panel,[data-theme="glass"] .tablewrap{backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}
+[data-theme="glass"] .frame{background:rgba(12,20,29,.38);border-color:rgba(255,255,255,.18)}
+[data-theme="glass"] .sidebar{border-right:1px solid rgba(255,255,255,.16)}
+[data-theme="glass"] .metric,[data-theme="glass"] .panel,[data-theme="glass"] .tablewrap{background:rgba(239,245,249,.075);border-color:rgba(255,255,255,.16)}
+[data-theme="glass"] th{background:rgba(255,255,255,.08);color:#D8E1E8}
+[data-theme="glass"] td{border-color:rgba(255,255,255,.12)}
+[data-theme="glass"] .theme-btn{background:rgba(255,255,255,.08);color:#F4F1EC;border-color:rgba(255,255,255,.18);backdrop-filter:blur(15px)}
+[data-theme="glass"] .theme-btn[aria-pressed="true"]{background:rgba(255,255,255,.22);border-color:#D9BD83}
+[data-theme="glass"] .labflag{background:rgba(255,255,255,.08);color:#F1D8E2;border-color:rgba(255,255,255,.2)}
+[data-theme="glass"] .labmark{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2)}
+[data-theme="glass"] .welcome{border-color:rgba(255,255,255,.2)}
+[data-theme="glass"] .title-strip{background:rgba(5,8,12,.7);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(15px)}
+[data-theme="glass"] .tablewrap{background:rgba(239,245,249,.06)}
+@media(max-width:1080px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.welcome{grid-template-columns:minmax(0,1fr) 280px}.main{padding:21px}}
+@media(max-width:760px){body{padding:10px}.frame{grid-template-columns:1fr}.sidebar{padding:13px 14px;display:block}.brand{font-size:23px;padding:0 7px}.brand-caption,.navlabel,.navnote{display:none}.nav{display:flex;overflow-x:auto;padding:9px 0 1px;gap:5px}.navitem{white-space:nowrap;padding:9px 10px;font-size:10px}.navitem.active{border-left:0;border-bottom:2px solid var(--accent)}.main{padding:16px}.welcome{grid-template-columns:1fr}.welcome-copy{min-height:145px}.calendar{max-width:380px;width:100%}.workgrid{grid-template-columns:1fr}.title-strip{align-items:flex-start;flex-direction:column}.labbar{align-items:flex-start}.themechooser{width:100%}.theme-btn{flex:1 1 42%}}
+@media(max-width:440px){.metrics{grid-template-columns:1fr 1fr;gap:8px}.metric{padding:12px}.metric-value{font-size:27px}.welcome{padding:16px}.welcome h1{font-size:30px}.topline{align-items:flex-start}.demo-date{font-size:9px}.labflag{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="lab" id="laboratorio" data-theme="rosa">
+  <header class="labbar">
+    <div class="labidentity">
+      <div class="labmark" aria-hidden="true">A</div>
+      <div><div class="labtitle">ATRIO · Laboratorio visual</div><div class="labsub">Fase 2 · Comparación de identidad gráfica</div></div>
+      <span class="labflag">SOLO DEMOSTRACIÓN · DATOS FICTICIOS</span>
+    </div>
+    <div class="themechooser" role="group" aria-label="Seleccionar tema visual">
+      <button class="theme-btn" type="button" data-select-theme="rosa" aria-pressed="true">Editorial Rosa</button>
+      <button class="theme-btn" type="button" data-select-theme="oro" aria-pressed="false">Editorial Oro</button>
+      <button class="theme-btn" type="button" data-select-theme="terracota" aria-pressed="false">Editorial Terracota</button>
+      <button class="theme-btn" type="button" data-select-theme="glass" aria-pressed="false">Glass Executive</button>
+    </div>
+  </header>
+
+  <div class="frame">
+    <aside class="sidebar">
+      <div class="brand">ATRIO</div>
+      <div class="brand-caption">CECATI 31 · Gestión académica</div>
+      <div class="navlabel">Espacio de trabajo</div>
+      <nav class="nav" aria-label="Navegación demostrativa">
+        <div class="navitem active"><span class="ico">⌂</span>Inicio</div>
+        <div class="navitem"><span class="ico">▦</span>Programación</div>
+        <div class="navitem"><span class="ico">◷</span>Mi Calendario</div>
+        <div class="navitem"><span class="ico">◇</span>Pendientes</div>
+        <div class="navitem"><span class="ico">▤</span>Preparar PEA</div>
+        <div class="navitem"><span class="ico">▣</span>Mis PEA</div>
+        <div class="navitem"><span class="ico">⌕</span>Revisor</div>
+        <div class="navitem"><span class="ico">⚙</span>Ajustes</div>
+      </nav>
+      <div class="navnote"><strong>Vista de laboratorio</strong>Los apartados son ilustrativos. No abren módulos ni realizan operaciones.</div>
+    </aside>
+
+    <main class="main">
+      <div class="topline">
+        <div class="eyebrow">Jefatura de Capacitación · Panel de control</div>
+        <div class="topright"><span class="demo-date">VIERNES · 06 NOV 2026</span><span class="avatar">E</span></div>
+      </div>
+
+      <section class="welcome">
+        <div class="welcome-copy">
+          <div class="welcome-kicker">CECATI N.º 31 · COATZACOALCOS</div>
+          <h1>Bienvenida a tu espacio de gestión.</h1>
+          <p>Una visión clara de la programación, los documentos y el seguimiento académico del plantel.</p>
+          <div class="welcome-foot">Habilidades reales · Oportunidades reales</div>
+        </div>
+        <div class="calendar" aria-label="Calendario demostrativo de noviembre de 2026">
+          <div class="cal-top"><span class="cal-title">Noviembre</span><span class="cal-year">2026</span></div>
+          <div class="calendar-grid">
+            <span class="weekday">L</span><span class="weekday">M</span><span class="weekday">M</span><span class="weekday">J</span><span class="weekday">V</span><span class="weekday">S</span><span class="weekday">D</span>
+            <span class="faded">26</span><span class="faded">27</span><span class="faded">28</span><span class="faded">29</span><span class="faded">30</span><span class="faded">31</span><span>1</span>
+            <span>2</span><span>3</span><span>4</span><span>5</span><span class="today">6</span><span>7</span><span>8</span>
+            <span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+            <span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
+            <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+            <span>30</span>
+          </div>
+          <div class="cal-foot"><span>Hoy · 6 de noviembre</span><strong>Coatzacoalcos</strong></div>
+        </div>
+      </section>
+
+      <section class="title-strip">
+        <div class="strip-label"><span class="gold-dot"></span><strong>PEA</strong> y trámites en MCE</div>
+        <div class="strip-meta">Seguimiento académico · Ciclo 2026–2027</div>
+      </section>
+
+      <section class="metrics" aria-label="Indicadores demostrativos">
+        <article class="metric"><div class="metric-head"><span>Grupos programados</span><span class="metric-icon">▦</span></div><div class="metric-value">24</div><div class="metric-note">Datos ficticios de demostración</div></article>
+        <article class="metric"><div class="metric-head"><span>PEA en revisión</span><span class="metric-icon">✎</span></div><div class="metric-value">08</div><div class="metric-note">Documentos de ejemplo</div></article>
+        <article class="metric"><div class="metric-head"><span>Trámites MCE</span><span class="metric-icon">▤</span></div><div class="metric-value">05</div><div class="metric-note">Seguimientos ilustrativos</div></article>
+        <article class="metric"><div class="metric-head"><span>Próximos cierres</span><span class="metric-icon">◷</span></div><div class="metric-value">03</div><div class="metric-note">Fechas simuladas</div></article>
+      </section>
+
+      <div class="section-head"><h2>Panorama de trabajo</h2><small>Resumen ilustrativo · No conectado a registros</small></div>
+      <section class="workgrid">
+        <article class="panel">
+          <div class="panel-title">Programación por modalidad</div><div class="panel-sub">Distribución ficticia de los grupos del ciclo</div>
+          <div class="progress-row"><span class="progress-label">Extensión</span><div class="track"><div class="fill" style="width:72%"></div></div><span class="progress-num">72%</span></div>
+          <div class="progress-row"><span class="progress-label">Regulares</span><div class="track"><div class="fill" style="width:48%"></div></div><span class="progress-num">48%</span></div>
+          <div class="progress-row"><span class="progress-label">Repositorio</span><div class="track"><div class="fill" style="width:31%"></div></div><span class="progress-num">31%</span></div>
+          <div class="footer-note"><span>Indicadores de muestra</span><span>Actualización simulada</span></div>
+        </article>
+        <article class="panel">
+          <div class="panel-title">Atención prioritaria</div><div class="panel-sub">Ejemplos de tareas y estados</div>
+          <div class="priority"><span class="priority-icon">◷</span><div><strong>Revisión de PEA</strong><small>Curso de ejemplo · Docente A</small></div><span class="tag">Revisar</span></div>
+          <div class="priority"><span class="priority-icon">▤</span><div><strong>Trámite MCE</strong><small>Expediente de demostración</small></div><span class="tag">En proceso</span></div>
+          <div class="priority"><span class="priority-icon">✓</span><div><strong>Validación documental</strong><small>Registro ficticio · Sin vencimiento</small></div><span class="tag">Listo</span></div>
+        </article>
+      </section>
+
+      <div class="section-head"><h2>Programación de ejemplo</h2><small>Información inventada para comparar estilos</small></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Curso</th><th>Docente</th><th>Inicio</th><th>Término</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td>Informática básica</td><td>Docente de prueba A</td><td>10 nov 2026</td><td>10 dic 2026</td><td><span class="status review">En revisión</span></td></tr>
+            <tr><td>Electricidad residencial</td><td>Docente de prueba B</td><td>17 nov 2026</td><td>18 dic 2026</td><td><span class="status">Programado</span></td></tr>
+            <tr><td>Diseño de presentaciones</td><td>Docente de prueba C</td><td>24 nov 2026</td><td>19 dic 2026</td><td><span class="status ok">Documentación lista</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        <span>ATRIO · Laboratorio visual independiente</span>
+        <span>La selección de tema solo cambia esta maqueta en tu navegador.</span>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('laboratorio');
+  const buttons = Array.from(document.querySelectorAll('[data-select-theme]'));
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const selected = button.dataset.selectTheme;
+      root.dataset.theme = selected;
+      for (const item of buttons) {
+        item.setAttribute('aria-pressed', String(item === button));
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
