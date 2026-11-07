@@ -32,8 +32,8 @@ def test_vista_previa_usa_grupos_y_tareas_ficticias():
     assert "DOCENTE DE PRUEBA" in source
     assert "metricas_demo" in source
     assert "tareas_demo" in source
-    assert "alumnos_unicos" in source
     assert "inscripciones" in source
+    assert "alumnos_unicos" not in source
     assert tema.ORBITA in tema.OPCIONES
 
 
