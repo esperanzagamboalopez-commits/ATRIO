@@ -297,6 +297,65 @@ class TestReprogramacion(unittest.TestCase):
             ).fetchone()[0]
             self.assertEqual(json.loads(payload)["fin"], "2026-11-30")
 
+
+    def test_conserva_reprogramacion_real_si_hay_cierre_tras_commit_sqlite(self):
+        """El cierre tras el commit y antes de borrar journal conserva Excel y SQLite nuevos."""
+        import os
+        original = self.excel.read_bytes()
+        cambio = self._change()
+        repo_root = Path(__file__).resolve().parents[1]
+        child_script = """
+import json, os, sqlite3, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import centro as C
+import reprogramacion as R
+root, data, resources, archive, db_path, change_json = sys.argv[2:]
+C.ROOT = Path(root)
+C.DATA = Path(data)
+C.RES = Path(resources)
+C.ARCH = Path(archive)
+def connect():
+    db = sqlite3.connect(db_path)
+    db.row_factory = sqlite3.Row
+    return db
+C.connect = connect
+journal = C._ruta_journal_programacion()
+original_unlink = Path.unlink
+def exit_before_journal_cleanup(path, *args, **kwargs):
+    if path == journal:
+        os._exit(86)
+    return original_unlink(path, *args, **kwargs)
+Path.unlink = exit_before_journal_cleanup
+R._actualizar_excel_y_db([json.loads(change_json)], C.RES / "PROGRAMACION DE CURSOS.xlsx")
+"""
+        result = subprocess.run(
+            [
+                sys.executable, "-c", child_script, str(repo_root),
+                str(self.root), str(self.root / "datos"), str(self.resources),
+                str(self.archive), str(self.db_path), json.dumps(cambio),
+            ],
+            capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(result.returncode, 86, result.stderr)
+        journal = C._ruta_journal_programacion()
+        self.assertTrue(journal.is_file())
+        self.assertNotEqual(self.excel.read_bytes(), original)
+        with self._connect() as db:
+            payload = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+            self.assertEqual(json.loads(payload)["fin"], "2026-12-07")
+
+        self.assertTrue(C.recuperar_programacion())
+        self.assertNotEqual(self.excel.read_bytes(), original)
+        self.assertFalse(journal.exists())
+        with self._connect() as db:
+            payload = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+            self.assertEqual(json.loads(payload)["fin"], "2026-12-07")
+
     def test_rechaza_huella_obsoleta_sin_modificar_excel(self):
         change = self._change()
         change["fingerprint"] = "huella-obsoleta"
