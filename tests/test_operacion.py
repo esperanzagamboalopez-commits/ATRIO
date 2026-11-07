@@ -184,6 +184,34 @@ def test_save_programacion_conserva_commit_si_falla_una_vez_el_borrado_del_journ
     assert any(json.loads(row["payload"]).get("operation_id") for row in rows)
 
 
+def test_save_programacion_sincroniza_respaldo_excel_y_directorios(isolated, monkeypatch):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    raw = resource.read_bytes()
+    with monkeypatch.context() as patcher:
+        original_file = C._fsync_archivo
+        original_dir = C._fsync_directorio
+        file_calls = []
+        dir_calls = []
+
+        def sync_file(path):
+            file_calls.append(Path(path))
+            return original_file(path)
+
+        def sync_dir(path):
+            dir_calls.append(Path(path))
+            return original_dir(path)
+
+        patcher.setattr(C, "_fsync_archivo", sync_file)
+        patcher.setattr(C, "_fsync_directorio", sync_dir)
+        result = C.save_resource("PROGRAMACION DE CURSOS.xlsx", raw)
+
+    assert result[0] == 1
+    assert any("PROGRAMACION" in path.name for path in file_calls)
+    assert C.ARCH in dir_calls
+    assert C.RES in dir_calls
+    assert not C._ruta_journal_programacion().exists()
+
+
 def test_save_programacion_revierte_si_falla_importacion(isolated, monkeypatch):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     original = resource.read_bytes()
