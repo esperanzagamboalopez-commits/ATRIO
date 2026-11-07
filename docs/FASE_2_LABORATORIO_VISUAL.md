@@ -2,9 +2,9 @@
 
 ## 1. Propósito
 
-Preparar una vista de laboratorio independiente para revisar la identidad visual de ATRIO sin abrir la aplicación operativa, conectar recursos institucionales ni modificar la base SQLite.
+Preparar una vista de laboratorio independiente para revisar la identidad visual y los primeros flujos de Inicio sin abrir la aplicación operativa ni conectarse o modificar la base SQLite institucional.
 
-La primera entrega será una galería estática/interactiva de temas con datos demostrativos. No importará `centro.py`, `app.py`, Excel, SISAE, expedientes, documentos PEA, claves ni archivos dentro de `datos/`.
+La galería y la vista de Inicio utilizan datos demostrativos. La prueba de calendario crea un SQLite temporal único por sesión, fuera del repositorio; no importa `centro.py` ni `app.py`, ni abre Excel, SISAE, expedientes, documentos PEA o archivos dentro de `datos/`.
 
 ## 2. Inventario del estado actual
 
@@ -120,7 +120,7 @@ Los valores se validan como hexadecimal de seis dígitos. La tipografía, las su
 - La vista previa configura `calendario.DB_PATH` a un SQLite temporal único por sesión, fuera del repositorio. No abre ni migra la base institucional. También siembra actividades demostrativas ficticias en ese archivo temporal.
 - El rótulo de SISAE en el laboratorio usa texto secundario `Sin corte de muestra`, no un indicador grande `No conectado`.
 - Se retiró la sección genérica `Componentes de interfaz` y sus botones/campos de ejemplo porque no representan módulos reales y no ayudan a revisar Inicio.
-- No importa `app.py` ni `centro.py`; no abre Excel, SISAE, expedientes o documentos del plantel.
+- No importa `app.py` ni `centro.py`; no accede a la base SQLite institucional, Excel, SISAE, expedientes o documentos del plantel.
 - Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
 - `tests/test_laboratorio_orbita_aislado.py` y `tests/test_calendario_inicio.py`: verifican la ausencia de conexiones operativas, el orden calendario-primero, el uso del SQLite temporal, la distribución de fechas de los cursos y la persistencia de actividades en la ruta configurada.
 
