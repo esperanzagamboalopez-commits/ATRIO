@@ -201,8 +201,18 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
             if hoja not in wb.sheetnames or fila < 1 or fila > wb[hoja].max_row:
                 raise ValueError(f"No se encontró la fila original del curso {cambio['curso']}.")
             ws = wb[hoja]
+            # No escribir sobre una fila que haya cambiado en Excel desde la simulación.
+            nombre_excel = C.motor.normal(ws.cell(fila, 2).value)
+            if nombre_excel != C.motor.normal(cambio["curso"]):
+                raise ValueError(f"La fila {fila} de {hoja} ya no corresponde a {cambio['curso']}. Importa la programación y vuelve a simular.")
+            inicio_excel = _a_date(ws.cell(fila, 5).value)
+            fin_excel = _a_date(ws.cell(fila, 6).value)
+            horas_excel = float(ws.cell(fila, 7).value or 0)
+            if (inicio_excel.isoformat() != cambio["inicio_anterior"]
+                    or fin_excel.isoformat() != cambio["fin_anterior"]
+                    or abs(horas_excel - float(cambio["horas"])) > 1e-9):
+                raise ValueError(f"Las fechas o duración de {cambio['curso']} cambiaron en el Excel. Importa la programación y vuelve a simular.")
             # Esquema vigente de centro.parse_program: B nombre, E inicio, F término, G horas.
-            ws.cell(fila, 2).value = cambio["curso"]
             ws.cell(fila, 5).value = _a_date(cambio["inicio_nuevo"])
             ws.cell(fila, 6).value = _a_date(cambio["fin_nuevo"])
             ws.cell(fila, 7).value = float(cambio["horas"])
