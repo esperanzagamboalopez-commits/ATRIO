@@ -439,7 +439,7 @@ def construir_pendientes(
             "certeza": "Confirmado",
         })
 
-    orden_estado = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3, "En espera": 4, "Por verificar": 5}
+    orden_estado = {"Vencido": 0, "Bloqueado": 1, "Pendiente": 2, "Aviso": 3, "En espera": 4, "Por verificar": 5}
     orden_prioridad = {"Alta": 0, "Media": 1, "Normal": 2}
     tareas.sort(key=lambda x: (
         orden_estado.get(x["estado"], 5),
@@ -492,7 +492,7 @@ def prioridades_del_dia(tareas, hoy, limite=3):
         and t.get("responsable") != "Por verificar"
         and (not como_fecha(t.get("fecha")) or como_fecha(t.get("fecha")) <= ventana)
     ]
-    orden = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3}
+    orden = {"Vencido": 0, "Bloqueado": 1, "Pendiente": 2, "Aviso": 3}
     candidatas.sort(key=lambda t: (
         orden.get(t.get("estado"), 9),
         {"Alta": 0, "Media": 1, "Normal": 2}.get(t.get("prioridad"), 3),
