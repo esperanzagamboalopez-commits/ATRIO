@@ -73,7 +73,7 @@ def _norm(value):
 
 
 def _es_acm(grupo):
-    campos = ("modalidad", "subtipo", "tipo_accion", "observaciones", "aula", "nombre")
+    campos = ("modalidad", "subtipo", "tipo_accion", "observaciones", "aula", "nombre", "poblacion", "especialidad_programada")
     texto = " ".join(str(grupo.get(k, "") or "") for k in campos).casefold()
     return bool(re.search(r"(?<![a-z])acm(?![a-z])|acci[oó]n(?:es)? m[oó]vil(?:es)?", texto))
 
@@ -174,13 +174,22 @@ def construir_pendientes(
         if tipo in TIPOS_PEA:
             fecha_pea = inicio - timedelta(days=5)
             if doc in {"sin pea", "no generado"}:
+                es_repositorio = tipo == "repositorio"
                 agregar(_crear(
-                    proceso="Elaboración de PEAs", grupo=g,
+                    proceso=(
+                        "Preparación de PEA de Repositorio"
+                        if es_repositorio else "Elaboración de PEAs"
+                    ),
+                    grupo=g,
                     fecha_objetivo=fecha_pea,
                     motivo=f"El curso inicia el {inicio:%d/%m/%Y}; el PEA debe estar listo con al menos cinco días de anticipación.",
-                    accion="Elaborar el PEA del nombre de curso vigente.",
+                    accion=(
+                        "Descargar y adaptar el PEA del repositorio institucional; actualizar únicamente los datos autorizados del grupo."
+                        if es_repositorio else
+                        "Elaborar el PEA del nombre de curso vigente."
+                    ),
                     modulo="Preparar PEA", hoy=hoy, prioridad="Alta",
-                    sufijo="elaboracion-pea",
+                    sufijo="preparar-pea-repositorio" if es_repositorio else "elaboracion-pea",
                 ))
             elif doc in {"sin verificar", ""} and inicio <= hoy + timedelta(days=15):
                 agregar(_crear(
