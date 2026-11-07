@@ -291,6 +291,40 @@ def test_recupera_confirmacion_aunque_falte_respaldo(isolated):
     assert not journal.exists()
 
 
+def test_journal_corrupto_no_modifica_programacion(isolated):
+    """Un journal ilegible detiene la recuperación sin tocar el Excel ni borrarlo."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    journal = C._ruta_journal_programacion()
+    journal.write_text('{"operation_id":', encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="no pudo completar su recuperación"):
+        C.recuperar_programacion()
+
+    assert resource.read_bytes() == original
+    assert journal.exists()
+
+
+def test_respaldo_faltante_sin_confirmacion_no_modifica_programacion(isolated):
+    """Sin confirmación y sin backup, ATRIO se detiene conservando Excel y journal."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    journal = C._ruta_journal_programacion()
+    C._escribir_journal_programacion({
+        "operation_id": "operacion-sin-confirmar",
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str((C.ARCH / "respaldo_ausente.xlsx").resolve()),
+        "created": C.now(),
+    })
+
+    with pytest.raises(RuntimeError, match="respaldo necesario"):
+        C.recuperar_programacion()
+
+    assert resource.read_bytes() == original
+    assert journal.exists()
+
+
 def test_sisae(isolated):
     tables = C.sisae_bytes((C.RES / "SISAE.zip").read_bytes())
     assert len(tables["PROG_CURSOS1.DBF"]) == 1
