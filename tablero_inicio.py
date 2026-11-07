@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import html
-from collections import Counter
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -84,7 +83,7 @@ def cargar_tareas(grupos, hoy):
         import hojas
         _, _, _, _, estudiantes, _ = hojas.snapshot(grupos)
         alumnos_por_grupo = {str(k): len(v) for k, v in estudiantes.items()}
-    except (FileNotFoundError, OSError, KeyError, ValueError, Exception):
+    except Exception:
         # Sin vínculo inequívoco no se inventa el padrón ni se asignan alumnos.
         alumnos_por_grupo = {}
 
@@ -203,7 +202,7 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
 
     if incluir_calendario:
         import calendario as CAL
-        CAL.render_inicio_calendario(grupos)
+        CAL.render_inicio_calendario(grupos, tareas=tareas)
 
     st.markdown("## Panorama de capacitación")
     st.caption("Programación activa y corte SISAE. Los cursos terminados se cuentan por su fecha de término, no por el cierre de constancias.")
