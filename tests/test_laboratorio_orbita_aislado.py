@@ -62,7 +62,8 @@ def test_inicio_va_primero_y_el_resumen_del_laboratorio_queda_al_pie():
     assert 'c1.metric("Grupos de muestra"' in source
     assert 'c2.metric("PEA por revisar"' in source
     assert 'st.caption("Sin corte de muestra.")' in source
-    assert 'st.info("Vista aislada:' in source
+    assert 'st.info(' in source
+    assert "Vista aislada: la agenda guarda únicamente en el SQLite temporal de esta sesión" in source
 
 
 def test_no_se_muestran_componentes_genericos_sin_contexto():
