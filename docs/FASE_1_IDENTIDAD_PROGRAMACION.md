@@ -62,6 +62,7 @@ La conciliación distingue la conservación del registro de su participación en
 
 - **Vigente/incluido:** participa en alertas, Inicio, Centro de Pendientes y selección para preparar PEA.
 - **Pendiente de reprogramación:** permanece activo y consultable; puede volver a seleccionarse en Reprogramación, pero queda fuera de alertas y tareas de la jornada actual.
+- **Identidad pendiente de revisión:** permanece conservada y consultable, pero queda fuera de los grupos operativos y no puede generar PEA hasta resolver manualmente la coincidencia.
 - **Sustituido por cambio de nombre:** permanece como antecedente histórico y no participa en los procesos operativos.
 
 En `identidad_programacion.py`, `grupo_incluido_en_actualizacion()` aplica esta regla y `grupos_operativos()` filtra sin mutar ni borrar la colección original. En `centro.py`, `groups()` conserva su comportamiento de devolver todos los grupos activos, para que Programación, Reprogramación y las consultas no pierdan acceso a los pendientes. `operational_groups()` ofrece la vista filtrada.
