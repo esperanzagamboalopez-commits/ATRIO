@@ -22,7 +22,7 @@ body{padding:22px;background:
  radial-gradient(circle at 94% 92%,rgba(181,139,80,.10),transparent 24rem),#F5EFEC;transition:background .2s}
 body[data-theme="oro"]{background:radial-gradient(circle at 8% 5%,rgba(199,169,108,.18),transparent 28rem),#EDE9E2}
 body[data-theme="terracota"]{background:radial-gradient(circle at 8% 5%,rgba(201,129,99,.2),transparent 28rem),#F0E8E1}
-body[data-theme="glass"]{background:radial-gradient(circle at 15% 17%,rgba(184,121,153,.40),transparent 28rem),radial-gradient(circle at 88% 16%,rgba(63,126,154,.35),transparent 31rem),radial-gradient(circle at 72% 90%,rgba(177,139,82,.24),transparent 27rem),#111923}
+body[data-theme="glass-renovado"]{background:radial-gradient(circle at 15% 17%,rgba(184,121,153,.40),transparent 28rem),radial-gradient(circle at 88% 16%,rgba(63,126,154,.35),transparent 31rem),radial-gradient(circle at 72% 90%,rgba(177,139,82,.24),transparent 27rem),#111923}
 button{font:inherit}
 button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .lab{max-width:1510px;margin:0 auto}
@@ -115,20 +115,35 @@ td:first-child{font-weight:750}
 [data-theme="oro"]{--page:#EDE9E2;--surface:#FFFCF6;--surface-2:#F5F0E7;--ink:#28241F;--muted:#6E675D;--line:rgba(55,44,30,.17);--accent:#987342;--accent-2:#C7A96C;--gold:#C7A96C;--sidebar:#28241F;--sidebar-ink:#F5EFE4;--shadow:0 15px 40px rgba(37,29,19,.13);--soft-accent:rgba(152,115,66,.13);--hero-grad:linear-gradient(118deg,#E7DCCB 0%,#FBF8F1 52%,#D9C39C 100%);--calendar:#F2E1E5;--calendar-ink:#563A42;--calendar-line:rgba(166,79,112,.22)}
 [data-theme="terracota"]{--page:#F0E8E1;--surface:#FFFBF7;--surface-2:#F6EEE7;--ink:#382A25;--muted:#76635A;--line:rgba(78,49,38,.16);--accent:#A6533C;--accent-2:#C98163;--gold:#B88C60;--sidebar:#382A25;--sidebar-ink:#F7EEE7;--shadow:0 14px 36px rgba(74,42,31,.10);--soft-accent:rgba(166,83,60,.12);--hero-grad:linear-gradient(118deg,#E8C9B9 0%,#FCF7F1 54%,#D5A18A 100%);--calendar:#F3E0E5;--calendar-ink:#5D3940;--calendar-line:rgba(166,79,112,.22)}
 /* Glass Executive: transparencia visible, capas de fondo y blur real */
-[data-theme="glass"]{--page:#111923;--surface:rgba(236,243,248,.105);--surface-2:rgba(236,243,248,.075);--ink:#F4F1EC;--muted:#B6C2CC;--line:rgba(255,255,255,.19);--accent:#D5A9BE;--accent-2:#D5A9BE;--gold:#D9BD83;--sidebar:rgba(15,24,34,.55);--sidebar-ink:#EDF1F3;--shadow:0 18px 46px rgba(0,0,0,.27);--soft-accent:rgba(213,169,190,.15);--hero-grad:linear-gradient(125deg,rgba(213,169,190,.20),rgba(255,255,255,.06) 54%,rgba(217,189,131,.16));--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25);--glass:1}
-[data-theme="glass"] .frame,[data-theme="glass"] .sidebar,[data-theme="glass"] .metric,[data-theme="glass"] .panel,[data-theme="glass"] .tablewrap{backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}
-[data-theme="glass"] .frame{background:rgba(12,20,29,.38);border-color:rgba(255,255,255,.18)}
-[data-theme="glass"] .sidebar{border-right:1px solid rgba(255,255,255,.16)}
-[data-theme="glass"] .metric,[data-theme="glass"] .panel,[data-theme="glass"] .tablewrap{background:rgba(239,245,249,.075);border-color:rgba(255,255,255,.16)}
-[data-theme="glass"] th{background:rgba(255,255,255,.08);color:#D8E1E8}
-[data-theme="glass"] td{border-color:rgba(255,255,255,.12)}
-[data-theme="glass"] .theme-btn{background:rgba(255,255,255,.08);color:#F4F1EC;border-color:rgba(255,255,255,.18);backdrop-filter:blur(15px)}
-[data-theme="glass"] .theme-btn[aria-pressed="true"]{background:rgba(255,255,255,.22);border-color:#D9BD83}
-[data-theme="glass"] .labflag{background:rgba(255,255,255,.08);color:#F1D8E2;border-color:rgba(255,255,255,.2)}
-[data-theme="glass"] .labmark{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2)}
-[data-theme="glass"] .welcome{border-color:rgba(255,255,255,.2)}
-[data-theme="glass"] .title-strip{background:rgba(5,8,12,.7);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(15px)}
-[data-theme="glass"] .tablewrap{background:rgba(239,245,249,.06)}
+[data-theme="glass-renovado"]{--page:#111923;--surface:rgba(236,243,248,.105);--surface-2:rgba(236,243,248,.075);--ink:#F4F1EC;--muted:#B6C2CC;--line:rgba(255,255,255,.19);--accent:#D5A9BE;--accent-2:#D5A9BE;--gold:#D9BD83;--sidebar:rgba(15,24,34,.55);--sidebar-ink:#EDF1F3;--shadow:0 18px 46px rgba(0,0,0,.27);--soft-accent:rgba(213,169,190,.15);--hero-grad:linear-gradient(125deg,rgba(213,169,190,.20),rgba(255,255,255,.06) 54%,rgba(217,189,131,.16));--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25);--glass:1}
+[data-theme="glass-renovado"] .frame,[data-theme="glass-renovado"] .sidebar,[data-theme="glass-renovado"] .metric,[data-theme="glass-renovado"] .panel,[data-theme="glass-renovado"] .tablewrap{backdrop-filter:blur(22px) saturate(135%);-webkit-backdrop-filter:blur(22px) saturate(135%)}
+[data-theme="glass-renovado"] .frame{background:rgba(12,20,29,.38);border-color:rgba(255,255,255,.18)}
+[data-theme="glass-renovado"] .sidebar{border-right:1px solid rgba(255,255,255,.16)}
+[data-theme="glass-renovado"] .metric,[data-theme="glass-renovado"] .panel,[data-theme="glass-renovado"] .tablewrap{background:rgba(239,245,249,.075);border-color:rgba(255,255,255,.16)}
+[data-theme="glass-renovado"] th{background:rgba(255,255,255,.08);color:#D8E1E8}
+[data-theme="glass-renovado"] td{border-color:rgba(255,255,255,.12)}
+[data-theme="glass-renovado"] .theme-btn{background:rgba(255,255,255,.08);color:#F4F1EC;border-color:rgba(255,255,255,.18);backdrop-filter:blur(15px)}
+[data-theme="glass-renovado"] .theme-btn[aria-pressed="true"]{background:rgba(255,255,255,.22);border-color:#D9BD83}
+[data-theme="glass-renovado"] .labflag{background:rgba(255,255,255,.08);color:#F1D8E2;border-color:rgba(255,255,255,.2)}
+[data-theme="glass-renovado"] .labmark{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2)}
+[data-theme="glass-renovado"] .welcome{border-color:rgba(255,255,255,.2)}
+[data-theme="glass-renovado"] .title-strip{background:rgba(5,8,12,.7);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(15px)}
+[data-theme="glass-renovado"] .tablewrap{background:rgba(239,245,249,.06)}
+
+/* Temas existentes en tema.py: reproducción de sus tokens originales */
+[data-theme="rosa-anterior"]{--page:#FBF7F2;--surface:#FFFFFF;--surface-2:#F7F0E8;--ink:#2A2326;--muted:#6B6063;--line:rgba(42,35,38,.14);--accent:#FF1493;--accent-2:#FF1493;--gold:#D4AF37;--sidebar:#F4EDE4;--sidebar-ink:#2A2326;--shadow:0 6px 24px rgba(42,35,38,.08);--soft-accent:rgba(255,20,147,.14);--hero-grad:linear-gradient(118deg,#F8E8EF 0%,#FBF7F2 54%,#E9C5D4 100%);--calendar:#F3E0E6;--calendar-ink:#593344;--calendar-line:rgba(255,20,147,.22)}
+[data-theme="premium"]{--page:#FBF7F2;--surface:#FFFFFF;--surface-2:#F7F0E8;--ink:#2A2326;--muted:#6B6063;--line:rgba(42,35,38,.14);--accent:#6D1F2F;--accent-2:#9A4050;--gold:#9A7A45;--sidebar:#F4EDE4;--sidebar-ink:#2A2326;--shadow:0 6px 24px rgba(42,35,38,.08);--soft-accent:rgba(109,31,47,.13);--hero-grad:linear-gradient(118deg,#EAD9D5 0%,#FBF7F2 54%,#D9C4B7 100%);--calendar:#F0E3DF;--calendar-ink:#4C3030;--calendar-line:rgba(109,31,47,.22)}
+[data-theme="japandi"]{--page:#FAFAF9;--surface:#FFFFFF;--surface-2:#F1F1EC;--ink:#1C1917;--muted:#57534E;--line:rgba(28,25,23,.14);--accent:#5F7A5E;--accent-2:#7D9678;--gold:#8A7F5B;--sidebar:#F1F1EC;--sidebar-ink:#1C1917;--shadow:0 6px 24px rgba(28,25,23,.07);--soft-accent:rgba(95,122,94,.13);--hero-grad:linear-gradient(118deg,#E6EAE2 0%,#FAFAF9 54%,#D8DFD2 100%);--calendar:#E9EDE5;--calendar-ink:#354635;--calendar-line:rgba(95,122,94,.22)}
+[data-theme="cyber"]{--page:#0F172A;--surface:#1E293B;--surface-2:#26364A;--ink:#F8FAFC;--muted:#CBD5E1;--line:rgba(255,255,255,.16);--accent:#22D3EE;--accent-2:#38BDF8;--gold:#38BDF8;--sidebar:#0B1222;--sidebar-ink:#F8FAFC;--shadow:0 10px 30px rgba(0,0,0,.28);--soft-accent:rgba(34,211,238,.15);--hero-grad:linear-gradient(118deg,#17354A 0%,#1E293B 54%,#1C3D55 100%);--calendar:#243B50;--calendar-ink:#F1F7FA;--calendar-line:rgba(34,211,238,.28)}
+[data-theme="glass-anterior"]{--page:#09090B;--surface:#18181B;--surface-2:#202024;--ink:#F5F1EA;--muted:#A1A1AA;--line:rgba(255,255,255,.12);--accent:#FF1493;--accent-2:#FF1493;--gold:#D4AF37;--sidebar:#09090B;--sidebar-ink:#F5F1EA;--shadow:0 0 20px rgba(255,20,147,.25);--soft-accent:rgba(255,20,147,.14);--hero-grad:linear-gradient(118deg,#272027 0%,#18181B 54%,#30222C 100%);--calendar:#F1DDE4;--calendar-ink:#533642;--calendar-line:rgba(166,79,112,.25)}
+body[data-theme="rosa-anterior"]{background:radial-gradient(circle at 8% 5%,rgba(255,20,147,.12),transparent 27rem),#FBF7F2}
+body[data-theme="premium"]{background:radial-gradient(circle at 8% 5%,rgba(109,31,47,.12),transparent 27rem),#FBF7F2}
+body[data-theme="japandi"]{background:radial-gradient(circle at 8% 5%,rgba(95,122,94,.13),transparent 27rem),#FAFAF9}
+body[data-theme="cyber"]{background:radial-gradient(circle at 8% 5%,rgba(34,211,238,.18),transparent 27rem),#0F172A}
+body[data-theme="glass-anterior"]{background:radial-gradient(circle at 12% 10%,rgba(255,20,147,.18),transparent 28rem),#09090B}
+[data-theme="cyber"] .sidebar,[data-theme="cyber"] .metric,[data-theme="cyber"] .panel{background:#1E293B}
+[data-theme="glass-anterior"] .sidebar{background:#09090B}
+
 @media(max-width:1080px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.welcome{grid-template-columns:minmax(0,1fr) 280px}.main{padding:21px}}
 @media(max-width:760px){body{padding:10px}.frame{grid-template-columns:1fr}.sidebar{padding:13px 14px;display:block}.brand{font-size:23px;padding:0 7px}.brand-caption,.navlabel,.navnote{display:none}.nav{display:flex;overflow-x:auto;padding:9px 0 1px;gap:5px}.navitem{white-space:nowrap;padding:9px 10px;font-size:10px}.navitem.active{border-left:0;border-bottom:2px solid var(--accent)}.main{padding:16px}.welcome{grid-template-columns:1fr}.welcome-copy{min-height:145px}.calendar{max-width:380px;width:100%}.workgrid{grid-template-columns:1fr}.title-strip{align-items:flex-start;flex-direction:column}.labbar{align-items:flex-start}.themechooser{width:100%}.theme-btn{flex:1 1 42%}}
 @media(max-width:440px){.metrics{grid-template-columns:1fr 1fr;gap:8px}.metric{padding:12px}.metric-value{font-size:27px}.welcome{padding:16px}.welcome h1{font-size:30px}.topline{align-items:flex-start}.demo-date{font-size:9px}.labflag{font-size:9px}}
@@ -136,18 +151,23 @@ td:first-child{font-weight:750}
 </style>
 </head>
 <body>
-<div class="lab" id="laboratorio" data-theme="rosa">
+<div class="lab" id="laboratorio" data-theme="rosa-renovado">
   <header class="labbar">
     <div class="labidentity">
       <div class="labmark" aria-hidden="true">A</div>
-      <div><div class="labtitle">ATRIO · Laboratorio visual</div><div class="labsub">Fase 2 · Comparación de identidad gráfica</div></div>
+      <div><div class="labtitle">ATRIO · Laboratorio visual</div><div class="labsub">Fase 2 · Comparación completa: temas existentes y propuestas</div></div>
       <span class="labflag">SOLO DEMOSTRACIÓN · DATOS FICTICIOS</span>
     </div>
     <div class="themechooser" role="group" aria-label="Seleccionar tema visual">
-      <button class="theme-btn" type="button" data-select-theme="rosa" aria-pressed="true">Editorial Rosa</button>
-      <button class="theme-btn" type="button" data-select-theme="oro" aria-pressed="false">Editorial Oro</button>
-      <button class="theme-btn" type="button" data-select-theme="terracota" aria-pressed="false">Editorial Terracota</button>
-      <button class="theme-btn" type="button" data-select-theme="glass" aria-pressed="false">Glass Executive</button>
+      <button class="theme-btn" type="button" data-select-theme="rosa-renovado" aria-pressed="true">Rosa · Renovado</button>
+      <button class="theme-btn" type="button" data-select-theme="rosa-anterior" aria-pressed="false">Rosa · Anterior</button>
+      <button class="theme-btn" type="button" data-select-theme="premium" aria-pressed="false">Editorial Premium</button>
+      <button class="theme-btn" type="button" data-select-theme="japandi" aria-pressed="false">Japandi</button>
+      <button class="theme-btn" type="button" data-select-theme="cyber" aria-pressed="false">Cyber-Neon</button>
+      <button class="theme-btn" type="button" data-select-theme="glass-anterior" aria-pressed="false">Glass · Anterior</button>
+      <button class="theme-btn" type="button" data-select-theme="glass-renovado" aria-pressed="false">Glass · Renovado</button>
+      <button class="theme-btn" type="button" data-select-theme="oro" aria-pressed="false">Editorial Oro · Nuevo</button>
+      <button class="theme-btn" type="button" data-select-theme="terracota" aria-pressed="false">Editorial Terracota · Nuevo</button>
     </div>
   </header>
 
@@ -240,7 +260,7 @@ td:first-child{font-weight:750}
 
       <div class="footer-note">
         <span>ATRIO · Laboratorio visual independiente</span>
-        <span>La selección de tema solo cambia esta maqueta en tu navegador.</span>
+        <span>Los temas anteriores reproducen la paleta definida en tema.py; las variantes renovadas y los temas nuevos son propuestas visuales. La selección solo cambia esta maqueta.</span>
       </div>
     </main>
   </div>
