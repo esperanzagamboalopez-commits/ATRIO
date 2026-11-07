@@ -58,8 +58,7 @@ def test_inicio_va_primero_y_el_resumen_del_laboratorio_queda_al_pie():
     assert source.index("components.html(inicio") < source.index(
         'st.subheader("ATRIO · Vista previa de integración")'
     )
-    assert 'c1.metric("Grupos de muestra"' in source
-    assert 'c2.metric("PEA por revisar"' in source
+    assert source.index("CAL.render_inicio_calendario(cursos)") < source.index("components.html(inicio")
     assert 'c1.metric("Grupos de muestra"' in source
     assert 'c2.metric("PEA por revisar"' in source
     assert 'st.caption("Sin corte de muestra.")' in source
