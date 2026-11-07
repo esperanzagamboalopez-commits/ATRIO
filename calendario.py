@@ -1217,12 +1217,28 @@ def render_inicio_calendario(cursos=None):
                 for ev in proximos[:5]:
                     _tarjeta_prioridad(ev, compacta=True)
 
+            cursos_proximos = []
+            for desplazamiento in range(8):
+                fecha_proxima = seleccionado + timedelta(days=desplazamiento)
+                for item in _cursos_de_fecha(cursos, fecha_proxima):
+                    cursos_proximos.append((fecha_proxima, item))
+            if cursos_proximos:
+                st.markdown("**Fechas de cursos**")
+                for fecha_proxima, item in cursos_proximos:
+                    st.caption(
+                        f"{_fecha_texto(fecha_proxima)} · {item['tipo']} · "
+                        f"{item['nombre']} · {item['docente']}"
+                    )
+
     editar_id = st.session_state.get("inicio_cal_editar_id")
     if editar_id:
         evento_editar = next((ev for ev in obtener_eventos(anio, mes) if ev.get("id") == editar_id), None)
         if evento_editar:
             with st.expander("Editar actividad seleccionada", expanded=True):
                 _form_editar(evento_editar)
+                if st.button("Cerrar edición", key="inicio_cal_cerrar_edicion"):
+                    st.session_state.pop("inicio_cal_editar_id", None)
+                    st.rerun()
         else:
             st.session_state.pop("inicio_cal_editar_id", None)
 
