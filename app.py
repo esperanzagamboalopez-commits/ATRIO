@@ -31,7 +31,17 @@ DARK=False
 if not C.setting('tema_migrado_claro',False):
  C.set_setting('tema_visual',tema.DEFECTO)
  C.set_setting('tema_migrado_claro',True)
-tema.fijar(C.setting('tema_visual',tema.DEFECTO))
+# La paleta de Órbita se conserva en Ajustes y se previsualiza en vivo desde los color pickers.
+_PALETA_KEY_PREFIX = '_atrio_orbita_paleta_'
+_paleta_base = tema.paleta_predeterminada()
+_paleta_guardada = tema.validar_paleta(C.setting('tema_paleta_personalizada',{}))
+for _campo, _valor in _paleta_base.items():
+ st.session_state.setdefault(_PALETA_KEY_PREFIX + _campo, _paleta_guardada.get(_campo,_valor))
+_paleta_previa = {
+ _campo: st.session_state.get(_PALETA_KEY_PREFIX + _campo,_valor)
+ for _campo,_valor in _paleta_base.items()
+}
+tema.fijar(C.setting('tema_visual',tema.DEFECTO),_paleta_previa)
 UI.theme(DARK)
 AC.exigir()  # Acceso privado: nada se muestra antes de la contraseña.
 try:
@@ -217,6 +227,35 @@ elif nav=='Ajustes':
    except Exception as e:st.error(str(e))
   checked=st.checkbox('Confirmo que estos días corresponden al calendario que usaré',value=C.setting('calendario_confirmado',False))
   if st.button('Guardar confirmación del calendario'):C.set_setting('calendario_confirmado',checked);st.success('Confirmación guardada.')
+ with st.expander('Personalizar · Mi paleta',expanded=False):
+  st.caption('Ajusta cuatro colores de ATRIO Órbita. Los cambios se previsualizan en vivo cuando ese tema está activo; la tipografía y las superficies de lectura se mantienen controladas para conservar el contraste.')
+  if tema.activo()!=tema.ORBITA:
+   st.info('Para ver los cambios en la aplicación, selecciona «ATRIO Órbita» en el apartado Autoridades y presentación.')
+  if st.button('Restablecer paleta original de Órbita',key='orbita_palette_reset'):
+   C.set_setting('tema_paleta_personalizada',{})
+   for _campo in _paleta_base:
+    st.session_state.pop(_PALETA_KEY_PREFIX + _campo,None)
+   st.rerun()
+  _cols_paleta=st.columns(4)
+  _etiquetas_paleta=[
+   ('fondo','Fondo general'),
+   ('acento','Color principal'),
+   ('secundario','Color secundario'),
+   ('calendario','Calendario'),
+  ]
+  _paleta_borrador={}
+  for _col,(_campo,_etiqueta) in zip(_cols_paleta,_etiquetas_paleta):
+   with _col:
+    _paleta_borrador[_campo]=st.color_picker(
+     _etiqueta,
+     value=st.session_state.get(_PALETA_KEY_PREFIX + _campo,_paleta_base[_campo]),
+     key=_PALETA_KEY_PREFIX + _campo,
+    )
+  if st.button('Guardar paleta y aplicar ATRIO Órbita',key='orbita_palette_save',type='primary'):
+   C.set_setting('tema_paleta_personalizada',tema.validar_paleta(_paleta_borrador))
+   C.set_setting('tema_visual',tema.ORBITA)
+   st.success('Paleta guardada y ATRIO Órbita aplicado.')
+   st.rerun()
  with st.expander('Autoridades y presentación',expanded=False):
   with st.form('settings'):
    valida=st.text_input('Valida',C.setting('valida','Lila Inurreta Fernández'));visto=st.text_input('Visto bueno',C.setting('visto','Lila Inurreta Fernández'));autoriza=st.text_input('Autoriza',C.setting('autoriza','Sergio López Hernández'))
