@@ -199,3 +199,25 @@ def planificar_conciliacion(previous, incoming):
             "no_incluidos": len(no_incluidos),
         },
     }
+
+
+
+def grupo_incluido_en_actualizacion(group):
+    """True si el grupo participa en la programación vigente de la jornada.
+
+    Los registros anteriores a esta regla se consideran incluidos para mantener
+    compatibilidad. Los pendientes y sustituidos quedan fuera de los procesos
+    operativos, aunque sigan disponibles para consulta.
+    """
+    meta = group.get("_atrio") or {}
+    state = normalizar(meta.get("estado_programacion"))
+    if state.startswith("pendiente de reprogramacion"):
+        return False
+    if state.startswith("sustituido por cambio de nombre"):
+        return False
+    return meta.get("incluido_en_ultima_actualizacion", True) is not False
+
+
+def grupos_operativos(groups):
+    """Filtra grupos incluidos sin borrar ni mutar la colección original."""
+    return [group for group in groups if grupo_incluido_en_actualizacion(group)]
