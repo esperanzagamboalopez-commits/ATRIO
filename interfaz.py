@@ -214,7 +214,9 @@ def home_html(data, alerts, dark, soft, strong, today):
 
 
 def home(data, alerts, dark, soft, strong, today):
-    st.iframe(home_html(data, alerts, dark, soft, strong, today), height=1250)
+    # Inicio operativo usa la misma fuente de pendientes que Centro de Pendientes.
+    import tablero_inicio as TI
+    TI.render(data, today)
 
 
 # ATRIO · Navegación visual nativa de Streamlit.
