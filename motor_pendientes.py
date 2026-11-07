@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 CERRADOS_CALENDARIO = {"completada", "completado", "cancelado", "eliminado"}
 CERRADO_CREDENCIALES = {"entrega documentada", "entregadas"}
 CERRADO_ACREDITACION = {"resultados capturados"}
-TIPOS_PEA = {"extension", "repositorio"}
+TIPOS_PEA = {"extension", "extensión", "repositorio"}
 ESTADOS_PEA_LISTO = {"generado", "revisado", "aprobado", "validado"}
 ESTADOS_ACREDITACION_EN_CURSO = {
     "por imprimir", "por entregar", "entregada al docente",
