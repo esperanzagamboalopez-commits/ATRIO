@@ -54,6 +54,25 @@ class TestValidacionGrupoAntesDeGenerar(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "pendiente de reprogramación"):
                 C.validate_group_current(self.group)
 
+    def test_rechaza_si_identidad_esta_pendiente_de_revision(self):
+        with patch.object(C, "DATA", Path(self.tmp.name)):
+            with C.connect() as db:
+                row = db.execute(
+                    "SELECT payload FROM groups WHERE id='g-1'"
+                ).fetchone()
+                payload = json.loads(row["payload"])
+                payload["_atrio"] = {
+                    "estado_programacion": "Revisar identidad",
+                    # Aun con esta bandera verdadera, la identidad no está resuelta.
+                    "incluido_en_ultima_actualizacion": True,
+                }
+                db.execute(
+                    "UPDATE groups SET payload=? WHERE id=?",
+                    (json.dumps(payload), "g-1"),
+                )
+            with self.assertRaisesRegex(ValueError, "identidad.*pendiente de revisión"):
+                C.validate_group_current(self.group)
+
     def test_rechaza_si_grupo_fue_desactivado(self):
         with patch.object(C, "DATA", Path(self.tmp.name)):
             with C.connect() as db:

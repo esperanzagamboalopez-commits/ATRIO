@@ -143,10 +143,8 @@ def _dif_habiles(inicio, fin, dias, festivos):
 
 
 def _grupo_incluido(g):
-    meta = g.get("_atrio") or {}
-    return meta.get("incluido_en_ultima_actualizacion", True) is not False and not str(
-        meta.get("estado_programacion", "")
-    ).startswith("Pendiente de reprogramación")
+    """Usa la misma regla central para todas las operaciones sobre grupos."""
+    return C.grupo_incluido_en_actualizacion(g)
 
 
 def _planificar_cascada(data, curso_id, nueva_fin, festivos):
