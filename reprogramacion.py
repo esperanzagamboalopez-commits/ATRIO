@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import tempfile
+import uuid
 
 import streamlit as st
 from openpyxl import load_workbook
@@ -189,7 +190,7 @@ def _planificar_cascada(data, curso_id, nueva_fin, festivos):
     return cambios
 
 
-def _actualizar_excel_y_db(cambios, excel_path=None):
+def _actualizar_excel_y_db_impl(cambios, excel_path=None):
     """Aplica los cambios coordinando respaldo, Excel y SQLite; restaura Excel si falla SQLite."""
     excel = Path(excel_path or (C.RES / "PROGRAMACION DE CURSOS.xlsx"))
     if not excel.is_file():
@@ -227,10 +228,18 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
     os.close(fd)
     temp = Path(temp_name)
     reemplazado = False
+    operation_id = str(uuid.uuid4())
+    journal = C._ruta_journal_programacion()
     try:
         wb.save(temp)
         wb.close()
         shutil.copy2(excel, backup)
+        C._escribir_journal_programacion({
+            "operation_id": operation_id,
+            "excel": str(excel.resolve()),
+            "backup": str(backup.resolve()),
+            "created": C.now(),
+        })
         with C.connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             # Validar todos los grupos antes de modificar cualquiera.
@@ -270,16 +279,20 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
                     "INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)",
                     (C.now(), None, "Reprogramación aplicada", json.dumps({
                         "grupos_actualizados": len(cambios), "respaldo": str(backup),
-                        "archivo": str(excel), "regla": "Se conservaron group_id, estados y documentos existentes.",
+                        "archivo": str(excel), "operation_id": operation_id,
+                        "regla": "Se conservaron group_id, estados y documentos existentes.",
                     }, ensure_ascii=False)),
                 )
             except Exception:
                 shutil.copy2(backup, excel)
                 raise
+        journal.unlink(missing_ok=True)
         return backup, excel
     except Exception:
-        if reemplazado and backup.exists():
-            shutil.copy2(backup, excel)
+        if backup.exists() and journal.exists():
+            if reemplazado:
+                shutil.copy2(backup, excel)
+            journal.unlink(missing_ok=True)
         raise
     finally:
         try:
@@ -288,6 +301,12 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
             pass
         temp.unlink(missing_ok=True)
 
+
+def _actualizar_excel_y_db(cambios, excel_path=None):
+    """Serializa operaciones y recupera cualquier journal pendiente antes de aplicar."""
+    with C.programacion_lock():
+        C.recuperar_programacion()
+        return _actualizar_excel_y_db_impl(cambios, excel_path)
 
 def render_reprogramacion(data, today):
     st.markdown("""
