@@ -135,7 +135,6 @@ reemplazos = {
         else "Buenas tardes" if ahora.hour < 20
         else "Buenas noches"
     ),
-    "__ALERT_TEXT__": "Un aviso demostrativo · no corresponde a un trámite real.",
     "__SISAE_SUMMARY__": (
         '<div class="sisae-data"><div><strong>Resumen de muestra</strong>'
         '<div class="subtle">SISAE no está conectado en este laboratorio.</div></div>'
