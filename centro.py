@@ -20,6 +20,8 @@ def ruta_dias_sin_clase():
 def now():return datetime.now(ZoneInfo('America/Mexico_City')).isoformat(timespec='seconds')
 def connect():
  c=sqlite3.connect(DATA/'atrio.sqlite3');c.row_factory=sqlite3.Row
+ # El journal de programación solo es seguro si el commit SQLite se fuerza a almacenamiento.
+ c.execute('PRAGMA synchronous=FULL')
  c.executescript('''CREATE TABLE IF NOT EXISTS groups(id TEXT PRIMARY KEY, rowkey TEXT, fingerprint TEXT, payload TEXT, active INTEGER DEFAULT 1);
  CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, at TEXT, group_id TEXT, action TEXT, payload TEXT);
  CREATE TABLE IF NOT EXISTS status(group_id TEXT PRIMARY KEY, doc TEXT DEFAULT 'Sin verificar', mce TEXT DEFAULT 'Sin verificar', note TEXT DEFAULT '');
