@@ -216,6 +216,7 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
     fd, temp_name = tempfile.mkstemp(prefix="PROGRAMACION_", suffix=".xlsx", dir=str(excel.parent))
     os.close(fd)
     temp = Path(temp_name)
+    reemplazado = False
     try:
         wb.save(temp)
         wb.close()
@@ -235,6 +236,7 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
                     raise ValueError(f"{cambio['curso']} quedó pendiente y no participa en esta jornada.")
                 actuales[cambio["id"]] = payload
             os.replace(temp, excel)
+            reemplazado = True
             try:
                 for cambio in cambios:
                     payload = actuales[cambio["id"]]
@@ -266,10 +268,14 @@ def _actualizar_excel_y_db(cambios, excel_path=None):
                 raise
         return backup, excel
     except Exception:
-        if backup.exists() and not excel.exists():
+        if reemplazado and backup.exists():
             shutil.copy2(backup, excel)
         raise
     finally:
+        try:
+            wb.close()
+        except Exception:
+            pass
         temp.unlink(missing_ok=True)
 
 
