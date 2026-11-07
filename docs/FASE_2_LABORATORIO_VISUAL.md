@@ -30,7 +30,20 @@ La galería ampliada permite comparar nueve variantes con una misma maqueta y da
 
 Las variantes “Anterior” reproducen los tokens principales de `tema.py` para facilitar la comparación; la maqueta no es una captura exacta de la interfaz Streamlit. Este inventario no afirma que la vista se haya probado visualmente en un navegador de la aplicación.
 
-## 3. Dirección visual acordada
+## 3. Nueva propuesta exclusiva: ATRIO Órbita
+
+Se incorpora una dirección visual original concebida para el trabajo académico y administrativo de ATRIO, no como una variación de los temas rosados:
+
+- Azul petróleo profundo y tinta azul para estructura, navegación y jerarquía.
+- Verde mineral/teal como acento de acción y orientación.
+- Lima mineral como señal secundaria de energía, avance y puntos importantes.
+- Marfil mineral y papel cálido para lectura y descanso visual.
+- Calendario en arena clara, separado del fondo general.
+- Degradados controlados inspirados en capas cartográficas y trayectorias, sin repetir la estética editorial rosa/oro/terracota.
+
+La propuesta busca transmitir precisión, continuidad, claridad y capacidad de gestión. Es un concepto de laboratorio, no una identidad institucional aprobada todavía.
+
+## 4. Dirección visual acordada
 
 Los cuatro temas principales que deben presentarse en la galería son:
 
@@ -59,7 +72,7 @@ Los cuatro temas principales que deben presentarse en la galería son:
 
 Japandi Minimalista y Cyber-Neon pueden conservarse como temas secundarios para evaluación posterior; no sustituyen los cuatro temas principales solicitados.
 
-## 4. Muestra funcional que deberá incluir la galería
+## 5. Muestra funcional que deberá incluir la galería
 
 Todas las vistas deben presentar la misma composición y los mismos datos ficticios para que la comparación sea justa:
 
@@ -74,7 +87,7 @@ Todas las vistas deben presentar la misma composición y los mismos datos fictic
 
 La galería será demostrativa. Sus botones, campos y navegación no ejecutarán operaciones de ATRIO ni guardarán información.
 
-## 5. Reglas para el rediseño posterior
+## 6. Reglas para el rediseño posterior
 
 - Primero se comparan y aprueban los cuatro temas en la galería; después se implementan en la capa central de temas.
 - `tema.py` debe ser la fuente única de tokens de color, superficies, bordes, sombras, tipografía y estados.
@@ -85,7 +98,11 @@ La galería será demostrativa. Sus botones, campos y navegación no ejecutarán
 - No se modifican Inicio ni otros módulos operativos hasta aprobar primero la galería.
 - Después de cada cambio visual se ejecutan las pruebas funcionales para detectar regresiones.
 
-## 6. Archivos previstos
+## 7. Personalización de paleta en el laboratorio
+
+Se añade la opción `Personalizar · Mi paleta`, con controles de color para fondo general, acento principal, acento secundario y calendario. La vista se actualiza en el navegador, sin guardar preferencias, sin escribir archivos y sin modificar ATRIO. Tipografía y superficies de lectura se mantienen controladas para proteger la legibilidad. La persistencia de preferencias, si se aprueba en el futuro, se diseñará dentro de Ajustes de ATRIO y requerirá autorización separada.
+
+## 8. Archivos previstos
 
 ### Primera entrega: laboratorio independiente
 - Nuevo `laboratorio_temas.py` o una página HTML autónoma servida en modo local.
@@ -97,9 +114,9 @@ La galería será demostrativa. Sus botones, campos y navegación no ejecutarán
 - `inicio.html`: composición de Inicio y consumo de variables compartidas.
 - Pruebas visuales o verificaciones automatizadas de tokens, contraste básico y no regresión funcional.
 
-## 7. Criterios de aceptación
+## 9. Criterios de aceptación
 
-- Los cuatro temas principales se distinguen claramente y conservan legibilidad.
+- Los temas principales y ATRIO Órbita se distinguen claramente y conservan legibilidad.
 - Glass Executive se percibe translúcido y con desenfoque real.
 - Editorial Rosa incluye rosa polvo y degradados con profundidad, sin neón dominante.
 - Editorial Oro utiliza negro, blanco cálido y champagne con moderación.
