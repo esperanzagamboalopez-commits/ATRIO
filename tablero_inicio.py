@@ -457,7 +457,6 @@ html,body{margin:0;padding:0;background:transparent}
        columnas_tarjetas, tarjetas_interactivas
     ):
         with columna:
-            st.markdown('<div class="atrio-panorama-click-card">', unsafe_allow_html=True)
             etiqueta = f"**{titulo}**  \n\n# {valor:,}  \n\n{nota}  \n\n↳ Tocar para ver cursos"
             if st.button(
                 etiqueta,
@@ -468,7 +467,6 @@ html,body{margin:0;padding:0;background:transparent}
                 st.session_state[detalle_key] = (
                     None if st.session_state.get(detalle_key) == clave else clave
                 )
-            st.markdown("</div>", unsafe_allow_html=True)
     with columnas_tarjetas[4]:
         st.markdown(
             (
@@ -513,7 +511,6 @@ html,body{margin:0;padding:0;background:transparent}
             "en_curso": "Cursos en curso",
             "por_iniciar": "Cursos por iniciar",
         }
-        st.markdown('<div class="atrio-panorama-detail">', unsafe_allow_html=True)
         st.markdown(f"**{nombres.get(detalle_activo, 'Detalle de cursos')}**")
         if st.button("Ocultar detalle", key="inicio_panorama_cerrar"):
             st.session_state[detalle_key] = None
@@ -532,7 +529,6 @@ html,body{margin:0;padding:0;background:transparent}
                     "Horario": grupo.get("horario") or "Sin horario",
                 })
             st.dataframe(filas, hide_index=True, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
     st.caption(f'SISAE · {metricas.get("corte", "Sin corte cargado")}')
 
     st.markdown(
