@@ -298,6 +298,40 @@ class TestReprogramacion(unittest.TestCase):
             self.assertEqual(json.loads(payload)["fin"], "2026-11-30")
 
 
+    def test_no_revierte_excel_confirmado_si_falla_una_vez_el_borrado_del_journal(self):
+        """Un fallo transitorio al limpiar journal no debe deshacer un commit SQLite."""
+        journal = C._ruta_journal_programacion()
+        unlink_real = Path.unlink
+        llamadas = {"journal": 0}
+
+        def fallar_una_vez(path, *args, **kwargs):
+            if path == journal:
+                llamadas["journal"] += 1
+                if llamadas["journal"] == 1:
+                    raise OSError("fallo simulado al limpiar journal")
+            return unlink_real(path, *args, **kwargs)
+
+        with patch.object(Path, "unlink", new=fallar_una_vez):
+            backup, archivo = R._actualizar_excel_y_db([self._change()], self.excel)
+
+        self.assertTrue(backup.is_file())
+        self.assertTrue(archivo.is_file())
+        self.assertFalse(journal.exists())
+        wb = load_workbook(archivo, data_only=True)
+        self.assertEqual(wb["DOCENTE A"].cell(15, 6).value.date(), date(2026, 12, 7))
+        wb.close()
+        with self._connect() as db:
+            payload = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+            self.assertEqual(json.loads(payload)["fin"], "2026-12-07")
+            self.assertEqual(
+                db.execute(
+                    "SELECT COUNT(*) FROM events WHERE action='Reprogramación aplicada'"
+                ).fetchone()[0],
+                1,
+            )
+
     def test_conserva_reprogramacion_real_si_hay_cierre_tras_commit_sqlite(self):
         """El cierre tras el commit y antes de borrar journal conserva Excel y SQLite nuevos."""
         import os
