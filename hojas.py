@@ -2,6 +2,7 @@ from pathlib import Path
 from collections import Counter
 from datetime import date,datetime
 import hashlib, io, json, re, zipfile
+from uuid import uuid4
 import streamlit as st
 import streamlit.components.v1 as components
 from openpyxl import load_workbook
@@ -87,7 +88,7 @@ def show(number,groups,today,tracking=False):
     except (zipfile.BadZipFile,KeyError,ValueError) as e:
         st.error(f'El archivo SISAE.zip no se pudo leer ({e}). Por favor, vuelve a subirlo en Ajustes.')
         return
-    keys=['links','proposals','pea','school','bags','records']
+    keys=['links','proposals','pea','school','bags','records','credentials']
     state={k:C.setting('hojas03_'+k,{}) for k in keys}
     for k,g in ids.items():
         status=C.status(g['id'])
@@ -149,14 +150,25 @@ def show(number,groups,today,tracking=False):
         st.session_state['handled'+str(number)]=event['nonce']
         if event.get('atrio')=='credenciales' and number==4:
             import credenciales
-            key=links.get(str(event.get('id')),{}).get('key')
+            course_id=str(event.get('id',''))
+            key=links.get(course_id,{}).get('key')
+            group=ids.get(course_id)
             st.session_state.pop('cred_output',None)
             try:
-                if not key or key!=event.get('group') or digest!=event.get('cut'):raise ValueError('Cambió el corte o el grupo. Vuelve a seleccionar los alumnos.')
-                selected=credenciales.datos((C.RES/'SISAE.zip').read_bytes(),key,event['students'])
-                st.session_state['cred_output']=(key,digest,len(selected),credenciales.powerpoint(selected))
-                st.session_state['hojas_notice']='PowerPoint listo. Descárgalo arriba de la ficha.'
-            except ValueError as exc:st.session_state['hojas_notice']=str(exc)
+                if not group or not key or key!=event.get('group') or digest!=event.get('cut'):
+                    raise ValueError('Cambió el corte o el vínculo del grupo. Vuelve a seleccionar los alumnos.')
+                student_ids=sorted({str(x).strip() for x in event.get('students',[]) if str(x).strip()})
+                selected=credenciales.datos((C.RES/'SISAE.zip').read_bytes(),key,student_ids)
+                pptx=credenciales.powerpoint(selected)
+                st.session_state['cred_output']={
+                    'key':key,'digest':digest,'course_id':course_id,
+                    'group_id':group['id'],'curso':group['curso'],
+                    'docente':group['docente'],'inicio':group['inicio'],'fin':group['fin'],
+                    'student_ids':student_ids,'rows':selected,'pptx':pptx,
+                }
+                st.session_state['hojas_notice']='PowerPoint listo. Descárgalo y confirma cuando las credenciales estén elaboradas.'
+            except Exception as exc:
+                st.session_state['hojas_notice']=f'No se generaron credenciales: {exc}'
             st.rerun()
         if event.get('atrio')=='open' and str(event.get('id')) in ids:
             g=ids[str(event['id'])];st.session_state.update(selected=g['id'],teacher=g['hoja'],editor_group=g['id'],jump='Preparar PEA',pea110_stage='validacion');st.rerun()
@@ -168,15 +180,116 @@ def show(number,groups,today,tracking=False):
                 st.session_state['hojas_notice']=str(exc)
                 st.rerun()
             st.session_state['hojas_notice']='Cambios guardados en ATRIO.';st.rerun()
-    result=st.session_state.get('cred_output')
-    if number==4 and result and result[1]==digest:
-        download.download_button(f'Descargar {result[2]} credencial(es) · grupo {result[0]}',result[3],file_name=f'CREDENCIALES_{result[0]}.pptx')
+    if number==4:
+        import credenciales
+        result=st.session_state.get('cred_output')
+        if isinstance(result,dict) and result.get('digest')==digest:
+            download.download_button(
+                f'Descargar PowerPoint · {len(result["student_ids"])} credencial(es) · {result["curso"]}',
+                result['pptx'],
+                file_name=f'CREDENCIALES_{result["course_id"]}.pptx',
+                mime='application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                key='descargar_pptx_cred_'+result['course_id'],
+            )
+            registro_actual=(state.get('credentials') or {}).get(result['course_id'])
+            if not registro_actual or registro_actual.get('estado') not in ('Elaboradas','Entrega documentada'):
+                st.info('Cuando hayas terminado de elaborar las credenciales, confirma el estado para crear la relación Excel de firmas.')
+                if st.button('Marcar credenciales como elaboradas y generar Excel de firmas',key='marcar_cred_elaboradas_'+result['course_id'],type='primary'):
+                    try:
+                        excel=credenciales.excel_firmas(
+                            result['rows'],curso=result['curso'],docente=result['docente'],
+                            inicio=result['inicio'],termino=result['fin'],
+                            fecha_elaboracion=C.now()[:10],
+                        )
+                        carpeta=Path(C.OUT)/'RELACIONES_CREDENCIALES'
+                        carpeta.mkdir(parents=True,exist_ok=True)
+                        nombre=f'RELACION_FIRMAS_CREDENCIALES_{result["course_id"]}_{uuid4().hex[:8]}.xlsx'
+                        destino=carpeta/nombre
+                        destino.write_bytes(excel)
+                        registros=C.setting('hojas03_credentials',{}) or {}
+                        registros[result['course_id']]={
+                            'estado':'Elaboradas',
+                            'student_ids':result['student_ids'],
+                            'grupo_id':result['group_id'],
+                            'group_key':result['key'],
+                            'cut':digest,
+                            'curso':result['curso'],
+                            'docente':result['docente'],
+                            'inicio':result['inicio'],
+                            'fin':result['fin'],
+                            'fecha_elaboracion':C.now()[:10],
+                            'numero_alumnos':len(result['rows']),
+                            'excel_path':str(destino.relative_to(C.ROOT)),
+                        }
+                        C.set_setting('hojas03_credentials',registros)
+                        C.event(result['group_id'],'Credenciales elaboradas',{
+                            'grupo_control_escolar':result['course_id'],
+                            'alumnos':len(result['rows']),
+                            'excel':str(destino.relative_to(C.ROOT)),
+                        })
+                        st.session_state.pop('cred_output',None)
+                        st.session_state['hojas_notice']='Credenciales elaboradas. Se generó y guardó la relación Excel para firmas.'
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f'No se pudo registrar la elaboración ni generar la relación: {exc}')
+
+        registros_cred=state.get('credentials') or {}
+        if registros_cred:
+            st.markdown('### Relaciones de credenciales elaboradas')
+        for course_id,registro in sorted(registros_cred.items(),key=lambda x:str(x[0])):
+            grupo=ids.get(str(course_id))
+            if not grupo:
+                continue
+            st.caption(
+                f'{registro.get("curso",grupo.get("curso","Curso"))} · '
+                f'{registro.get("numero_alumnos","—")} alumno(s) · '
+                f'Estado: {registro.get("estado","Elaboradas")} · '
+                f'Elaboradas: {registro.get("fecha_elaboracion","—")}'
+            )
+            ruta_excel=Path(C.ROOT)/str(registro.get('excel_path') or '')
+            if ruta_excel.is_file():
+                st.download_button(
+                    f'Descargar Excel de firmas · {grupo.get("curso","Curso")}',
+                    ruta_excel.read_bytes(),
+                    file_name=ruta_excel.name,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    key='descargar_excel_firmas_'+str(course_id),
+                )
+            else:
+                st.warning('No se encontró el archivo de relación guardado. Revisa Respaldos antes de regenerarlo.')
+            if registro.get('estado')=='Elaboradas':
+                confirmacion=st.checkbox(
+                    'Confirmo que la relación física ya está firmada y quedó resguardada',
+                    key='confirmar_entrega_cred_'+str(course_id),
+                )
+                if st.button(
+                    'Registrar entrega documentada',
+                    key='cerrar_credenciales_'+str(course_id),
+                    disabled=not confirmacion,
+                ):
+                    registros=C.setting('hojas03_credentials',{}) or {}
+                    actual=registros.get(str(course_id),{})
+                    if actual.get('estado')!='Elaboradas':
+                        st.warning('El estado cambió; vuelve a revisar el registro.')
+                    else:
+                        actual=dict(actual,estado='Entrega documentada',fecha_entrega=C.now()[:10])
+                        registros[str(course_id)]=actual
+                        C.set_setting('hojas03_credentials',registros)
+                        C.event(actual.get('grupo_id'),'Entrega de credenciales documentada',{
+                            'grupo_control_escolar':str(course_id),
+                            'fecha_entrega':actual['fecha_entrega'],
+                            'relacion_firmada_resguardada':True,
+                        })
+                        st.success('Entrega documentada. El pendiente de credenciales quedará cerrado.')
+                        st.rerun()
+            elif registro.get('estado')=='Entrega documentada':
+                st.success('Entrega documentada y relación firmada resguardada.')
     if number==2 and state['proposals']:
         try:st.download_button('Descargar copia de Excel con propuestas',working_copy(ids,state['proposals']),'PROGRAMACION_PROPUESTA.xlsx')
         except ValueError as exc:st.error(str(exc))
 
 def save_changes(delta,ids,number):
-    allowed={2:{'proposals','links'},3:{'pea'},4:{'school'},5:{'pea','records','bags'}}[number]
+    allowed={2:{'proposals','links'},3:{'pea'},4:{'school','credentials'},5:{'pea','records','bags'}}[number]
     with C.connect() as db:
         db.execute('BEGIN IMMEDIATE')
         for item in delta:
