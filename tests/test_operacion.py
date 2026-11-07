@@ -271,6 +271,29 @@ def test_save_programacion_sincroniza_respaldo_excel_y_directorios(isolated, mon
     assert not C._ruta_journal_programacion().exists()
 
 
+def test_save_programacion_no_reporta_fallo_si_falla_evento_secundario_tras_commit(isolated, monkeypatch):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    raw = resource.read_bytes()
+    event_real = C.event
+
+    def fail_secondary_event(group_id, action, payload):
+        if action == "Recurso actualizado":
+            raise OSError("fallo del evento secundario")
+        return event_real(group_id, action, payload)
+
+    monkeypatch.setattr(C, "event", fail_secondary_event)
+    result = C.save_resource("PROGRAMACION DE CURSOS.xlsx", raw)
+
+    assert result[0] == 1
+    assert not C._ruta_journal_programacion().exists()
+    assert C._validar_excel_programacion(resource)
+    with C.connect() as db:
+        rows = db.execute(
+            "SELECT payload FROM events WHERE action='Importación programación'"
+        ).fetchall()
+    assert any(json.loads(row["payload"] or "{}").get("operation_id") for row in rows)
+
+
 def test_save_programacion_revierte_si_falla_importacion(isolated, monkeypatch):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     original = resource.read_bytes()
