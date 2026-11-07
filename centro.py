@@ -170,6 +170,9 @@ def recuperar_programacion():
                 raise ValueError('El journal contiene un commit_action no permitido.')
             excel=Path(data['excel']).resolve()
             backup=Path(data['backup']).resolve()
+            excel_objetivo=(RES/'PROGRAMACION DE CURSOS.xlsx')
+            if excel_objetivo.is_symlink() or excel!=excel_objetivo.resolve() or backup.parent!=ARCH.resolve():
+                raise ValueError('El journal debe apuntar al Excel de programación y a un respaldo directo de versiones.')
             if not _es_ruta_segura_programacion(excel) or not _es_ruta_segura_programacion(backup):
                 raise ValueError('El journal contiene rutas fuera de los directorios permitidos.')
             # Buscar la confirmación por coincidencia exacta del operation_id en el JSON.
