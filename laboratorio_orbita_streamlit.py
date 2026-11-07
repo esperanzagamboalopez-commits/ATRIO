@@ -1,11 +1,13 @@
 """Vista previa aislada de ATRIO Órbita en Streamlit.
 
-No importa app.py ni centro.py. No abre SQLite, Excel, SISAE ni documentos.
-Usa los estilos reales de tema.py/interfaz.py e inicio.html con datos ficticios.
+No importa app.py ni centro.py. No abre SQLite, Excel, SISAE ni documentos del plantel.
+El calendario usa una base temporal por sesión y solo recibe cursos/actividades ficticios.
 """
 import json
-from datetime import datetime
+import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import streamlit as st
@@ -13,6 +15,7 @@ import streamlit.components.v1 as components
 
 import tema
 import interfaz as UI
+import calendario as CAL
 
 
 st.set_page_config(
@@ -57,6 +60,13 @@ tema.fijar(seleccion, paleta)
 UI.theme(False)
 tokens = tema.variables()
 
+# Aislamiento: el calendario de esta vista nunca apunta al SQLite institucional.
+if "_lab_calendar_db_path" not in st.session_state:
+    ruta_temporal = Path(tempfile.gettempdir()) / f"atrio_calendario_demo_{uuid4().hex}.sqlite3"
+    st.session_state["_lab_calendar_db_path"] = str(ruta_temporal)
+CAL.DB_PATH = Path(st.session_state["_lab_calendar_db_path"])
+CAL.init_db()
+
 ahora = datetime.now(ZoneInfo("America/Mexico_City"))
 hoy = ahora.date()
 cursos = [
@@ -95,7 +105,66 @@ cursos = [
     },
 ]
 
-# La composición real de Inicio es el contenido principal y aparece primero.
+
+def _sembrar_agenda_demostrativa():
+    """Crea actividades inventadas una sola vez dentro del SQLite temporal."""
+    if st.session_state.get("_lab_calendar_seeded"):
+        return
+    categorias = {c["nombre"]: c["id"] for c in CAL.obtener_categorias()}
+    muestras = [
+        {
+            "titulo": "Revisión de agenda · demostración",
+            "descripcion": "Actividad ficticia para probar la agenda diaria.",
+            "categoria_id": categorias.get("Notas personales"),
+            "tipo": "Tarea",
+            "prioridad": "Media",
+            "fecha_inicio": hoy,
+            "todo_el_dia": True,
+            "modulo_vinculado": "Ninguno",
+            "recordatorio": "Ninguno",
+            "repeticion": "No se repite",
+            "lugar": "CECATI 31 · muestra",
+        },
+        {
+            "titulo": "Visita a talleres · demostración",
+            "descripcion": "Ejemplo de actividad institucional en el calendario.",
+            "categoria_id": categorias.get("Visitas a talleres"),
+            "tipo": "Evento",
+            "prioridad": "Alta",
+            "fecha_inicio": hoy + timedelta(days=4),
+            "todo_el_dia": False,
+            "hora_inicio": "10:00",
+            "hora_fin": "12:00",
+            "modulo_vinculado": "Ninguno",
+            "recordatorio": "Ninguno",
+            "repeticion": "No se repite",
+            "lugar": "Taller de muestra",
+        },
+        {
+            "titulo": "Seguimiento de trámite · demostración",
+            "descripcion": "Fecha límite ficticia para revisar cómo se identifica un vencimiento.",
+            "categoria_id": categorias.get("Seguimiento de trámites"),
+            "tipo": "Compromiso",
+            "prioridad": "Alta",
+            "fecha_inicio": hoy + timedelta(days=2),
+            "fecha_limite": hoy + timedelta(days=2),
+            "todo_el_dia": True,
+            "modulo_vinculado": "Ninguno",
+            "recordatorio": "Ninguno",
+            "repeticion": "No se repite",
+        },
+    ]
+    for evento in muestras:
+        CAL.guardar_evento(evento)
+    st.session_state["_lab_calendar_seeded"] = True
+
+
+_sembrar_agenda_demostrativa()
+
+# El calendario funcional aparece primero; los cursos solo aportan sus fechas de inicio/término.
+CAL.render_inicio_calendario(cursos)
+
+# Se conserva la composición aprobada de Inicio debajo del calendario funcional.
 inicio = (Path(__file__).parent / "inicio.html").read_text(encoding="utf-8")
 inicio = '<style>' + tema.root_css() + '</style>' + inicio
 reemplazos = {
@@ -108,8 +177,8 @@ reemplazos = {
         else "Buenas noches"
     ),
     "__SISAE_SUMMARY__": (
-        '<div class="sisae-data"><div><strong>Resumen de muestra</strong>'
-        '<div class="subtle">SISAE no está conectado en este laboratorio.</div></div>'
+        '<div class="sisae-data"><div><strong>Corte SISAE de demostración</strong>'
+        '<div class="subtle">Sin corte de muestra.</div></div>'
         '<span class="sisae-number">—</span></div>'
     ),
     "__DARK_CSS__": "",
@@ -122,7 +191,7 @@ for clave, valor in reemplazos.items():
 
 components.html(inicio, height=1320, scrolling=True)
 
-# Este bloque informativo queda al pie, en el espacio reservado para la antigua franja.
+# Resumen técnico del laboratorio, deliberadamente al final y con jerarquía discreta.
 with st.container(border=True):
     st.subheader("ATRIO · Vista previa de integración")
     st.caption(
@@ -132,10 +201,12 @@ with st.container(border=True):
     c1, c2, c3 = st.columns(3)
     c1.metric("Grupos de muestra", "3", "Ficticios")
     c2.metric("PEA por revisar", "1", "Demostración")
-    c3.metric("Corte SISAE", "No conectado", "Sin consulta")
+    with c3:
+        st.markdown("**SISAE**")
+        st.caption("Sin corte de muestra.")
     st.info("Vista aislada: ningún botón ejecuta procesos ni guarda cambios.")
 
 st.caption(
-    "Laboratorio de presentación solamente. Para ejecutar la aplicación real "
-    "y conectar recursos institucionales se requiere una autorización separada."
+    "El calendario conserva las actividades únicamente en un SQLite temporal de esta sesión. "
+    "No se conecta a la base institucional ni a recursos reales."
 )
