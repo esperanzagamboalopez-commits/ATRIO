@@ -230,7 +230,7 @@ def construir_pendientes(
                     proceso="Subir PEAs al MCE", grupo=g,
                     fecha_objetivo=None,
                     motivo="El PEA ya está elaborado/revisado y todavía no aparece como subido al MCE.",
-                    accion="Subir el PEA y registrar el estado real del envío.",
+                    accion="Subir el PEA al MCE y registrar el estado real del envío.",
                     modulo="Seguimiento y MCE", hoy=hoy, prioridad="Alta",
                     sufijo="subir-pea",
                 ))
@@ -248,7 +248,7 @@ def construir_pendientes(
                     proceso="Subir PEAs al MCE", grupo=g,
                     fecha_objetivo=None,
                     motivo="El PEA ya está elaborado/revisado, pero no hay confirmación del estado de su carga al MCE.",
-                    accion="Verificar primero si ya fue subido; si no, completar la carga y registrar el estado.",
+                    accion="Antes de continuar, verificar primero si ya fue subido al MCE; si no, completar la carga y registrar el estado.",
                     modulo="Seguimiento y MCE", hoy=hoy, certeza="Por verificar",
                     sufijo="verificar-carga-pea",
                 ))
