@@ -2,6 +2,7 @@ import io
 import json
 import shutil
 import struct
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -172,6 +173,45 @@ def test_save_programacion_revierte_si_falla_importacion(isolated, monkeypatch):
     with pytest.raises(RuntimeError, match="fallo de importación simulado"):
         C.save_resource("PROGRAMACION DE CURSOS.xlsx", updated.getvalue())
 
+    assert resource.read_bytes() == original
+    assert not C._ruta_journal_programacion().exists()
+
+
+def test_recupera_guardado_tras_cierre_abrupto_antes_de_importar(isolated, tmp_path):
+    """Simula la terminación del proceso justo después de sustituir el Excel."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    workbook = load_workbook(resource)
+    workbook["DOCENTE PRUEBA"].cell(15, 6).value = "2026-12-20"
+    updated_path = tmp_path / "programacion_actualizada.xlsx"
+    workbook.save(updated_path)
+    workbook.close()
+
+    repo_root = Path(__file__).resolve().parents[1]
+    child_script = """
+import os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import centro as C
+C.ROOT = Path(sys.argv[2])
+C.DATA = Path(sys.argv[3])
+C.RES = Path(sys.argv[4])
+C.ARCH = Path(sys.argv[5])
+C._import_program_impl = lambda *args, **kwargs: os._exit(73)
+C.save_resource("PROGRAMACION DE CURSOS.xlsx", Path(sys.argv[6]).read_bytes())
+"""
+    result = subprocess.run(
+        [
+            sys.executable, "-c", child_script, str(repo_root), str(C.ROOT),
+            str(C.DATA), str(C.RES), str(C.ARCH), str(updated_path),
+        ],
+        capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 73
+    assert resource.read_bytes() != original
+    assert C._ruta_journal_programacion().exists()
+
+    assert C.recuperar_programacion() is True
     assert resource.read_bytes() == original
     assert not C._ruta_journal_programacion().exists()
 
