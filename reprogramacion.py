@@ -192,7 +192,14 @@ def _planificar_cascada(data, curso_id, nueva_fin, festivos):
 
 def _actualizar_excel_y_db_impl(cambios, excel_path=None):
     """Aplica los cambios coordinando respaldo, Excel y SQLite; restaura Excel si falla SQLite."""
-    excel = Path(excel_path or (C.RES / "PROGRAMACION DE CURSOS.xlsx"))
+    excel_oficial = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    excel = Path(excel_path) if excel_path is not None else excel_oficial
+    # La recuperación solo admite el Excel oficial. Rechazar alias y symlinks
+    # antes de abrir el libro, crear respaldos o escribir el journal.
+    if excel.is_symlink() or excel_oficial.is_symlink():
+        raise ValueError("La reprogramación solo admite el archivo oficial; no se permiten enlaces simbólicos.")
+    if Path(os.path.abspath(excel)) != Path(os.path.abspath(excel_oficial)):
+        raise ValueError("La reprogramación solo puede modificar el Excel oficial de programación.")
     if not excel.is_file():
         raise FileNotFoundError(f"No se encontró la programación: {excel}")
     wb = load_workbook(excel)
