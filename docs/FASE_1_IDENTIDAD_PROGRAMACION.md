@@ -76,3 +76,18 @@ Pruebas específicas: `tests/test_grupos_operativos.py` cubre pendientes, vigent
 Los trabajos de PEA en cola conservan una instantánea de los datos seleccionados, pero esa instantánea no se considera autorización para generar indefinidamente. Antes de encolar y al iniciar la generación, ATRIO comprueba que el grupo siga activo, incluido en la actualización actual y con la misma huella de programación. Al finalizar el documento, vuelve a validar dentro de una transacción SQLite `BEGIN IMMEDIATE` antes de registrar el artefacto y actualizar el estado. Si la programación cambió durante la generación, el documento provisional se descarta y no se registra como PEA vigente.
 
 Cambios en `centro.py` y `trabajos.py`; pruebas en `tests/test_generacion_vigente.py`. Esta protección no sustituye la conciliación pendiente del módulo real de Reprogramación, que debe hacerse por separado antes de ejecutar una prueba integrada.
+
+## Reprogramación operativa con persistencia
+
+El módulo \`reprogramacion.py\` dejó de ser un simulador manual. La pantalla calcula la cascada por docente y carril horario, excluyendo grupos pendientes de reprogramación que no participan en la actualización actual. Los grupos excluidos se conservan en la base y no se modifican.
+
+Al aplicar una simulación:
+
+- Se valida que cada \`group_id\`, huella y fila del Excel sigan correspondiendo a los datos usados en la simulación.
+- Se crea un respaldo \`datos/versiones/PROGRAMACION_BACKUP_*.xlsx\`.
+- Se actualiza el Excel vigente con el esquema que lee \`centro.parse_program\`: B nombre, E inicio, F término y G duración.
+- Se actualiza el payload y la huella del mismo grupo en SQLite; no se crea una identidad nueva.
+- Se registran eventos de reprogramación. No se alteran estados MCE, artefactos PEA ni documentos históricos.
+- Si falla la actualización de SQLite después de sustituir el Excel, se restaura el respaldo.
+
+Pruebas aisladas: \`python -B -m unittest discover -s tests -p "test_reprogramacion_operativa.py" -v\`.
