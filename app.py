@@ -69,17 +69,7 @@ if query:
   found=st.selectbox('Resultados',hits,format_func=lambda g:f"{g['hoja']} · {g['nombre']} · {g['inicio']}")
   if st.button('Abrir curso'):
    st.session_state['selected']=found['id'];st.session_state['teacher']=found['hoja'];st.session_state['editor_group']=found['id'];st.session_state['pea110_stage']='contenido';st.session_state['jump']='Preparar PEA';st.rerun()
-alerts=[]
-for g in data_operativos:
- s=C.status(g['id'])
- if s['mce']=='Observado':alerts.append((g,'PEA devuelto con observaciones'))
- elif g['tipo']!='Regular' and s['mce']=='No subido':alerts.append((g,'PEA pendiente de subir al MCE'))
- elif s['doc']=='Sin PEA':alerts.append((g,'PEA confirmado por elaborar'))
-st.sidebar.caption(f'{len(alerts)} pendientes confirmados · los sin verificar no se cuentan como atrasos')
-if alerts:
- st.markdown(f'<div class="floating">● {len(alerts)} pendientes por atender</div>',unsafe_allow_html=True)
- with st.sidebar.expander('Ver pendientes',expanded=False):
-  for g,msg in alerts:st.write(f"{g['nombre']} · {msg}")
+alerts=[]  # El seguimiento se concentra en Inicio y Centro de Pendientes.
 if nav not in ('Inicio','Programación','Mi Calendario','Pendientes','Reprogramación','Adaptar PDF','Acciones Móviles','Preparar PEA','PEA históricos','Preparar documento','Seguimiento y MCE','Control escolar','Constancias y folios','Revisor','Asistente virtual','Auditoría histórica'):UI.heading(nav,a,b)
 def show_group(g):
  st.subheader(g['nombre']);st.caption(f"{g['hoja']} · {g['tipo']} · {g['duracion']:g} horas")
@@ -94,8 +84,6 @@ def select_group(key='select'):
 
 if nav=='Inicio':
  UI.home(data_operativos,alerts,DARK,a,b,today)
- if st.button('Abrir seguimiento de PEA y MCE →',key='home_follow'):
-  st.session_state['jump']='Seguimiento y MCE';st.rerun()
 
 elif nav in ('Programación','Preparar PEA','Control escolar','Constancias y folios','Seguimiento y MCE'):
  number={'Programación':2,'Preparar PEA':3,'Seguimiento y MCE':3,'Control escolar':4,'Constancias y folios':5}[nav]
