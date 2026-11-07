@@ -71,13 +71,44 @@ def _es_ruta_segura_programacion(path):
     allowed=(RES.resolve(),ARCH.resolve())
     return any(candidate==base or base in candidate.parents for base in allowed)
 
+def _fsync_archivo(path):
+    """Fuerza a disco el contenido de un archivo ya escrito."""
+    with open(path,'rb') as stream:
+        os.fsync(stream.fileno())
+
+def _fsync_directorio(path):
+    """Fuerza a disco los cambios de nombres de archivo del directorio (POSIX)."""
+    flags=os.O_RDONLY|getattr(os,'O_DIRECTORY',0)
+    fd=os.open(os.fspath(path),flags)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+def _reemplazar_archivo_durable(origen,destino):
+    """Sustituye un archivo y sincroniza el directorio que contiene el destino."""
+    os.replace(origen,destino)
+    _fsync_directorio(Path(destino).parent)
+
+def _eliminar_journal_programacion():
+    """Elimina el journal y sincroniza su directorio; devuelve si existía."""
+    journal=_ruta_journal_programacion()
+    try:
+        journal.unlink()
+    except FileNotFoundError:
+        return False
+    _fsync_directorio(journal.parent)
+    return True
+
 def _escribir_journal_programacion(data):
     journal=_ruta_journal_programacion()
+    journal.parent.mkdir(parents=True,exist_ok=True)
     tmp=journal.with_suffix('.json.tmp')
     raw=json.dumps(data,ensure_ascii=False).encode('utf-8')
     with open(tmp,'wb') as stream:
         stream.write(raw);stream.flush();os.fsync(stream.fileno())
     os.replace(tmp,journal)
+    _fsync_directorio(journal.parent)
 
 def recuperar_programacion():
     """Resuelve una operación interrumpida según el evento de confirmación en SQLite."""
@@ -118,7 +149,7 @@ def recuperar_programacion():
                         'SQLite confirmó la operación, pero el Excel de programación no existe; '
                         'se conserva el journal para recuperación manual.'
                     )
-                journal.unlink()
+                _eliminar_journal_programacion()
                 return True
             if not backup.is_file():
                 raise FileNotFoundError('No se encuentra el respaldo necesario para restaurar la programación no confirmada.')
@@ -128,10 +159,11 @@ def recuperar_programacion():
             temp=Path(name)
             try:
                 shutil.copy2(backup,temp)
-                os.replace(temp,excel)
+                _fsync_archivo(temp)
+                _reemplazar_archivo_durable(temp,excel)
             finally:
                 temp.unlink(missing_ok=True)
-            journal.unlink()
+            _eliminar_journal_programacion()
             return True
         except Exception as exc:
             raise RuntimeError(f'ATRIO detectó una reprogramación interrumpida y no pudo completar su recuperación: {exc}') from exc
@@ -369,6 +401,9 @@ def _save_resource_impl(name,raw):
  if path.exists():
   backup=ARCH/(datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+name)
   shutil.copy2(path,backup)
+  if name=='PROGRAMACION DE CURSOS.xlsx':
+   _fsync_archivo(backup)
+   _fsync_directorio(backup.parent)
  operation_id=None
  if name=='PROGRAMACION DE CURSOS.xlsx':
   if backup is None:
@@ -380,12 +415,16 @@ def _save_resource_impl(name,raw):
   })
  tmp=path.with_suffix(path.suffix+'.tmp')
  try:
-  tmp.write_bytes(raw);os.replace(tmp,path)
+  tmp.write_bytes(raw)
   if name=='PROGRAMACION DE CURSOS.xlsx':
+   _fsync_archivo(tmp)
+  os.replace(tmp,path)
+  if name=='PROGRAMACION DE CURSOS.xlsx':
+   _fsync_directorio(path.parent)
    # La importación y su evento de confirmación comparten la transacción SQLite.
    result=_import_program_impl(path,operation_id=operation_id)
    try:
-    _ruta_journal_programacion().unlink(missing_ok=True)
+    _eliminar_journal_programacion()
    except Exception:
     # Si SQLite ya confirmó, una falla transitoria al limpiar el journal no invalida la importación.
     recuperar_programacion()
