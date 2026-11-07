@@ -69,3 +69,10 @@ En `identidad_programacion.py`, `grupo_incluido_en_actualizacion()` aplica esta 
 En `app.py`, Inicio, alertas, búsqueda que abre Preparar PEA, Centro de Pendientes y selección para generar PEA reciben solo grupos operativos. Programación, Reprogramación y las consultas generales conservan el conjunto completo. Los registros antiguos sin metadatos se consideran incluidos para mantener compatibilidad.
 
 Pruebas específicas: `tests/test_grupos_operativos.py` cubre pendientes, vigentes, sustituidos, compatibilidad histórica y no mutación de los registros originales.
+
+
+## Protección de generación frente a cambios de programación
+
+Los trabajos de PEA en cola conservan una instantánea de los datos seleccionados, pero esa instantánea no se considera autorización para generar indefinidamente. Antes de encolar y al iniciar la generación, ATRIO comprueba que el grupo siga activo, incluido en la actualización actual y con la misma huella de programación. Al finalizar el documento, vuelve a validar dentro de una transacción SQLite `BEGIN IMMEDIATE` antes de registrar el artefacto y actualizar el estado. Si la programación cambió durante la generación, el documento provisional se descarta y no se registra como PEA vigente.
+
+Cambios en `centro.py` y `trabajos.py`; pruebas en `tests/test_generacion_vigente.py`. Esta protección no sustituye la conciliación pendiente del módulo real de Reprogramación, que debe hacerse por separado antes de ejecutar una prueba integrada.
