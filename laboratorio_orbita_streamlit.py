@@ -1,9 +1,9 @@
-"""Vista previa aislada de ATRIO Órbita en Streamlit.
+"""Vista previa aislada del tablero ejecutivo ATRIO Órbita.
 
-No importa app.py ni centro.py. No abre SQLite, Excel, SISAE ni documentos del plantel.
-El calendario usa una base temporal por sesión y solo recibe cursos/actividades ficticios.
+Usa exclusivamente grupos, indicadores y tareas ficticias. El calendario
+escribe únicamente en un SQLite temporal único por sesión; no importa app.py
+ni centro.py y no abre SISAE, Excel ni recursos institucionales.
 """
-import json
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -11,22 +11,21 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 import tema
-import interfaz as UI
 import calendario as CAL
+import tablero_inicio as TINI
 
 
 st.set_page_config(
-    page_title="ATRIO · Vista previa",
+    page_title="ATRIO · Laboratorio Órbita",
     page_icon="◈",
     layout="wide",
 )
 
 PALETA_BASE = tema.paleta_predeterminada()
-st.sidebar.markdown("### Laboratorio visual")
-st.sidebar.caption("Vista aislada · solo datos ficticios")
+st.sidebar.markdown("### Laboratorio ATRIO Órbita")
+st.sidebar.caption("Vista aislada · exclusivamente datos ficticios")
 
 opciones = tema.OPCIONES
 seleccion = st.sidebar.selectbox(
@@ -57,12 +56,14 @@ if seleccion == tema.ORBITA:
         st.rerun()
 
 tema.fijar(seleccion, paleta)
-UI.theme(False)
-tokens = tema.variables()
+TINI.UI.theme(False)
 
-# Aislamiento: el calendario de esta vista nunca apunta al SQLite institucional.
+# La vista de laboratorio jamás apunta al SQLite institucional.
 if "_lab_calendar_db_path" not in st.session_state:
-    ruta_temporal = Path(tempfile.gettempdir()) / f"atrio_calendario_demo_{uuid4().hex}.sqlite3"
+    ruta_temporal = (
+        Path(tempfile.gettempdir())
+        / f"atrio_calendario_demo_{uuid4().hex}.sqlite3"
+    )
     st.session_state["_lab_calendar_db_path"] = str(ruta_temporal)
 CAL.DB_PATH = Path(st.session_state["_lab_calendar_db_path"])
 CAL.init_db()
@@ -73,81 +74,74 @@ cursos = [
     {
         "id": "LAB-001",
         "docente": "DOCENTE DE PRUEBA",
+        "nombre": "INFORMÁTICA BÁSICA · MUESTRA",
         "curso": "INFORMÁTICA BÁSICA · MUESTRA",
-        "tipo": "EXTENSIÓN",
+        "tipo": "Extensión",
         "inicio": "2026-11-10",
         "fin": "2026-12-10",
+        "duracion": 60,
         "horas": 60,
         "horario": "MARTES A SÁBADO · 09:00–12:00",
-        "alerta": "Registro demostrativo para revisión visual",
+        "aula": "Taller de muestra",
     },
     {
         "id": "LAB-002",
         "docente": "DOCENTE DE PRUEBA",
+        "nombre": "HERRAMIENTAS DIGITALES · MUESTRA",
         "curso": "HERRAMIENTAS DIGITALES · MUESTRA",
-        "tipo": "REPOSITORIO",
+        "tipo": "Repositorio",
         "inicio": "2026-11-17",
         "fin": "2026-12-17",
+        "duracion": 40,
         "horas": 40,
         "horario": "MARTES A SÁBADO · 15:00–17:00",
-        "alerta": "",
+        "aula": "Taller de muestra",
     },
     {
         "id": "LAB-003",
         "docente": "DOCENTE DE PRUEBA",
+        "nombre": "HOJA DE CÁLCULO · MUESTRA",
         "curso": "HOJA DE CÁLCULO · MUESTRA",
-        "tipo": "REGULAR",
+        "tipo": "Regular",
         "inicio": "2026-10-01",
         "fin": "2026-10-30",
+        "duracion": 30,
         "horas": 30,
         "horario": "MARTES A SÁBADO · 10:00–12:00",
-        "alerta": "",
+        "aula": "Aula de muestra",
     },
 ]
 
 
 def _sembrar_agenda_demostrativa():
-    """Crea actividades inventadas una sola vez dentro del SQLite temporal."""
+    """Crea actividades inventadas una sola vez en la base temporal."""
     if st.session_state.get("_lab_calendar_seeded"):
         return
     categorias = {c["nombre"]: c["id"] for c in CAL.obtener_categorias()}
     muestras = [
         {
-            "titulo": "Revisión de agenda · demostración",
-            "descripcion": "Actividad ficticia para probar la agenda diaria.",
-            "categoria_id": categorias.get("Notas personales"),
-            "tipo": "Tarea",
-            "prioridad": "Media",
-            "fecha_inicio": hoy,
-            "todo_el_dia": True,
+            "titulo": "Reunión de coordinación · demostración",
+            "descripcion": "Compromiso ficticio del Área de Capacitación.",
+            "categoria_id": categorias.get("Reuniones"),
+            "tipo": "Reunión",
+            "prioridad": "Alta",
+            "fecha_inicio": hoy + timedelta(days=2),
+            "hora_inicio": "10:00",
+            "hora_fin": "11:00",
+            "todo_el_dia": False,
             "modulo_vinculado": "Ninguno",
             "recordatorio": "Ninguno",
             "repeticion": "No se repite",
             "lugar": "CECATI 31 · muestra",
         },
         {
-            "titulo": "Visita a talleres · demostración",
-            "descripcion": "Ejemplo de actividad institucional en el calendario.",
-            "categoria_id": categorias.get("Visitas a talleres"),
-            "tipo": "Evento",
-            "prioridad": "Alta",
-            "fecha_inicio": hoy + timedelta(days=4),
-            "todo_el_dia": False,
-            "hora_inicio": "10:00",
-            "hora_fin": "12:00",
-            "modulo_vinculado": "Ninguno",
-            "recordatorio": "Ninguno",
-            "repeticion": "No se repite",
-            "lugar": "Taller de muestra",
-        },
-        {
-            "titulo": "Seguimiento de trámite · demostración",
-            "descripcion": "Fecha límite ficticia para revisar cómo se identifica un vencimiento.",
-            "categoria_id": categorias.get("Seguimiento de trámites"),
+            "titulo": "Entrega de informe · demostración",
+            "descripcion": "Entrega ficticia ajena a MCE y PEA, registrada en Mi Calendario.",
+            "categoria_id": categorias.get("Constancias y documentos"),
             "tipo": "Compromiso",
-            "prioridad": "Alta",
-            "fecha_inicio": hoy + timedelta(days=2),
-            "fecha_limite": hoy + timedelta(days=2),
+            "prioridad": "Media",
+            "fecha_inicio": hoy + timedelta(days=4),
+            "fecha_limite": hoy + timedelta(days=4),
             "todo_el_dia": True,
             "modulo_vinculado": "Ninguno",
             "recordatorio": "Ninguno",
@@ -161,55 +155,56 @@ def _sembrar_agenda_demostrativa():
 
 _sembrar_agenda_demostrativa()
 
-# El calendario funcional aparece primero; los cursos solo aportan sus fechas de inicio/término.
-CAL.render_inicio_calendario(cursos)
-
-# Se conserva la composición aprobada de Inicio debajo del calendario funcional.
-inicio = (Path(__file__).parent / "inicio.html").read_text(encoding="utf-8")
-inicio = '<style>' + tema.root_css() + '</style>' + inicio
-reemplazos = {
-    "__COURSES__": json.dumps(cursos, ensure_ascii=False).replace("<", "\\u003c"),
-    "__COUNT__": str(len(cursos)),
-    "__TODAY__": hoy.isoformat(),
-    "__GREETING__": (
-        "Buenos días" if ahora.hour < 12
-        else "Buenas tardes" if ahora.hour < 20
-        else "Buenas noches"
-    ),
-    "__SISAE_SUMMARY__": (
-        '<div class="sisae-data"><div><strong>Corte SISAE de demostración</strong>'
-        '<div class="subtle">Sin corte de muestra.</div></div>'
-        '<span class="sisae-number">—</span></div>'
-    ),
-    "__DARK_CSS__": "",
-    "__TEMA_CSS__": tema.root_css(),
-    "__SOFT__": tokens["--atrio-calendario"],
-    "__STRONG__": tokens["--atrio-neon"],
+# Estos indicadores y tareas son deliberadamente ficticios; el tablero no lee
+# el SISAE ni la SQLite institucional durante esta vista de prueba.
+metricas_demo = {
+    "disponible": True,
+    "alumnos_unicos": 24,
+    "inscripciones": 31,
+    "corte": "Corte ficticio de demostración",
 }
-for clave, valor in reemplazos.items():
-    inicio = inicio.replace(clave, valor)
+tareas_demo = [
+    {
+        "id": "LAB-TAREA-PEA",
+        "proceso": "Elaboración de PEAs",
+        "curso": "INFORMÁTICA BÁSICA · MUESTRA",
+        "docente": "DOCENTE DE PRUEBA",
+        "tipo_curso": "Extensión",
+        "fecha": (hoy + timedelta(days=1)).isoformat(),
+        "motivo": "Ejemplo ficticio: el curso se aproxima y el PEA debe estar listo con cinco días de anticipación.",
+        "accion": "Revisar y elaborar el PEA del curso de muestra.",
+        "modulo": "Preparar PEA",
+        "estado": "Pendiente",
+        "prioridad": "Alta",
+        "responsable": "Me corresponde",
+        "fuente": "Demostración",
+        "certeza": "Confirmado",
+    },
+    {
+        "id": "LAB-TAREA-ACM",
+        "proceso": "Cursos ACM",
+        "curso": "ACM · TALLER DE MUESTRA",
+        "docente": "DOCENTE DE PRUEBA",
+        "tipo_curso": "Acción móvil",
+        "fecha": (hoy + timedelta(days=5)).isoformat(),
+        "motivo": "Ejemplo ficticio: el grupo ACM se aproxima a su fecha de inicio.",
+        "accion": "Revisar oficio, sede y preparación del curso.",
+        "modulo": "Acciones Móviles",
+        "estado": "Aviso",
+        "prioridad": "Media",
+        "responsable": "Me corresponde",
+        "fuente": "Demostración",
+        "certeza": "Aviso",
+    },
+]
 
-components.html(inicio, height=1320, scrolling=True)
-
-# Resumen técnico del laboratorio, deliberadamente al final y con jerarquía discreta.
-with st.container(border=True):
-    st.subheader("ATRIO · Vista previa de integración")
-    st.caption(
-        "Esta vista no utiliza datos del plantel. La composición superior corresponde "
-        "al archivo inicio.html real y contiene únicamente registros de demostración."
-    )
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Grupos de muestra", "3", "Ficticios")
-    c2.metric("PEA por revisar", "1", "Demostración")
-    with c3:
-        st.markdown("**SISAE**")
-        st.caption("Sin corte de muestra.")
-    st.info(
-        "Vista aislada: la agenda guarda únicamente en el SQLite temporal de esta sesión; "
-        "no ejecuta procesos ni modifica datos institucionales."
-    )
-
-st.caption(
-    "El calendario conserva las actividades únicamente en un SQLite temporal de esta sesión. "
-    "No se conecta a la base institucional ni a recursos reales."
+TINI.render(
+    cursos,
+    hoy,
+    metricas_sisae=metricas_demo,
+    tareas=tareas_demo,
+    incluir_calendario=True,
+)
+st.sidebar.caption(
+    "Los cambios de agenda se guardan solo en el SQLite temporal de esta sesión."
 )
