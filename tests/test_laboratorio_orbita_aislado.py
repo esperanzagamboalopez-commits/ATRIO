@@ -60,7 +60,9 @@ def test_inicio_va_primero_y_el_resumen_del_laboratorio_queda_al_pie():
     )
     assert 'c1.metric("Grupos de muestra"' in source
     assert 'c2.metric("PEA por revisar"' in source
-    assert 'c3.metric("Corte SISAE"' in source
+    assert 'c1.metric("Grupos de muestra"' in source
+    assert 'c2.metric("PEA por revisar"' in source
+    assert 'st.caption("Sin corte de muestra.")' in source
     assert 'st.info("Vista aislada:' in source
 
 
@@ -73,3 +75,16 @@ def test_no_se_muestran_componentes_genericos_sin_contexto():
     assert "Acción de muestra" not in source
     assert "Campo de ejemplo" not in source
     assert "Selector de muestra" not in source
+
+
+def test_vista_previa_usa_sqlite_temporal_y_renderiza_calendario_funcional():
+    source = (Path(__file__).resolve().parents[1] / "laboratorio_orbita_streamlit.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "tempfile.gettempdir()" in source
+    assert 'CAL.DB_PATH = Path(st.session_state["_lab_calendar_db_path"])' in source
+    assert "CAL.init_db()" in source
+    assert "CAL.render_inicio_calendario(cursos)" in source
+    assert "Sin corte de muestra." in source
+    assert "No conectado" not in source
