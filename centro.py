@@ -390,6 +390,9 @@ def validate_group_current(group, conn=None):
   if not group.get('fingerprint') or row['fingerprint'] != group.get('fingerprint'):
    raise ValueError('La programación de este curso cambió mientras el PEA estaba seleccionado. Vuelve a abrir el curso y revisa sus datos antes de generar.')
   current=json.loads(row['payload'])
+  estado_programacion=str((current.get('_atrio') or {}).get('estado_programacion') or '')
+  if estado_programacion.casefold().startswith('revisar identidad'):
+   raise ValueError('La identidad de este curso está pendiente de revisión. Resuelve la coincidencia antes de generar el PEA.')
   if not grupo_incluido_en_actualizacion(current):
    raise ValueError('Este curso quedó pendiente de reprogramación y no participa en la jornada actual. Consérvalo y selecciónalo cuando se incluya en una nueva actualización.')
   return True
