@@ -184,6 +184,29 @@ def test_save_programacion_conserva_commit_si_falla_una_vez_el_borrado_del_journ
     assert any(json.loads(row["payload"]).get("operation_id") for row in rows)
 
 
+def test_save_programacion_recupera_si_falla_fsync_del_directorio_excel(isolated, monkeypatch):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    fsync_real = C._fsync_directorio
+    failed = {"value": False}
+
+    def fail_once(path):
+        if Path(path) == C.RES and not failed["value"]:
+            failed["value"] = True
+            raise OSError("fallo fsync simulado")
+        return fsync_real(path)
+
+    monkeypatch.setattr(C, "_fsync_directorio", fail_once)
+    with pytest.raises(OSError, match="fallo fsync simulado"):
+        C.save_resource("PROGRAMACION DE CURSOS.xlsx", original)
+
+    assert failed["value"]
+    assert resource.read_bytes() == original
+    assert not C._ruta_journal_programacion().exists()
+    with C.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM events WHERE action='Importación programación'").fetchone()[0] == 0
+
+
 def test_save_programacion_sincroniza_respaldo_excel_y_directorios(isolated, monkeypatch):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     raw = resource.read_bytes()
