@@ -202,7 +202,6 @@ def home_html(data, alerts, dark, soft, strong, today):
         '__COUNT__': str(len(rows)),
         '__TODAY__': today.isoformat(),
         '__GREETING__': 'Buenos días' if now.hour < 12 else 'Buenas tardes' if now.hour < 20 else 'Buenas noches',
-        '__ALERT_TEXT__': f'{len(alerts)} pendientes confirmados · consulta y atiende su seguimiento.' if alerts else 'Sin pendientes confirmados. Los estados sin verificar requieren revisión.',
         '__SISAE_SUMMARY__': sisae_resume(),
         '__DARK_CSS__': dark_css,
         '__TEMA_CSS__': tema.root_css(),
