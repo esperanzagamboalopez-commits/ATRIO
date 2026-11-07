@@ -40,3 +40,10 @@ Las seis pruebas unitarias cubren cambio de docente, cambio de nombre, horas dis
 ### Reversión
 
 Esta entrega está en la rama `implementacion/identidad-grupos-pea-fase1`. Para revertirla, basta con no integrar esa rama; `main` permanece intacta.
+
+
+## Compatibilidad de antecedentes en consultas
+
+La consulta de documentos generados ahora recupera también la ficha del grupo inactivo que los originó. Esto permite identificar curso y docente anteriores en la biblioteca y en los detalles del asistente, sin reactivar el grupo ni transferir sus documentos al grupo nuevo.
+
+Prueba añadida: `tests/test_antecedentes_consulta.py`, con base SQLite temporal y datos ficticios. Comprueba la identificación del antecedente en ambas consultas.
