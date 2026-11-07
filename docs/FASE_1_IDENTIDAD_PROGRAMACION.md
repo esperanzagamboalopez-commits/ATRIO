@@ -47,3 +47,10 @@ Esta entrega está en la rama `implementacion/identidad-grupos-pea-fase1`. Para 
 La consulta de documentos generados ahora recupera también la ficha del grupo inactivo que los originó. Esto permite identificar curso y docente anteriores en la biblioteca y en los detalles del asistente, sin reactivar el grupo ni transferir sus documentos al grupo nuevo.
 
 Prueba añadida: `tests/test_antecedentes_consulta.py`, con base SQLite temporal y datos ficticios. Comprueba la identificación del antecedente en ambas consultas.
+
+
+## PEA anterior después de una reprogramación
+
+Cuando el grupo conserva su identidad, pero cambian atributos de programación, los artefactos cuya huella no coincide con la vigente se presentan como versiones anteriores. Preparar PEA ofrece acceso directo a Revisor para comparar y reajustar el Word, conservando el original. Las versiones anteriores no se muestran como PEA vigente ni se reutilizan automáticamente.
+
+Prueba adicional: el selector de biblioteca marca la huella anterior y Preparar PEA recupera esos artefactos por group_id para enviarlos a revisión.
