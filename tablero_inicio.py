@@ -61,7 +61,7 @@ def _metricas_sisae():
         }
 
 
-def _cargar_seguimiento(grupos, hoy):
+def cargar_tareas(grupos, hoy):
     """Reúne fuentes reales para el motor común, sin modificar sus registros."""
     import centro as C
     import calendario as CAL
@@ -157,7 +157,7 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
     hoy = hoy if isinstance(hoy, date) else date.fromisoformat(str(hoy)[:10])
     resumen = _resumen_cursos(grupos, hoy)
     metricas = metricas_sisae if metricas_sisae is not None else _metricas_sisae()
-    tareas = tareas if tareas is not None else _cargar_seguimiento(grupos, hoy)
+    tareas = tareas if tareas is not None else cargar_tareas(grupos, hoy)
 
     st.markdown(
         """
