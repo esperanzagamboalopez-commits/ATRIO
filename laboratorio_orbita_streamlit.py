@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 
 import tema
+import interfaz as UI
 import calendario as CAL
 import tablero_inicio as TINI
 
@@ -56,7 +57,7 @@ if seleccion == tema.ORBITA:
         st.rerun()
 
 tema.fijar(seleccion, paleta)
-TINI.UI.theme(False)
+UI.theme(False)
 
 # La vista de laboratorio jamás apunta al SQLite institucional.
 if "_lab_calendar_db_path" not in st.session_state:
