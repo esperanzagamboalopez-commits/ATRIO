@@ -7,7 +7,7 @@
 
 Cerrar la separación de responsabilidades entre las tres vistas:
 
-- **Inicio:** bienvenida, calendario, panorama de capacitación y hasta tres prioridades inmediatas explicadas con su siguiente acción y destino.
+- **Inicio:** bienvenida con reloj digital, calendario de consulta, panorama de capacitación y hasta tres prioridades inmediatas explicadas con su siguiente acción y destino.
 - **Pendientes:** centro de trabajo con filtros de periodo, proceso, responsable y situación. Reúne obligaciones derivadas de fuentes reales y compromisos personales del calendario.
 - **Mi Calendario:** agenda de reuniones, entregas, compromisos y actividades del Área de Capacitación, además de fechas objetivo y referencias de inicio/término de cursos.
 
@@ -17,10 +17,10 @@ Inicio ya no renderiza la maqueta HTML heredada ni la franja informativa PEA/MCE
 
 \`tablero_inicio.py\` es la fuente de la vista ejecutiva:
 
-1. Bienvenida dinámica.
-2. Calendario funcional.
-3. Panorama: cursos programados, cursos vigentes, alumnos únicos, inscripciones y distribución Extensión/Repositorio/Regular.
-4. Barras de avance por tipo, calculadas por término de curso; el término por fecha no equivale a cierre de acreditaciones o constancias.
+1. Bienvenida dinámica con reloj digital de hora local que se actualiza cada segundo.
+2. Calendario compacto de consulta: marcas de actividades, fechas objetivo, avisos e inicios/términos de cursos; no crea ni edita actividades desde Inicio.
+3. Panorama con conteos separados de cursos programados, terminados por fecha, en curso y por iniciar, además de alumnos únicos e inscripciones del corte SISAE.
+4. Barras por tipo que separan terminados, en curso y por iniciar; el avance se calcula por término de curso y no por cierre de acreditaciones o constancias.
 5. Hasta tres prioridades, con motivo, siguiente acción y acceso al módulo.
 
 Los datos de alumnos y registros proceden del corte SISAE cargado. Cuando no hay un corte legible, se muestra «—» y no se inventa un cero.
@@ -53,7 +53,7 @@ La jornada personal para las listas es martes a viernes. Esta regla de trabajo n
 
 ## 4. Mi Calendario y fechas objetivo automáticas
 
-\`calendario.py\` conserva las actividades personales editables en sus tablas actuales. Recibe además las tareas generadas por el motor:
+`calendario.py` conserva las actividades personales editables en sus tablas actuales. En Inicio, el calendario es una vista de consulta; para crear, editar o completar actividades se utiliza el módulo Mi Calendario. Recibe además las tareas generadas por el motor:
 
 - Las fechas objetivo confirmadas se muestran con marca **L**.
 - Los avisos o verificaciones se muestran con marca **V**.
