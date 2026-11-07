@@ -19,8 +19,8 @@ Inicio ya no renderiza la maqueta HTML heredada ni la franja informativa PEA/MCE
 
 1. Bienvenida dinámica con reloj digital de hora local que se actualiza cada segundo.
 2. Calendario compacto de consulta: marcas de actividades, fechas objetivo, avisos e inicios/términos de cursos; no crea ni edita actividades desde Inicio.
-3. Panorama con conteos separados de cursos programados, terminados por fecha, en curso y por iniciar, además de alumnos únicos e inscripciones del corte SISAE.
-4. Barras por tipo que separan terminados, en curso y por iniciar; el avance se calcula por término de curso y no por cierre de acreditaciones o constancias.
+3. Panorama con tarjetas diferenciadas para cursos programados, terminados por fecha, en curso, por iniciar e inscripciones del corte SISAE.
+4. Tarjetas de avance por tipo con barra y conteos separados de terminados, en curso y por iniciar; el avance se calcula por término de curso y no por cierre de acreditaciones o constancias.
 5. Hasta tres prioridades, con motivo, siguiente acción y acceso al módulo.
 
 Los datos de alumnos y registros proceden del corte SISAE cargado. Cuando no hay un corte legible, se muestra «—» y no se inventa un cero.
