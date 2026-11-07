@@ -216,6 +216,56 @@ C.save_resource("PROGRAMACION DE CURSOS.xlsx", Path(sys.argv[6]).read_bytes())
     assert not C._ruta_journal_programacion().exists()
 
 
+def test_conserva_guardado_confirmado_tras_cierre_abrupto(isolated, tmp_path):
+    """Si SQLite confirmó, un cierre antes de borrar el journal conserva el Excel nuevo."""
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    workbook = load_workbook(resource)
+    workbook["DOCENTE PRUEBA"].cell(15, 6).value = "2026-12-20"
+    updated_path = tmp_path / "programacion_confirmada.xlsx"
+    workbook.save(updated_path)
+    workbook.close()
+    expected_new = updated_path.read_bytes()
+
+    repo_root = Path(__file__).resolve().parents[1]
+    child_script = """
+import os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import centro as C
+C.ROOT = Path(sys.argv[2])
+C.DATA = Path(sys.argv[3])
+C.RES = Path(sys.argv[4])
+C.ARCH = Path(sys.argv[5])
+original_import = C._import_program_impl
+def commit_then_exit(path, operation_id=None):
+    result = original_import(path, operation_id=operation_id)
+    os._exit(74)
+C._import_program_impl = commit_then_exit
+C.save_resource("PROGRAMACION DE CURSOS.xlsx", Path(sys.argv[6]).read_bytes())
+"""
+    result = subprocess.run(
+        [
+            sys.executable, "-c", child_script, str(repo_root), str(C.ROOT),
+            str(C.DATA), str(C.RES), str(C.ARCH), str(updated_path),
+        ],
+        capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 74
+    assert resource.read_bytes() == expected_new
+    assert C._ruta_journal_programacion().exists()
+
+    assert C.recuperar_programacion() is True
+    assert resource.read_bytes() == expected_new
+    assert not C._ruta_journal_programacion().exists()
+    with C.connect() as db:
+        row = db.execute(
+            "SELECT payload FROM events WHERE action='Importación programación' ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    assert row is not None
+    assert json.loads(row["payload"])["operation_id"]
+
+
 def test_sisae(isolated):
     tables = C.sisae_bytes((C.RES / "SISAE.zip").read_bytes())
     assert len(tables["PROG_CURSOS1.DBF"]) == 1
