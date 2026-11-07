@@ -87,7 +87,7 @@ def render_pendientes(data, today):
     )
 
     st.markdown("### Filtros de seguimiento")
-    f1, f2, f3 = st.columns([1.05, 1.45, 1.2])
+    f1, f2, f3, f4 = st.columns([1.0, 1.4, 1.2, 1.0])
     with f1:
         periodo = st.selectbox(
             "Cuándo",
@@ -106,7 +106,10 @@ def render_pendientes(data, today):
             if t.get("responsable") and t.get("responsable") not in responsables
         })
         responsables.extend(otros)
-        responsable = st.selectbox("Responsable / situación", responsables, key="pendientes_responsable_nuevo")
+        responsable = st.selectbox("Responsable", responsables, key="pendientes_responsable_nuevo")
+    with f4:
+        estados = ["Todos"] + sorted({str(t.get("estado") or "Pendiente") for t in tareas})
+        estado_sel = st.selectbox("Situación", estados, key="pendientes_estado_nuevo")
     fecha_personal = None
     if periodo == "Fecha":
         fecha_personal = st.date_input("Día específico", value=today, key="pendientes_fecha_nueva")
@@ -119,6 +122,8 @@ def render_pendientes(data, today):
         responsable=responsable,
         fecha_personal=fecha_personal,
     )
+    if estado_sel != "Todos":
+        filtrados = [t for t in filtrados if str(t.get("estado") or "Pendiente") == estado_sel]
     st.caption(f"{len(filtrados)} tarea(s) en esta vista · {len(tareas)} en seguimiento total.")
 
     por_proceso = defaultdict(list)
@@ -142,7 +147,7 @@ def render_pendientes(data, today):
         key=lambda x: (orden_preferido.index(x) if x in orden_preferido else len(orden_preferido), x),
     )
     if not nombres:
-        st.success("No hay tareas que coincidan con estos filtros.")
+        st.caption("No hay tareas que coincidan con estos filtros.")
     for nombre in nombres:
         elementos = por_proceso[nombre]
         with st.expander(f"{nombre} · {len(elementos)}", expanded=len(nombres) == 1):
@@ -186,10 +191,13 @@ def render_pendientes(data, today):
         import centro as C
         grupos_por_id = {str(g.get("id")): g for g in data}
         with st.expander("Historial reciente de gestión", expanded=False):
-            with C.connect() as db:
+            db = C.connect()
+            try:
                 historial = db.execute(
                     "SELECT at, group_id, action FROM events ORDER BY id DESC LIMIT 40"
                 ).fetchall()
+            finally:
+                db.close()
             if not historial:
                 st.caption("Todavía no hay movimientos registrados.")
             else:
