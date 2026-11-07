@@ -170,6 +170,26 @@ class TestReprogramacion(unittest.TestCase):
             self.assertEqual(after_payload, before_payload)
             self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
 
+    def test_journal_y_recuperacion_sincronizan_archivo_y_directorios(self):
+        backup = self.archive / "backup_durabilidad.xlsx"
+        backup.write_bytes(self.excel.read_bytes())
+        operation_id = "operacion-durabilidad"
+        with patch.object(C, "_fsync_archivo", wraps=C._fsync_archivo) as sync_file, \
+             patch.object(C, "_fsync_directorio", wraps=C._fsync_directorio) as sync_dir:
+            C._escribir_journal_programacion({
+                "operation_id": operation_id,
+                "excel": str(self.excel.resolve()),
+                "backup": str(backup.resolve()),
+                "created": C.now(),
+            })
+            self.assertTrue(C._ruta_journal_programacion().is_file())
+            sync_file.assert_called()
+            self.assertIn(self.archive, [call.args[0] for call in sync_dir.call_args_list])
+            self.assertTrue(C.recuperar_programacion())
+            self.assertFalse(C._ruta_journal_programacion().exists())
+            self.assertIn(self.resources, [call.args[0] for call in sync_dir.call_args_list])
+            self.assertGreaterEqual(sync_dir.call_count, 3)
+
     def test_recupera_excel_si_hubo_interrupcion_antes_del_commit_sqlite(self):
         original = self.excel.read_bytes()
         backup = self.archive / "backup_interrupcion.xlsx"
