@@ -446,6 +446,8 @@ def _save_resource_impl(name,raw):
  if name=='SISAE.zip':sisae_bytes(raw)
  if name.endswith('.pdf') and not raw.startswith(b'%PDF'):raise ValueError('PDF inválido')
  path=RES/name
+ if name=='PROGRAMACION DE CURSOS.xlsx' and path.is_symlink():
+  raise ValueError('La importación solo admite el Excel oficial como archivo normal; no se permiten enlaces simbólicos.')
  backup=None
  if path.exists():
   backup=ARCH/(datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+name)
