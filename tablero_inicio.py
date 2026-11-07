@@ -219,19 +219,27 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
           transform:translateY(-2px);
           box-shadow:0 10px 24px rgba(42,35,38,.12);
         }
-        .atrio-panorama-click-card div[data-testid="stButton"]{height:100%}
-        .atrio-panorama-click-card div[data-testid="stButton"] button{
+        .st-key-inicio_panorama_programados button,
+        .st-key-inicio_panorama_terminados button,
+        .st-key-inicio_panorama_en_curso button,
+        .st-key-inicio_panorama_por_iniciar button{
           width:100%;height:100%;min-height:154px;text-align:left;
           border:1px solid rgba(var(--atrio-oro-rgb),.48);
           border-radius:11px;background:var(--atrio-surface);
           color:var(--atrio-tinta);box-shadow:var(--atrio-sombra);
           padding:15px 17px;white-space:pre-wrap;
         }
-        .atrio-panorama-click-card div[data-testid="stButton"] button:hover{
+        .st-key-inicio_panorama_programados button:hover,
+        .st-key-inicio_panorama_terminados button:hover,
+        .st-key-inicio_panorama_en_curso button:hover,
+        .st-key-inicio_panorama_por_iniciar button:hover{
           border-color:var(--atrio-neon);color:var(--atrio-tinta);
           transform:translateY(-2px);
         }
-        .atrio-panorama-click-card div[data-testid="stButton"] button p{
+        .st-key-inicio_panorama_programados button p,
+        .st-key-inicio_panorama_terminados button p,
+        .st-key-inicio_panorama_en_curso button p,
+        .st-key-inicio_panorama_por_iniciar button p{
           line-height:1.45;margin:0;
         }
         .atrio-panorama-detail{
@@ -446,7 +454,7 @@ html,body{margin:0;padding:0;background:transparent}
          "Con inicio en fecha futura", "Cursos con inicio posterior a hoy"),
     ]
     for columna, (clave, titulo, valor, nota, encabezado) in zip(
-       (columnas_tarjetas, tarjetas_interactivas)
+       columnas_tarjetas, tarjetas_interactivas
     ):
         with columna:
             st.markdown('<div class="atrio-panorama-click-card">', unsafe_allow_html=True)
