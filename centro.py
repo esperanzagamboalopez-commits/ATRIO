@@ -73,6 +73,23 @@ def _es_ruta_segura_programacion(path):
     allowed=(RES.resolve(),ARCH.resolve())
     return any(candidate==base or base in candidate.parents for base in allowed)
 
+def _programacion_confirmada(operation_id):
+    """Busca la confirmación transaccional exacta de una operación de importación."""
+    if not isinstance(operation_id,str) or not operation_id.strip():
+        return False
+    with connect() as conn:
+        rows=conn.execute(
+            "SELECT payload FROM events WHERE action='Importación programación'"
+        ).fetchall()
+    for row in rows:
+        try:
+            payload=json.loads(row['payload'] or '{}')
+        except (TypeError,ValueError):
+            continue
+        if isinstance(payload,dict) and payload.get('operation_id')==operation_id:
+            return True
+    return False
+
 def _validar_excel_programacion(path):
     """Comprueba que el XLSX existe, supera CRC ZIP y puede leerse completo."""
     path=Path(path)
@@ -462,25 +479,29 @@ def _save_resource_impl(name,raw):
     except RuntimeError:
      if _ruta_journal_programacion().exists():
       raise
-    with connect() as conn:
-     rows=conn.execute("SELECT payload FROM events WHERE action='Importación programación'").fetchall()
-    confirmado=False
-    for row in rows:
-     try: payload=json.loads(row['payload'] or '{}')
-     except (TypeError,ValueError): continue
-     if isinstance(payload,dict) and payload.get('operation_id')==operation_id:
-      confirmado=True
-      break
+    confirmado=_programacion_confirmada(operation_id)
     if not confirmado or _ruta_journal_programacion().exists():
      raise
     _validar_excel_programacion(path)
   else:
    result=None
-  event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
+  try:
+   event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
+  except Exception:
+   # La importación tiene su propio evento transaccional; este registro es secundario.
+   if name!='PROGRAMACION DE CURSOS.xlsx' or not _programacion_confirmada(operation_id):
+    raise
+   _validar_excel_programacion(path)
   if name=='DIAS_SIN_CLASE.json':set_setting('calendario_confirmado',False)
   return result
  finally:
-  tmp.unlink(missing_ok=True)
+  try:
+   tmp.unlink(missing_ok=True)
+  except OSError:
+   # No ocultar fallos previos a la importación; un temporal residual posterior
+   # al commit no invalida la programación confirmada.
+   if name!='PROGRAMACION DE CURSOS.xlsx' or not _programacion_confirmada(operation_id):
+    raise
 
 def save_resource(name,raw):
  if name=='PROGRAMACION DE CURSOS.xlsx':
