@@ -15,7 +15,7 @@ Revisión del código de `tema.py` en la rama de laboratorio:
 - Editorial Oro y Editorial Terracota no existen todavía como presets de la aplicación: son propuestas nuevas del laboratorio.
 - Glass Executive existente usa fondos oscuros y superficies como `#18181B`; no equivale al rediseño de vidrio translúcido.
 - `interfaz.py` centraliza buena parte del CSS de Streamlit; `inicio.html` define de forma independiente la composición y estilos de Inicio mediante variables CSS.
-- El Inicio actual tiene saludo dinámico, calendario rosa, métricas y tarjetas de seguimiento. No tiene aún el degradado rosa de dos intensidades ni la franja negra con el título institucional solicitado.
+- El Inicio anterior a la integración tenía saludo dinámico, calendario, métricas y tarjetas de seguimiento. La propuesta visual inicial incluyó una franja `PEA y trámites en MCE`, pero quedó descartada en la revisión: el Inicio final no debe mostrar esa franja ni un panel de atención.
 
 La galería ampliada permite comparar nueve variantes con una misma maqueta y datos ficticios:
 1. Editorial Rosa · Renovado (propuesta).
