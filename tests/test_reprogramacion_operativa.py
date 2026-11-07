@@ -170,6 +170,40 @@ class TestReprogramacion(unittest.TestCase):
             self.assertEqual(after_payload, before_payload)
             self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
 
+    def test_retorna_exito_si_commit_confirmado_y_falla_fsync_final_del_journal(self):
+        fsync_real = C._fsync_directorio
+        llamadas = {"archivo": 0}
+
+        def fallar_limpieza_journal(path):
+            if Path(path) == self.archive:
+                llamadas["archivo"] += 1
+                # backup, creación del journal y limpieza del journal, en ese orden.
+                if llamadas["archivo"] == 3:
+                    raise OSError("fallo fsync final del journal")
+            return fsync_real(path)
+
+        with patch.object(C, "_fsync_directorio", side_effect=fallar_limpieza_journal):
+            backup, archivo = R._actualizar_excel_y_db([self._change()], self.excel)
+
+        self.assertTrue(backup.is_file())
+        self.assertEqual(archivo, self.excel)
+        self.assertGreaterEqual(llamadas["archivo"], 3)
+        self.assertFalse(C._ruta_journal_programacion().exists())
+        wb = load_workbook(self.excel, data_only=True)
+        self.assertEqual(wb["DOCENTE A"].cell(15, 6).value.date(), date(2026, 12, 7))
+        wb.close()
+        with self._connect() as db:
+            payload = db.execute(
+                "SELECT payload FROM groups WHERE id='grupo-1'"
+            ).fetchone()[0]
+            self.assertEqual(json.loads(payload)["fin"], "2026-12-07")
+            self.assertEqual(
+                db.execute(
+                    "SELECT COUNT(*) FROM events WHERE action='Reprogramación aplicada'"
+                ).fetchone()[0],
+                1,
+            )
+
     def test_reprogramacion_sincroniza_respaldo_excel_y_directorios(self):
         with patch.object(C, "_fsync_archivo", wraps=C._fsync_archivo) as sync_file, \
              patch.object(C, "_fsync_directorio", wraps=C._fsync_directorio) as sync_dir:
