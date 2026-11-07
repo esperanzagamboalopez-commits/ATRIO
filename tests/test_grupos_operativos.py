@@ -34,6 +34,22 @@ class TestSeparacionGruposOperativos(unittest.TestCase):
         self.assertTrue(grupo_incluido_en_actualizacion(antiguo))
         self.assertEqual(grupos_operativos([antiguo]), [antiguo])
 
+    def test_identidad_pendiente_de_revision_no_es_operativa(self):
+        ambiguo = {
+            "id": "ambiguo-1",
+            "_atrio": {
+                "estado_programacion": "Revisar identidad",
+                "incluido_en_ultima_actualizacion": True,
+            },
+        }
+        self.assertFalse(grupo_incluido_en_actualizacion(ambiguo))
+        self.assertEqual(grupos_operativos([ambiguo]), [])
+        # El registro permanece disponible y no se muta al filtrar.
+        self.assertEqual(
+            ambiguo["_atrio"]["estado_programacion"], "Revisar identidad"
+        )
+        self.assertTrue(ambiguo["_atrio"]["incluido_en_ultima_actualizacion"])
+
     def test_sustituido_no_se_incluye_en_operacion(self):
         sustituido = {
             "id": "sustituido-1",
