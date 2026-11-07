@@ -158,6 +158,17 @@ def show(number,groups,today,tracking=False):
                 if not group or not key or key!=event.get('group') or digest!=event.get('cut'):
                     raise ValueError('Cambió el corte o el vínculo del grupo. Vuelve a seleccionar los alumnos.')
                 student_ids=sorted({str(x).strip() for x in event.get('students',[]) if str(x).strip()})
+                all_student_ids={
+                    str(item.get('id','')).strip()
+                    for item in students.get(course_id,[])
+                    if str(item.get('id','')).strip()
+                }
+                if not all_student_ids or set(student_ids)!=all_student_ids:
+                    raise ValueError(
+                        'Para marcar como elaboradas las credenciales del grupo, '
+                        'selecciona a todos los alumnos vinculados en SISAE. '
+                        'Así la relación Excel no dejará alumnos fuera.'
+                    )
                 selected=credenciales.datos((C.RES/'SISAE.zip').read_bytes(),key,student_ids)
                 pptx=credenciales.powerpoint(selected)
                 st.session_state['cred_output']={
