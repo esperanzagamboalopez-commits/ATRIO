@@ -176,6 +176,6 @@ def test_tarea_de_credenciales_sin_padron_confirmado_es_solo_verificacion():
         date(2026, 11, 6),
         estados={"g-1": {"doc": "Generado", "mce": "Subido"}},
     )
-    cred = next(t for t in tareas if t["proceso"] == "Por verificar" and "credenciales" in t["id"])
+    cred = next(t for t in tareas if t["proceso"] == "Credenciales")
     assert cred["estado"] == "Por verificar"
     assert cred["responsable"] == "Por verificar"
