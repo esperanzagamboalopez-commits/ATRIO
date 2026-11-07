@@ -160,7 +160,6 @@ _sembrar_agenda_demostrativa()
 # el SISAE ni la SQLite institucional durante esta vista de prueba.
 metricas_demo = {
     "disponible": True,
-    "alumnos_unicos": 24,
     "inscripciones": 31,
     "corte": "Corte ficticio de demostración",
 }
