@@ -1061,6 +1061,7 @@ def render_inicio_calendario(cursos=None):
         st.error(f"No se pudo preparar el calendario de Inicio: {exc}")
         return
 
+    _inyectar_estilos()
     hoy = fecha_hoy()
     st.session_state.setdefault("inicio_cal_anio", hoy.year)
     st.session_state.setdefault("inicio_cal_mes", hoy.month)
