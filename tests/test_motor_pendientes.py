@@ -214,3 +214,34 @@ def test_acreditacion_sin_estado_confirmado_no_se_marca_atrasada():
     acreditacion = next(t for t in tareas if t["proceso"] == "Acreditaciones")
     assert acreditacion["estado"] == "Por verificar"
     assert acreditacion["responsable"] == "Por verificar"
+
+
+
+def test_periodo_sisae_se_asigna_solo_a_grupos_vinculados_y_filtra():
+    tareas = construir_pendientes(
+        [grupo()],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Sin PEA", "mce": "Sin verificar"}},
+        periodos_sisae={"g-1": "2"},
+        eventos_calendario=[{
+            "id": 88,
+            "titulo": "Entrega de informe personal",
+            "fecha_inicio": "2026-11-06",
+            "estado": "Pendiente",
+            "prioridad": "Media",
+            "cat_nombre": "Notas personales",
+        }],
+    )
+
+    curso = next(t for t in tareas if t.get("grupo_id") == "g-1")
+    personal = next(t for t in tareas if t.get("proceso") == "Mi Calendario")
+
+    assert curso["periodo_sisae"] == "P2"
+    assert personal["periodo_sisae"] == ""
+    filtrados = filtrar_pendientes(
+        tareas,
+        date(2026, 11, 6),
+        periodo_sisae="P2",
+    )
+    assert filtrados
+    assert all(t["periodo_sisae"] == "P2" for t in filtrados)
