@@ -16,7 +16,7 @@ import interfaz as UI
 
 
 st.set_page_config(
-    page_title="ATRIO · Laboratorio visual",
+    page_title="ATRIO · Vista previa",
     page_icon="◈",
     layout="wide",
 )
@@ -57,25 +57,6 @@ tema.fijar(seleccion, paleta)
 UI.theme(False)
 tokens = tema.variables()
 
-st.title("ATRIO · Vista previa de integración")
-st.caption(
-    "Esta pantalla no utiliza datos del plantel. El Inicio de abajo es el archivo "
-    "inicio.html real con registros de demostración."
-)
-
-c1, c2, c3 = st.columns(3)
-c1.metric("Grupos de muestra", "3", "Ficticios")
-c2.metric("PEA por revisar", "1", "Demostración")
-c3.metric("Corte SISAE", "No conectado", "Sin consulta")
-st.info("Vista aislada: ningún botón ejecuta procesos ni guarda cambios.")
-
-# La composición real de Inicio se muestra antes que los componentes de ejemplo.
-st.subheader("Inicio · composición real con información ficticia")
-st.caption(
-    "Saludo, calendario y métricas proceden de inicio.html. "
-    "Los cursos y el resumen SISAE de esta vista son ejemplos inventados."
-)
-
 ahora = datetime.now(ZoneInfo("America/Mexico_City"))
 hoy = ahora.date()
 cursos = [
@@ -114,6 +95,7 @@ cursos = [
     },
 ]
 
+# La composición real de Inicio es el contenido principal y aparece primero.
 inicio = (Path(__file__).parent / "inicio.html").read_text(encoding="utf-8")
 inicio = '<style>' + tema.root_css() + '</style>' + inicio
 reemplazos = {
@@ -139,17 +121,21 @@ for clave, valor in reemplazos.items():
     inicio = inicio.replace(clave, valor)
 
 components.html(inicio, height=1320, scrolling=True)
+
+# Este bloque informativo queda al pie, en el espacio reservado para la antigua franja.
+with st.container(border=True):
+    st.subheader("ATRIO · Vista previa de integración")
+    st.caption(
+        "Esta vista no utiliza datos del plantel. La composición superior corresponde "
+        "al archivo inicio.html real y contiene únicamente registros de demostración."
+    )
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Grupos de muestra", "3", "Ficticios")
+    c2.metric("PEA por revisar", "1", "Demostración")
+    c3.metric("Corte SISAE", "No conectado", "Sin consulta")
+    st.info("Vista aislada: ningún botón ejecuta procesos ni guarda cambios.")
+
 st.caption(
     "Laboratorio de presentación solamente. Para ejecutar la aplicación real "
     "y conectar recursos institucionales se requiere una autorización separada."
 )
-
-with st.container(border=True):
-    st.subheader("Componentes de interfaz")
-    a, b = st.columns(2)
-    with a:
-        st.button("Acción de muestra", disabled=True, type="primary")
-        st.text_input("Campo de ejemplo", value="Solo demostración", disabled=True)
-    with b:
-        st.button("Acción secundaria", disabled=True)
-        st.selectbox("Selector de muestra", ["Opción demostrativa"], disabled=True)
