@@ -87,6 +87,7 @@ def recuperar_programacion():
         try:
             data=json.loads(journal.read_text(encoding='utf-8'))
             operation_id=str(data['operation_id'])
+            commit_action=str(data.get('commit_action','Reprogramación aplicada'))
             excel=Path(data['excel']).resolve()
             backup=Path(data['backup']).resolve()
             if not _es_ruta_segura_programacion(excel) or not _es_ruta_segura_programacion(backup):
@@ -94,7 +95,7 @@ def recuperar_programacion():
             if not backup.is_file():
                 raise FileNotFoundError('No se encuentra el respaldo necesario para recuperar la programación.')
             with connect() as conn:
-                row=conn.execute("SELECT 1 FROM events WHERE action='Reprogramación aplicada' AND payload LIKE ?",('%'+operation_id+'%',)).fetchone()
+                row=conn.execute("SELECT 1 FROM events WHERE action=? AND payload LIKE ?",(commit_action,'%'+operation_id+'%')).fetchone()
             if row:
                 # SQLite confirmó: conservar el Excel nuevo y retirar solo el journal.
                 journal.unlink()
@@ -149,7 +150,7 @@ def parse_program(path):
  return out
 
 def fingerprint(g):return sha(json.dumps({k:g.get(k) for k in ['hoja','nombre','tipo','inicio','fin','duracion','horario','poblacion','aula','especialidad_programada']},sort_keys=True,default=str).encode())
-def _import_program_impl(path):
+def _import_program_impl(path, operation_id=None):
  rows=parse_program(path)
  previous=[]
  with connect() as c:
@@ -253,16 +254,17 @@ def _import_program_impl(path):
   c.execute('INSERT INTO events(at,action,payload) VALUES(?,?,?)',(
    now(),'Importación programación',json.dumps({'grupos_recibidos':len(rows),
     'resumen':summary,'avisos':warnings,
+    'operation_id':operation_id,
     'regla':'Los grupos no incluidos se conservan; no se interpretan como cancelados.'},
     ensure_ascii=False,default=str)))
  if no_included:
   warnings.append(f"{no_included} grupo(s) no incluidos en esta actualización quedaron conservados como pendientes de reprogramación; no se eliminaron.")
  return len(rows),warnings
 
-def import_program(path):
+def import_program(path, operation_id=None):
  with programacion_lock():
   recuperar_programacion()
-  return _import_program_impl(path)
+  return _import_program_impl(path, operation_id=operation_id)
 
 def groups():
  """Devuelve todos los grupos activos, incluidos los pendientes para consulta y reprogramación."""
@@ -341,17 +343,45 @@ def _save_resource_impl(name,raw):
  if name=='SISAE.zip':sisae_bytes(raw)
  if name.endswith('.pdf') and not raw.startswith(b'%PDF'):raise ValueError('PDF inválido')
  path=RES/name
+ backup=None
  if path.exists():
-  dest=ARCH/(datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+name);shutil.copy2(path,dest)
- tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_bytes(raw);os.replace(tmp,path);event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
- if name=='DIAS_SIN_CLASE.json':set_setting('calendario_confirmado',False)
- return import_program(path) if name.startswith('PROGRAMACION') else None
+  backup=ARCH/(datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'_'+name)
+  shutil.copy2(path,backup)
+ operation_id=None
+ if name=='PROGRAMACION DE CURSOS.xlsx':
+  if backup is None:
+   raise FileNotFoundError('No existe una programación anterior para respaldar; no se sustituirá el archivo.')
+  operation_id=str(uuid.uuid4())
+  _escribir_journal_programacion({
+   'operation_id':operation_id,'commit_action':'Importación programación',
+   'excel':str(path.resolve()),'backup':str(backup.resolve()),'created':now(),
+  })
+ tmp=path.with_suffix(path.suffix+'.tmp')
+ try:
+  tmp.write_bytes(raw);os.replace(tmp,path)
+  if name=='PROGRAMACION DE CURSOS.xlsx':
+   # La importación y su evento de confirmación comparten la transacción SQLite.
+   result=_import_program_impl(path,operation_id=operation_id)
+   _ruta_journal_programacion().unlink(missing_ok=True)
+  else:
+   result=None
+  event(None,'Recurso actualizado',{'nombre':name,'sha256':sha(raw)})
+  if name=='DIAS_SIN_CLASE.json':set_setting('calendario_confirmado',False)
+  return result
+ finally:
+  tmp.unlink(missing_ok=True)
 
 def save_resource(name,raw):
  if name=='PROGRAMACION DE CURSOS.xlsx':
   with programacion_lock():
    recuperar_programacion()
-   return _save_resource_impl(name,raw)
+   try:
+    return _save_resource_impl(name,raw)
+   except Exception:
+    # Si el proceso sigue vivo, intenta revertir ahora; ante cierre abrupto
+    # el journal se resolverá en la siguiente operación de programación.
+    recuperar_programacion()
+    raise
  return _save_resource_impl(name,raw)
 
 def dbf(raw):
