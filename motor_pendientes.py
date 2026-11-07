@@ -268,13 +268,24 @@ def construir_pendientes(
         if estado_acred not in CERRADO_ACREDITACION:
             if estado_acred in ESTADOS_ACREDITACION_EN_CURSO:
                 if fin <= hoy + timedelta(days=14):
+                    esperando = estado_acred == "entregada al docente"
                     agregar(_crear(
                         proceso="Acreditaciones", grupo=g,
                         fecha_objetivo=fin,
-                        motivo=f"El curso termina el {fin:%d/%m/%Y}; la acreditación todavía no concluye su recorrido.",
-                        accion="Continuar el trámite de acreditación y registrar el siguiente estado.",
+                        motivo=(
+                            "La acreditación ya se entregó al docente y está pendiente su devolución."
+                            if esperando else
+                            f"El curso termina el {fin:%d/%m/%Y}; la acreditación todavía no concluye su recorrido."
+                        ),
+                        accion=(
+                            "Dar seguimiento a la devolución de la acreditación."
+                            if esperando else
+                            "Continuar el trámite de acreditación y registrar el siguiente estado."
+                        ),
                         modulo="Control escolar", hoy=hoy,
                         prioridad="Alta" if fin <= hoy + timedelta(days=3) else "Normal",
+                        responsable="Esperando respuesta" if esperando else "Me corresponde",
+                        estado_forzado="En espera" if esperando else None,
                         fuente="Control escolar", sufijo="acreditacion",
                     ))
             elif estado_acred in {"sin verificar", ""} and fin <= hoy + timedelta(days=10):
@@ -378,7 +389,7 @@ def construir_pendientes(
             "certeza": "Confirmado",
         })
 
-    orden_estado = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3, "Por verificar": 4}
+    orden_estado = {"Bloqueado": 0, "Vencido": 1, "Pendiente": 2, "Aviso": 3, "En espera": 4, "Por verificar": 5}
     orden_prioridad = {"Alta": 0, "Media": 1, "Normal": 2}
     tareas.sort(key=lambda x: (
         orden_estado.get(x["estado"], 5),
