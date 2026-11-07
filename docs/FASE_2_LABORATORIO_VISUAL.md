@@ -11,7 +11,7 @@ La primera entrega será una galería estática/interactiva de temas con datos d
 Revisión del código de `tema.py` en la rama de laboratorio:
 
 - Presets existentes: Editorial Rosa, Editorial Premium, Japandi Minimalista, Cyber-Neon y Glass Executive.
-- `tema.OPCIONES` expone solo Editorial Rosa, Editorial Premium y Japandi Minimalista; los temas oscuros están definidos pero no aparecen en ese selector.
+- Antes de integrar Órbita, `tema.OPCIONES` exponía Editorial Rosa, Editorial Premium y Japandi Minimalista; los temas oscuros estaban definidos pero no aparecían en ese selector. En Fase 2.2 se incorpora ATRIO Órbita sin sustituir los temas anteriores.
 - Editorial Oro y Editorial Terracota no existen todavía como presets de la aplicación: son propuestas nuevas del laboratorio.
 - Glass Executive existente usa fondos oscuros y superficies como `#18181B`; no equivale al rediseño de vidrio translúcido.
 - `interfaz.py` centraliza buena parte del CSS de Streamlit; `inicio.html` define de forma independiente la composición y estilos de Inicio mediante variables CSS.
@@ -41,7 +41,7 @@ Se incorpora una dirección visual original concebida para el trabajo académico
 - Calendario en arena clara, separado del fondo general.
 - Degradados controlados inspirados en capas cartográficas y trayectorias, sin repetir la estética editorial rosa/oro/terracota.
 
-La propuesta busca transmitir precisión, continuidad, claridad y capacidad de gestión. Es un concepto de laboratorio, no una identidad institucional aprobada todavía.
+La propuesta busca transmitir precisión, continuidad, claridad y capacidad de gestión. La usuaria aprobó ATRIO Órbita como identidad visual para la integración controlada en la aplicación; esta aprobación no modifica la identidad institucional oficial del plantel.
 
 ## 4. Dirección visual acordada
 
@@ -87,15 +87,15 @@ Todas las vistas deben presentar la misma composición y los mismos datos fictic
 
 La galería será demostrativa. Sus botones, campos y navegación no ejecutarán operaciones de ATRIO ni guardarán información.
 
-## 6. Reglas para el rediseño posterior
+## 6. Reglas de integración visual
 
-- Primero se comparan y aprueban los cuatro temas en la galería; después se implementan en la capa central de temas.
+- ATRIO Órbita ya fue aprobado en la galería; su integración se realiza primero en la rama aislada `pruebas/fase2-funcional-aislada` y no se fusiona automáticamente a `main`.
 - `tema.py` debe ser la fuente única de tokens de color, superficies, bordes, sombras, tipografía y estados.
 - `interfaz.py` debe aplicar esos tokens a Streamlit de forma consistente.
 - `inicio.html` debe consumir los mismos tokens, sin mantener una paleta paralela difícil de controlar.
 - Los nombres de módulos, rutas, claves de sesión, widgets, acciones y lógica académica no se cambian como parte del trabajo visual.
 - La plantilla institucional del PEA permanece congelada: no se modifica su estructura, diseño, tipografía, tablas, controles ni distribución.
-- No se modifican Inicio ni otros módulos operativos hasta aprobar primero la galería.
+- Las modificaciones visuales de `Inicio` y `Ajustes` se limitan a consumir los tokens de tema; no se alteran flujos académicos ni operativos.
 - Después de cada cambio visual se ejecutan las pruebas funcionales para detectar regresiones.
 
 ## 7. Personalización de paleta en el laboratorio
@@ -124,3 +124,17 @@ Se añade la opción `Personalizar · Mi paleta`, con controles de color para fo
 - Calendario, navegación, botones, tarjetas y tablas conservan jerarquía y coherencia.
 - La galería puede ejecutarse sin conectar archivos institucionales.
 - No se modifica `main`, la base SQLite, Excel, SISAE ni la plantilla PEA.
+
+
+## 10. Estado de la integración visual · 6 de noviembre de 2026
+
+La identidad ATRIO Órbita está aprobada por la usuaria y su integración está preparada en la rama `pruebas/fase2-funcional-aislada`.
+
+- Se incorpora como opción de tema; Editorial Rosa continúa como valor predeterminado y los temas anteriores no se eliminan.
+- El Inicio consume los mismos tokens compartidos para el degradado de bienvenida, calendario en arena clara y franja oscura `PEA y trámites en MCE`.
+- Ajustes permite personalizar los cuatro colores aprobados y guardar la paleta en la configuración ya existente.
+- La personalización no cambia tipografía, superficies de lectura, color de texto ni estados semánticos.
+- No se han modificado `main`, Excel institucional, SISAE, documentos PEA, plantillas ni la base de datos del entorno operativo.
+- La validación de ejecución y no regresión queda pendiente de realizar en Codespaces sobre esta rama; no se declara todavía una prueba visual de la aplicación Streamlit.
+
+La reversión de esta integración en la rama de laboratorio consiste en revertir los commits de Fase 2.2 que afectan `tema.py`, `interfaz.py`, `inicio.html`, `app.py`, esta documentación y `tests/test_tema_orbita.py`. No se requiere tocar `main` ni eliminar datos.
