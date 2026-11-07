@@ -106,7 +106,13 @@ def recuperar_programacion():
                     committed=True
                     break
             if committed:
-                # SQLite confirmó: conservar el Excel nuevo y retirar solo el journal.
+                # SQLite confirmó, pero no se puede dar por recuperado un Excel ausente.
+                # Conservar el journal permite investigar/restaurar el archivo sin ocultar la incidencia.
+                if not excel.is_file():
+                    raise FileNotFoundError(
+                        'SQLite confirmó la operación, pero el Excel de programación no existe; '
+                        'se conserva el journal para recuperación manual.'
+                    )
                 journal.unlink()
                 return True
             if not backup.is_file():
