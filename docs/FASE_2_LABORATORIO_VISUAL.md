@@ -115,11 +115,14 @@ Los valores se validan como hexadecimal de seis dígitos. La tipografía, las su
 
 ### Vista previa independiente
 - Inicio no muestra el bloque `Lo que requiere tu atención`, el aviso demostrativo, el botón `Ver cursos para revisar` ni la franja decorativa `PEA y trámites en MCE`. El seguimiento se consulta en sus módulos correspondientes.
-- `laboratorio_orbita_streamlit.py`: presenta primero la composición real de `inicio.html` con tres cursos ficticios. Debajo muestra el título de la vista previa, tres indicadores demostrativos y el aviso de aislamiento, en el espacio destinado a la antigua franja informativa.
+- `laboratorio_orbita_streamlit.py`: muestra primero el calendario y agenda funcionales; después conserva la composición real de `inicio.html` con tres cursos ficticios. El resumen de laboratorio permanece al final.
+- `calendario.py`: incorpora `render_inicio_calendario(cursos)`, que reutiliza las tablas y operaciones de Mi Calendario. Las actividades personales pueden crearse, editarse y completarse. Los inicios y términos de cursos se muestran como referencias de solo lectura, tomados de la lista que recibe la función; no se duplican en `cal_eventos`.
+- La vista previa configura `calendario.DB_PATH` a un SQLite temporal único por sesión, fuera del repositorio. No abre ni migra la base institucional. También siembra actividades demostrativas ficticias en ese archivo temporal.
+- El rótulo de SISAE en el laboratorio usa texto secundario `Sin corte de muestra`, no un indicador grande `No conectado`.
 - Se retiró la sección genérica `Componentes de interfaz` y sus botones/campos de ejemplo porque no representan módulos reales y no ayudan a revisar Inicio.
-- No importa `app.py` ni `centro.py`; no abre SQLite, Excel, SISAE, expedientes o documentos.
+- No importa `app.py` ni `centro.py`; no abre Excel, SISAE, expedientes o documentos del plantel.
 - Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
-- `tests/test_laboratorio_orbita_aislado.py`: verifica la ausencia de conexiones operativas, el orden Inicio-primero y que no regresen los componentes genéricos.
+- `tests/test_laboratorio_orbita_aislado.py` y `tests/test_calendario_inicio.py`: verifican la ausencia de conexiones operativas, el orden calendario-primero, el uso del SQLite temporal, la distribución de fechas de los cursos y la persistencia de actividades en la ruta configurada.
 
 Para abrir solamente la vista previa, nunca `app.py`, se usa:
 
@@ -152,3 +155,19 @@ La identidad ATRIO Órbita está aprobada por la usuaria y su integración está
 - La validación de ejecución y no regresión queda pendiente de realizar en Codespaces sobre esta rama; no se declara todavía una prueba visual de la aplicación Streamlit.
 
 La reversión de esta integración en la rama de laboratorio consiste en revertir los commits de Fase 2.2 que afectan `tema.py`, `interfaz.py`, `inicio.html`, `app.py`, esta documentación y `tests/test_tema_orbita.py`. No se requiere tocar `main` ni eliminar datos.
+
+
+## 11. Fase 2.3.1 · Calendario y agenda en Inicio
+
+La primera etapa funcional de Inicio reutiliza el módulo existente de Mi Calendario, sin reemplazar sus tablas ni su esquema:
+
+- El calendario mensual permite cambiar de mes, regresar a Hoy y seleccionar un día.
+- Cada día muestra marcas para actividades, fechas límite, inicios de curso y términos de curso.
+- La agenda lateral muestra las actividades del día y las fechas de los cursos seleccionados.
+- Las actividades personales conservan su categoría, prioridad, lugar, responsable, fechas, horario y módulo relacionado. Se pueden crear, editar y completar desde la vista de Inicio.
+- Las fechas de inicio y término de cursos se leen del parámetro `cursos`; son referencias de solo lectura. No se insertan como actividades personales, por lo que no se duplican.
+- El bloque Próximos 7 días utiliza las actividades pendientes registradas en Mi Calendario.
+- El laboratorio asigna un SQLite temporal por sesión y utiliza únicamente cursos/eventos ficticios. El módulo operativo todavía no invoca esta nueva función desde `app.py`; su integración en el Inicio operativo se realizará después de revisar y aprobar el comportamiento de laboratorio.
+- Los recordatorios y las repeticiones siguen siendo metadatos. No se afirma que envíen notificaciones ni que creen ocurrencias recurrentes automáticamente.
+
+Pruebas añadidas en `tests/test_calendario_inicio.py` para las fechas de actividad/límite, las fechas de inicio/término de cursos, las marcas mensuales y el guardado en una base temporal configurada.
