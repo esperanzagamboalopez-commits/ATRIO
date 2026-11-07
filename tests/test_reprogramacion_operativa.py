@@ -657,6 +657,27 @@ R._actualizar_excel_y_db([json.loads(change_json)], C.RES / "PROGRAMACION DE CUR
             R._actualizar_excel_y_db([change], self.excel)
         self.assertEqual(self.excel.read_bytes(), before)
 
+    def test_no_incluye_identidad_ambigua_en_cascada(self):
+        data = [
+            dict(self.payload, id="grupo-1", fingerprint=self.fingerprint),
+            dict(
+                self.payload,
+                id="identidad-ambigua",
+                fingerprint="fp-ambigua",
+                _atrio={
+                    "estado_programacion": "Revisar identidad",
+                    "incluido_en_ultima_actualizacion": True,
+                },
+                inicio="2026-12-01",
+                fin="2026-12-20",
+            ),
+        ]
+        changes = R._planificar_cascada(
+            data, "grupo-1", date(2026, 12, 7), []
+        )
+        self.assertEqual([item["id"] for item in changes], ["grupo-1"])
+        self.assertFalse(R._grupo_incluido(data[1]))
+
     def test_no_incluye_grupos_pendientes_en_cascada(self):
         data = [
             dict(self.payload, id="grupo-1", fingerprint=self.fingerprint),
