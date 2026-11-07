@@ -139,6 +139,43 @@ def test_resource_validation_is_atomic(isolated):
     assert C.setting("calendario_confirmado") is False
 
 
+def test_save_programacion_confirma_importacion_y_limpia_journal(isolated):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    raw = resource.read_bytes()
+
+    result = C.save_resource("PROGRAMACION DE CURSOS.xlsx", raw)
+
+    assert result[0] == 1
+    assert not C._ruta_journal_programacion().exists()
+    with C.connect() as db:
+        row = db.execute(
+            "SELECT payload FROM events WHERE action='Importación programación' ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    assert row is not None
+    assert json.loads(row["payload"])["operation_id"]
+
+
+def test_save_programacion_revierte_si_falla_importacion(isolated, monkeypatch):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    original = resource.read_bytes()
+    workbook = load_workbook(resource)
+    workbook["DOCENTE PRUEBA"].cell(15, 6).value = "2026-12-20"
+    from io import BytesIO
+    updated = BytesIO()
+    workbook.save(updated)
+    workbook.close()
+
+    def fail_import(*args, **kwargs):
+        raise RuntimeError("fallo de importación simulado")
+
+    monkeypatch.setattr(C, "_import_program_impl", fail_import)
+    with pytest.raises(RuntimeError, match="fallo de importación simulado"):
+        C.save_resource("PROGRAMACION DE CURSOS.xlsx", updated.getvalue())
+
+    assert resource.read_bytes() == original
+    assert not C._ruta_journal_programacion().exists()
+
+
 def test_sisae(isolated):
     tables = C.sisae_bytes((C.RES / "SISAE.zip").read_bytes())
     assert len(tables["PROG_CURSOS1.DBF"]) == 1
