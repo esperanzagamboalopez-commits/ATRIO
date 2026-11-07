@@ -195,7 +195,7 @@ def construir_pendientes(
             if doc in ESTADOS_PEA_LISTO and mce == "no subido":
                 agregar(_crear(
                     proceso="Subir PEAs al MCE", grupo=g,
-                    fecha_objetivo=hoy,
+                    fecha_objetivo=None,
                     motivo="El PEA ya está elaborado/revisado y todavía no aparece como subido al MCE.",
                     accion="Subir el PEA y registrar el estado real del envío.",
                     modulo="Seguimiento y MCE", hoy=hoy, prioridad="Alta",
@@ -204,7 +204,7 @@ def construir_pendientes(
             elif doc in ESTADOS_PEA_LISTO and mce == "observado":
                 agregar(_crear(
                     proceso="Subir PEAs al MCE", grupo=g,
-                    fecha_objetivo=hoy,
+                    fecha_objetivo=None,
                     motivo="El PEA tiene observaciones registradas y necesita corrección antes de continuar.",
                     accion="Revisar y atender las observaciones del MCE.",
                     modulo="Seguimiento y MCE", hoy=hoy, estado_forzado="Bloqueado",
@@ -213,7 +213,7 @@ def construir_pendientes(
             elif doc in ESTADOS_PEA_LISTO and mce in {"sin verificar", ""}:
                 agregar(_crear(
                     proceso="Por verificar", grupo=g,
-                    fecha_objetivo=hoy,
+                    fecha_objetivo=None,
                     motivo="El PEA está listo, pero el estado de su carga al MCE no está confirmado.",
                     accion="Comprobar el estado de carga antes de considerarlo pendiente.",
                     modulo="Seguimiento y MCE", hoy=hoy, certeza="Por verificar",
