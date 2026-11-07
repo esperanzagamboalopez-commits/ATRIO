@@ -60,7 +60,7 @@ if query:
   if st.button('Abrir curso'):
    st.session_state['selected']=found['id'];st.session_state['teacher']=found['hoja'];st.session_state['editor_group']=found['id'];st.session_state['pea110_stage']='contenido';st.session_state['jump']='Preparar PEA';st.rerun()
 alerts=[]
-for g in data:
+for g in data_operativos:
  s=C.status(g['id'])
  if s['mce']=='Observado':alerts.append((g,'PEA devuelto con observaciones'))
  elif g['tipo']!='Regular' and s['mce']=='No subido':alerts.append((g,'PEA pendiente de subir al MCE'))
