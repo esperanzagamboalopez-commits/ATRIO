@@ -10,6 +10,7 @@ DATA=ROOT/'datos'; RES=DATA/'recursos'; OUT=DATA/'salidas'; ARCH=DATA/'versiones
 for p in (RES,OUT,ARCH):p.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0,str(ROOT/'motor'))
 import generador_pea_extension_v6_4 as motor
+from identidad_programacion import planificar_conciliacion
 
 def ruta_dias_sin_clase():
     """Primera ruta existente de DIAS_SIN_CLASE.json (datos/recursos y luego raíz). None si no existe."""
@@ -61,19 +62,113 @@ def parse_program(path):
 
 def fingerprint(g):return sha(json.dumps({k:g.get(k) for k in ['hoja','nombre','tipo','inicio','fin','duracion','horario','poblacion','aula','especialidad_programada']},sort_keys=True,default=str).encode())
 def import_program(path):
- rows=parse_program(path);warnings=[]
+ rows=parse_program(path)
+ previous=[]
  with connect() as c:
-  old=[dict(x) for x in c.execute('SELECT * FROM groups WHERE active=1')];used=set();c.execute('UPDATE groups SET active=0')
-  for g in rows:
-   fp=fingerprint(g);key=f"{g['hoja']}|{g['fila']}";exact=[x for x in old if x['fingerprint']==fp and x['id'] not in used]
-   fallback=[x for x in old if x['rowkey']==key and x['id'] not in used and json.loads(x['payload'])['nombre']==g['nombre']]
-   found=exact if len(exact)==1 else fallback
-   uid=found[0]['id'] if len(found)==1 else str(uuid.uuid4());used.add(uid)
-   if len(found)!=1 and old:warnings.append(f"Nuevo registro: {g['hoja']} / {g['nombre']}. Revisar si reemplaza un grupo anterior.")
-   if len(found)==1 and found[0]['fingerprint']!=fp:
-    c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(now(),uid,'Programación actualizada',json.dumps({'antes':json.loads(found[0]['payload']),'despues':g},ensure_ascii=False)))
-   c.execute('INSERT OR REPLACE INTO groups VALUES(?,?,?,?,1)',(uid,key,fp,json.dumps(g,ensure_ascii=False,default=str)))
-  c.execute('INSERT INTO events(at,action,payload) VALUES(?,?,?)',(now(),'Importación programación',json.dumps({'grupos':len(rows),'avisos':warnings})))
+  previous=[dict(x) for x in c.execute('SELECT * FROM groups WHERE active=1')]
+ prepared=[]
+ for g in rows:
+  item=dict(g);item['fingerprint']=fingerprint(g);prepared.append(item)
+ plan=planificar_conciliacion(previous,prepared)
+ warnings=list(plan['avisos'])
+ possible_replacements={}
+ for item in plan['nuevos']:
+  old_id=item.get('posible_grupo_anterior')
+  if old_id:
+   possible_replacements[old_id]=item
+ new_ids={}
+ with connect() as c:
+  c.execute('BEGIN IMMEDIATE')
+  for match in plan['vinculados']:
+   g=dict(match['actual']);g.pop('fingerprint',None)
+   meta={
+    'estado_programacion':'Vigente',
+    'incluido_en_ultima_actualizacion':True,
+    'ultima_conciliacion':now(),
+    'motivo_conciliacion':match['motivo_vinculo'],
+    'accion_pea_sugerida':match['accion_pea'],
+    'requiere_revision_horas':bool(match['horas_cambiaron']),
+    'requiere_revision_docente':bool(match['docente_cambio']),
+    'requiere_pea_nuevo':False,
+   }
+   g['_atrio']=meta
+   key=f"{g['hoja']}|{g['fila']}"
+   c.execute('INSERT OR REPLACE INTO groups VALUES(?,?,?,?,1)',(
+    match['id'],key,fingerprint(g),json.dumps(g,ensure_ascii=False,default=str)))
+   if match['cambios']:
+    c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(
+     now(),match['id'],'Programación actualizada',
+     json.dumps({'antes':match['anterior'],'despues':g,
+                 'campos_modificados':match['cambios'],
+                 'accion_pea_sugerida':match['accion_pea']},
+                ensure_ascii=False,default=str)))
+  for item in plan['nuevos']:
+   g=dict(item['actual']);g.pop('fingerprint',None)
+   uid=str(uuid.uuid4());new_ids[uid]=item
+   pea_required=bool(item['requiere_pea_nuevo'] and g.get('tipo')!='Regular')
+   g['_atrio']={
+    'estado_programacion':'Revisar identidad' if item['requiere_revision_manual'] else 'Vigente',
+    'incluido_en_ultima_actualizacion':True,
+    'ultima_conciliacion':now(),
+    'motivo_conciliacion':item['motivo'],
+    'accion_pea_sugerida':item['accion_pea'],
+    'requiere_pea_nuevo':pea_required,
+    'posible_grupo_anterior':item.get('posible_grupo_anterior'),
+   }
+   key=f"{g['hoja']}|{g['fila']}"
+   c.execute('INSERT INTO groups(id,rowkey,fingerprint,payload,active) VALUES(?,?,?,?,1)',(
+    uid,key,fingerprint(g),json.dumps(g,ensure_ascii=False,default=str)))
+   if pea_required:
+    c.execute('INSERT OR IGNORE INTO status(group_id,doc,mce,note) VALUES(?,?,?,?)',(
+     uid,'Sin PEA','Sin verificar',
+     'Curso nuevo o nombre cambiado. Se requiere un PEA nuevo; no reutilizar el PEA del nombre anterior.'))
+   action=('Identidad pendiente de revisión' if item['requiere_revision_manual']
+           else 'PEA nuevo requerido por cambio de nombre' if item['motivo']=='nombre_cambiado'
+           else 'Curso nuevo incorporado')
+   c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(
+    now(),uid,action,json.dumps({
+     'grupo':g,'posible_grupo_anterior':item.get('posible_grupo_anterior'),
+     'requiere_pea_nuevo':pea_required,
+     'requiere_revision_manual':item['requiere_revision_manual']},
+     ensure_ascii=False,default=str)))
+  no_included=0
+  for item in plan['no_incluidos']:
+   uid=item['id'];g=dict(item['grupo']);old_meta=dict(g.get('_atrio') or {})
+   prior_replacement=possible_replacements.get(uid)
+   if prior_replacement:
+    new_uid=next((new_id for new_id,new_item in new_ids.items()
+                  if new_item is prior_replacement),None)
+    state='Sustituido por cambio de nombre · antecedente conservado'
+    meta=dict(old_meta,estado_programacion=state,
+              incluido_en_ultima_actualizacion=False,
+              sustituido_por_grupo=new_uid,ultima_conciliacion=now())
+    active=0
+   else:
+    state='Pendiente de reprogramación · no incluido en esta actualización'
+    meta=dict(old_meta,estado_programacion=state,
+              incluido_en_ultima_actualizacion=False,
+              ultima_conciliacion=now())
+    active=1
+    no_included+=1
+   g['_atrio']=meta
+   c.execute('UPDATE groups SET payload=?,active=? WHERE id=?',(
+    json.dumps(g,ensure_ascii=False,default=str),active,uid))
+   if old_meta.get('estado_programacion')!=state:
+    c.execute('INSERT INTO events(at,group_id,action,payload) VALUES(?,?,?,?)',(
+     now(),uid,'Grupo conservado fuera de la actualización',
+     json.dumps({'estado':state,'sustituido_por_grupo':meta.get('sustituido_por_grupo'),
+                 'datos_anteriores_conservados':True},
+                ensure_ascii=False,default=str)))
+  summary=dict(plan['resumen'])
+  summary['pendientes_conservados']=no_included
+  summary['nombres_cambiados']=sum(1 for x in plan['nuevos'] if x['motivo']=='nombre_cambiado')
+  c.execute('INSERT INTO events(at,action,payload) VALUES(?,?,?)',(
+   now(),'Importación programación',json.dumps({'grupos_recibidos':len(rows),
+    'resumen':summary,'avisos':warnings,
+    'regla':'Los grupos no incluidos se conservan; no se interpretan como cancelados.'},
+    ensure_ascii=False,default=str)))
+ if no_included:
+  warnings.append(f"{no_included} grupo(s) no incluidos en esta actualización quedaron conservados como pendientes de reprogramación; no se eliminaron.")
  return len(rows),warnings
 
 def groups():
