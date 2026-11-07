@@ -8,6 +8,7 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 import streamlit as st
+import tema
 
 from motor_pendientes import (
     construir_pendientes,
@@ -118,29 +119,42 @@ def _resumen_cursos(grupos, hoy):
         "Repositorio": [],
         "Regular": [],
     }
+    por_tipo = {
+        etiqueta: {"terminados": 0, "en_curso": 0, "por_iniciar": 0}
+        for etiqueta in tipos
+    }
     vigentes = por_iniciar = terminados = 0
     for grupo in grupos:
         inicio = date.fromisoformat(str(grupo["inicio"])[:10])
         fin = date.fromisoformat(str(grupo["fin"])[:10])
         if inicio <= hoy <= fin:
             vigentes += 1
+            estado = "en_curso"
         elif inicio > hoy:
             por_iniciar += 1
-        elif fin < hoy:
+            estado = "por_iniciar"
+        else:
             terminados += 1
+            estado = "terminados"
+
         tipo = str(grupo.get("tipo") or "").strip().casefold()
-        if tipo in ("extensión", "extension"):
-            tipos["Extensión"].append(grupo)
-        elif tipo == "repositorio":
-            tipos["Repositorio"].append(grupo)
-        elif tipo == "regular":
-            tipos["Regular"].append(grupo)
+        etiqueta = (
+            "Extensión" if tipo in ("extensión", "extension")
+            else "Repositorio" if tipo == "repositorio"
+            else "Regular" if tipo == "regular"
+            else None
+        )
+        if etiqueta:
+            tipos[etiqueta].append(grupo)
+            por_tipo[etiqueta][estado] += 1
+
     return {
         "total": len(grupos),
         "vigentes": vigentes,
         "por_iniciar": por_iniciar,
         "terminados": terminados,
         "tipos": tipos,
+        "por_tipo": por_tipo,
     }
 
 
@@ -195,16 +209,79 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
         """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        f"""
-        <section class="atrio-inicio-welcome">
-          <div class="eyebrow">Jefatura de Capacitación · CECATI N.º 31</div>
-          <h1>{html.escape(_saludo())}, Esperanza.</h1>
-          <p>Tu gestión, bajo tu dirección.</p>
-        </section>
-        """,
-        unsafe_allow_html=True,
-    )
+    tokens = tema.variables()
+    bienvenida = """<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+html,body{margin:0;padding:0;background:transparent}
+*{box-sizing:border-box}
+.atrio-live-welcome{
+  width:100%;min-height:112px;display:flex;align-items:center;
+  justify-content:space-between;gap:20px;padding:18px 24px;
+  background:__HERO__;border:1px solid __BORDER__;
+  border-left:6px solid __ACCENT__;border-radius:15px;
+  box-shadow:__SHADOW__;color:__TEXT__;
+  font-family:Inter,Arial,sans-serif
+}
+.atrio-live-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:__MUTED__}
+.atrio-live-welcome h1{margin:8px 0 2px;font-family:Georgia,serif;
+  font-size:32px;line-height:1.15;font-weight:600;color:__TITLE__}
+.atrio-live-welcome p{margin:0;font-size:13px;color:__TEXT__}
+.atrio-live-clock{text-align:right;white-space:nowrap;min-width:125px}
+.atrio-live-clock time{display:block;font-variant-numeric:tabular-nums;
+  font-size:27px;font-weight:650;letter-spacing:1px;color:__TITLE__}
+.atrio-live-clock span{display:block;margin-top:3px;font-size:9px;
+  font-weight:700;letter-spacing:1.4px;color:__MUTED__}
+@media(max-width:520px){
+ .atrio-live-welcome{padding:16px;gap:10px}
+ .atrio-live-welcome h1{font-size:24px}
+ .atrio-live-clock{min-width:92px}
+ .atrio-live-clock time{font-size:21px}
+}
+</style>
+</head>
+<body>
+<section class="atrio-live-welcome">
+  <div>
+    <div class="atrio-live-eyebrow">Jefatura de Capacitación · CECATI N.º 31</div>
+    <h1>__GREETING__, Esperanza.</h1>
+    <p>Tu gestión, bajo tu dirección.</p>
+  </div>
+  <div class="atrio-live-clock" aria-label="Reloj de hora local">
+    <time id="atrio-live-clock">--:--:--</time>
+    <span>HORA LOCAL</span>
+  </div>
+</section>
+<script>
+(function(){
+  const node=document.getElementById("atrio-live-clock");
+  const formatter=new Intl.DateTimeFormat("es-MX",{
+    timeZone:"America/Mexico_City",hour:"2-digit",minute:"2-digit",
+    second:"2-digit",hour12:false
+  });
+  function updateClock(){node.textContent=formatter.format(new Date());}
+  updateClock();
+  window.setInterval(updateClock,1000);
+})();
+</script>
+</body>
+</html>"""
+    valores_bienvenida = {
+        "__HERO__": tokens["--atrio-hero-gradient"],
+        "__BORDER__": tokens["--atrio-borde"],
+        "__ACCENT__": tokens["--atrio-neon"],
+        "__SHADOW__": tokens["--atrio-sombra"],
+        "__TEXT__": tokens["--atrio-tinta"],
+        "__TITLE__": tokens["--atrio-titulo"],
+        "__MUTED__": tokens["--atrio-tenue"],
+        "__GREETING__": html.escape(_saludo()),
+    }
+    for marcador, valor in valores_bienvenida.items():
+        bienvenida = bienvenida.replace(marcador, valor)
+    st.components.v1.html(bienvenida, height=126, scrolling=False)
 
     if incluir_calendario:
         import calendario as CAL
@@ -212,25 +289,25 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
 
     st.markdown("## Panorama de capacitación")
     st.caption("Programación activa y corte SISAE. Los cursos terminados se cuentan por su fecha de término, no por el cierre de constancias.")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Cursos programados", resumen["total"])
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1.metric("Programados", resumen["total"])
+    c2.metric("Terminados", resumen["terminados"])
+    c3.metric("En curso", resumen["vigentes"])
+    c4.metric("Por iniciar", resumen["por_iniciar"])
     if metricas.get("disponible"):
-        c2.metric("Alumnos únicos", f'{metricas["alumnos_unicos"]:,}')
-        c3.metric("Inscripciones", f'{metricas["inscripciones"]:,}')
+        c5.metric("Alumnos únicos", f'{metricas["alumnos_unicos"]:,}')
+        c6.metric("Inscripciones", f'{metricas["inscripciones"]:,}')
     else:
-        c2.metric("Alumnos únicos", "—")
-        c3.metric("Inscripciones", "—")
-    c4.metric("Cursos vigentes", resumen["vigentes"])
+        c5.metric("Alumnos únicos", "—")
+        c6.metric("Inscripciones", "—")
     st.caption(f'SISAE · {metricas.get("corte", "Sin corte cargado")}')
 
     st.markdown("### Avance por tipo de curso")
     for etiqueta in ("Extensión", "Repositorio", "Regular"):
         registros = resumen["tipos"][etiqueta]
         total = len(registros)
-        concluidos = sum(
-            1 for g in registros
-            if date.fromisoformat(str(g["fin"])[:10]) < hoy
-        )
+        estados = resumen["por_tipo"][etiqueta]
+        concluidos = estados["terminados"]
         porcentaje = concluidos / total if total else 0
         st.markdown(
             f'<div class="atrio-progress-label">{html.escape(etiqueta)}'
@@ -240,14 +317,15 @@ def render(grupos, hoy, *, metricas_sisae=None, tareas=None, incluir_calendario=
         if total:
             st.progress(
                 porcentaje,
-                text=f"{concluidos} terminados por fecha · {total - concluidos} vigentes o por iniciar · {porcentaje:.0%}",
+                text=(
+                    f'{estados["terminados"]} terminados · '
+                    f'{estados["en_curso"]} en curso · '
+                    f'{estados["por_iniciar"]} por iniciar · {porcentaje:.0%}'
+                ),
             )
         else:
             st.progress(0.0, text="Sin cursos programados")
-    st.caption(
-        f'{resumen["terminados"]} terminados por fecha · '
-        f'{resumen["vigentes"]} vigentes · {resumen["por_iniciar"]} por iniciar.'
-    )
+    st.caption("El avance se calcula por fecha de término; el cierre de constancias se gestiona por separado.")
 
     st.markdown("## Prioridades de hoy")
     prioridades = prioridades_del_dia(tareas, hoy, limite=3)
