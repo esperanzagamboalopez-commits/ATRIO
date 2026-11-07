@@ -6,6 +6,7 @@ from pathlib import Path
 import centro as C
 import pea_biblioteca_109 as P109
 import nucleo_atrio_101215 as N
+import pea_wizard_112 as W
 
 
 class TestAntecedentesConservados(unittest.TestCase):
@@ -105,6 +106,9 @@ class TestAntecedentesConservados(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertTrue(rows[0]["es_version_anterior"])
         self.assertIn("Versión anterior de programación", P109._label(rows[0]))
+        current_group = {"id": "grupo-reprogramado", "fingerprint": "fp-actual"}
+        previous = W._previous_artifacts(current_group)
+        self.assertEqual([x["id"] for x in previous], ["pea-version-anterior"])
 
     def test_consulta_lectura_identifica_documento_del_antecedente(self):
         db = N.conectar(C.ROOT)
