@@ -179,3 +179,38 @@ def test_tarea_de_credenciales_sin_padron_confirmado_es_solo_verificacion():
     cred = next(t for t in tareas if t["proceso"] == "Credenciales")
     assert cred["estado"] == "Por verificar"
     assert cred["responsable"] == "Por verificar"
+
+
+
+def test_pea_listo_con_mce_sin_verificar_permanece_en_proceso_mce():
+    tareas = construir_pendientes(
+        [grupo(inicio="2026-12-10")],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Generado", "mce": "Sin verificar"}},
+    )
+    carga = next(t for t in tareas if t["proceso"] == "Subir PEAs al MCE")
+    assert carga["estado"] == "Por verificar"
+    assert carga["responsable"] == "Por verificar"
+    assert "verificar primero" in carga["accion"]
+
+
+def test_alta_regular_sin_verificar_permanece_en_seccion_de_regulares():
+    tareas = construir_pendientes(
+        [grupo(tipo="Regular", inicio="2026-11-20")],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Sin verificar", "mce": "Sin verificar"}},
+    )
+    alta = next(t for t in tareas if t["proceso"] == "Altas de cursos regulares en MCE")
+    assert alta["estado"] == "Por verificar"
+    assert alta["responsable"] == "Por verificar"
+
+
+def test_acreditacion_sin_estado_confirmado_no_se_marca_atrasada():
+    tareas = construir_pendientes(
+        [grupo(inicio="2026-10-01", fin="2026-11-10")],
+        date(2026, 11, 6),
+        estados={"g-1": {"doc": "Generado", "mce": "Subido"}},
+    )
+    acreditacion = next(t for t in tareas if t["proceso"] == "Acreditaciones")
+    assert acreditacion["estado"] == "Por verificar"
+    assert acreditacion["responsable"] == "Por verificar"
