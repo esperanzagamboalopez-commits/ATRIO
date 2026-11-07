@@ -105,6 +105,40 @@ class TestReprogramacion(unittest.TestCase):
             self.assertEqual(db.execute("SELECT COUNT(*) FROM artifacts").fetchone()[0], 1)
             self.assertEqual(db.execute("SELECT COUNT(*) FROM events WHERE action='Curso reprogramado'").fetchone()[0], 1)
 
+    def test_revierte_excel_y_sqlite_si_falla_el_registro_de_eventos(self):
+        before_excel = self.excel.read_bytes()
+        with self._connect() as db:
+            before_payload = db.execute("SELECT payload FROM groups WHERE id='grupo-1'").fetchone()[0]
+            db.execute("""
+                CREATE TRIGGER provocar_fallo_evento
+                BEFORE INSERT ON events
+                BEGIN SELECT RAISE(ABORT, 'fallo simulado de SQLite'); END;
+            """)
+
+        with self.assertRaisesRegex(sqlite3.IntegrityError, "fallo simulado"):
+            R._actualizar_excel_y_db([self._change()], self.excel)
+
+        self.assertEqual(self.excel.read_bytes(), before_excel)
+        with self._connect() as db:
+            after_payload = db.execute("SELECT payload FROM groups WHERE id='grupo-1'").fetchone()[0]
+            self.assertEqual(after_payload, before_payload)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
+
+    def test_no_modifica_excel_ni_sqlite_si_falla_reemplazo_de_archivo(self):
+        before_excel = self.excel.read_bytes()
+        with self._connect() as db:
+            before_payload = db.execute("SELECT payload FROM groups WHERE id='grupo-1'").fetchone()[0]
+
+        with patch.object(R.os, "replace", side_effect=OSError("fallo simulado de reemplazo")):
+            with self.assertRaisesRegex(OSError, "fallo simulado"):
+                R._actualizar_excel_y_db([self._change()], self.excel)
+
+        self.assertEqual(self.excel.read_bytes(), before_excel)
+        with self._connect() as db:
+            after_payload = db.execute("SELECT payload FROM groups WHERE id='grupo-1'").fetchone()[0]
+            self.assertEqual(after_payload, before_payload)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
+
     def test_rechaza_huella_obsoleta_sin_modificar_excel(self):
         change = self._change()
         change["fingerprint"] = "huella-obsoleta"
