@@ -266,6 +266,31 @@ C.save_resource("PROGRAMACION DE CURSOS.xlsx", Path(sys.argv[6]).read_bytes())
     assert json.loads(row["payload"])["operation_id"]
 
 
+def test_recupera_confirmacion_aunque_falte_respaldo(isolated):
+    """Una operación confirmada conserva el Excel nuevo aunque ya no exista el backup."""
+    operation_id = "op-confirmada-sin-respaldo"
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    expected = resource.read_bytes()
+    journal = C._ruta_journal_programacion()
+    C._escribir_journal_programacion({
+        "operation_id": operation_id,
+        "commit_action": "Importación programación",
+        "excel": str(resource.resolve()),
+        "backup": str((C.ARCH / "respaldo_que_no_existe.xlsx").resolve()),
+        "created": C.now(),
+    })
+    with C.connect() as db:
+        db.execute(
+            "INSERT INTO events(at,action,payload) VALUES(?,?,?)",
+            (C.now(), "Importación programación",
+             json.dumps({"operation_id": operation_id}, ensure_ascii=False)),
+        )
+
+    assert C.recuperar_programacion() is True
+    assert resource.read_bytes() == expected
+    assert not journal.exists()
+
+
 def test_sisae(isolated):
     tables = C.sisae_bytes((C.RES / "SISAE.zip").read_bytes())
     assert len(tables["PROG_CURSOS1.DBF"]) == 1
