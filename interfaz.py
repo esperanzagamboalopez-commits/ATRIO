@@ -10,7 +10,7 @@ import tema
 
 MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
-# Paleta Editorial Rosa (tema claro). Los colores llegan por variables CSS desde tema.py.
+# Tokens de presentación compartidos. Los colores llegan por variables CSS desde tema.py.
 NEON = '#FF1493'
 ORO = '#D4AF37'
 
