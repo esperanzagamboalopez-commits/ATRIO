@@ -58,9 +58,9 @@ def test_inicio_va_primero_y_el_resumen_del_laboratorio_queda_al_pie():
     assert source.index("components.html(inicio") < source.index(
         'st.subheader("ATRIO · Vista previa de integración")'
     )
-    assert 'st.metric("Grupos de muestra"' in source
-    assert 'st.metric("PEA por revisar"' in source
-    assert 'st.metric("Corte SISAE"' in source
+    assert 'c1.metric("Grupos de muestra"' in source
+    assert 'c2.metric("PEA por revisar"' in source
+    assert 'c3.metric("Corte SISAE"' in source
     assert 'st.info("Vista aislada:' in source
 
 
