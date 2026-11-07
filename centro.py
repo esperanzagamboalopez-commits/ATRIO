@@ -111,7 +111,8 @@ def _fsync_directorio(path):
         os.close(fd)
 
 def _reemplazar_archivo_durable(origen,destino):
-    """Sustituye un archivo y sincroniza el directorio que contiene el destino."""
+    """Sincroniza el archivo fuente, lo sustituye y sincroniza el directorio destino."""
+    _fsync_archivo(origen)
     os.replace(origen,destino)
     _fsync_directorio(Path(destino).parent)
 
