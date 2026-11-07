@@ -115,10 +115,11 @@ Los valores se validan como hexadecimal de seis dígitos. La tipografía, las su
 
 ### Vista previa independiente
 - Inicio no muestra el bloque `Lo que requiere tu atención`, el aviso demostrativo, el botón `Ver cursos para revisar` ni la franja decorativa `PEA y trámites en MCE`. El seguimiento se consulta en sus módulos correspondientes.
-- `laboratorio_orbita_streamlit.py`: muestra el tema y la composición real de `inicio.html` con tres cursos ficticios.
+- `laboratorio_orbita_streamlit.py`: presenta primero la composición real de `inicio.html` con tres cursos ficticios. Debajo muestra el título de la vista previa, tres indicadores demostrativos y el aviso de aislamiento, en el espacio destinado a la antigua franja informativa.
+- Se retiró la sección genérica `Componentes de interfaz` y sus botones/campos de ejemplo porque no representan módulos reales y no ayudan a revisar Inicio.
 - No importa `app.py` ni `centro.py`; no abre SQLite, Excel, SISAE, expedientes o documentos.
 - Sus selectores de color son temporales y no guardan valores en la configuración del plantel.
-- `tests/test_laboratorio_orbita_aislado.py`: verifica que la vista previa no incorpore conexiones con recursos operativos.
+- `tests/test_laboratorio_orbita_aislado.py`: verifica la ausencia de conexiones operativas, el orden Inicio-primero y que no regresen los componentes genéricos.
 
 Para abrir solamente la vista previa, nunca `app.py`, se usa:
 
@@ -138,7 +139,6 @@ Se abrirá el puerto 8502 de Codespaces. Esta ejecución no equivale a iniciar A
 - Calendario, navegación, botones, tarjetas y tablas conservan jerarquía y coherencia.
 - La galería puede ejecutarse sin conectar archivos institucionales.
 - No se modifica `main`, la base SQLite, Excel, SISAE ni la plantilla PEA.
-
 
 ## 10. Estado de la integración visual · 6 de noviembre de 2026
 
