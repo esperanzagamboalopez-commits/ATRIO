@@ -78,11 +78,16 @@ def cargar_tareas(grupos, hoy):
             festivos = []
 
     alumnos_por_grupo = {}
+    periodos_sisae = {}
     try:
         # Reutiliza la conciliación estricta Programación ↔ SISAE de Control Escolar.
         import hojas
-        _, _, _, _, estudiantes, _ = hojas.snapshot(grupos)
+        _, _, _, vinculos, estudiantes, _ = hojas.snapshot(grupos)
         alumnos_por_grupo = {str(k): len(v) for k, v in estudiantes.items()}
+        periodos_sisae = {
+            str(k): v.get("periodo")
+            for k, v in vinculos.items()
+        }
     except Exception:
         # Sin vínculo inequívoco no se inventa el padrón ni se asignan alumnos.
         alumnos_por_grupo = {}
@@ -102,6 +107,7 @@ def cargar_tareas(grupos, hoy):
         eventos_calendario=eventos,
         dias_inhabiles=festivos,
         alumnos_por_grupo=alumnos_por_grupo,
+        periodos_sisae=periodos_sisae,
     )
     return tareas
 
