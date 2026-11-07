@@ -8,16 +8,27 @@ La primera entrega será una galería estática/interactiva de temas con datos d
 
 ## 2. Inventario del estado actual
 
-Revisión del código en la rama de laboratorio:
+Revisión del código de `tema.py` en la rama de laboratorio:
 
-- `tema.py` contiene Editorial Rosa, Editorial Premium, Japandi Minimalista, Cyber-Neon y Glass Executive.
-- `tema.OPCIONES` expone solo Editorial Rosa, Editorial Premium y Japandi Minimalista.
-- No están definidos los presets Editorial Oro ni Editorial Terracota.
-- Glass Executive usa fondos oscuros y superficies como `#18181B`; el CSS de `interfaz.py` aplica varias superficies opacas y no incorpora desenfoque consistente en las tarjetas principales. Por eso todavía no representa el vidrio translúcido solicitado.
+- Presets existentes: Editorial Rosa, Editorial Premium, Japandi Minimalista, Cyber-Neon y Glass Executive.
+- `tema.OPCIONES` expone solo Editorial Rosa, Editorial Premium y Japandi Minimalista; los temas oscuros están definidos pero no aparecen en ese selector.
+- Editorial Oro y Editorial Terracota no existen todavía como presets de la aplicación: son propuestas nuevas del laboratorio.
+- Glass Executive existente usa fondos oscuros y superficies como `#18181B`; no equivale al rediseño de vidrio translúcido.
 - `interfaz.py` centraliza buena parte del CSS de Streamlit; `inicio.html` define de forma independiente la composición y estilos de Inicio mediante variables CSS.
 - El Inicio actual tiene saludo dinámico, calendario rosa, métricas y tarjetas de seguimiento. No tiene aún el degradado rosa de dos intensidades ni la franja negra con el título institucional solicitado.
 
-Este inventario describe el código, no una evaluación visual en un navegador real. La galería permitirá revisar las propuestas visuales antes de intervenir la aplicación.
+La galería ampliada permite comparar nueve variantes con una misma maqueta y datos ficticios:
+1. Editorial Rosa · Renovado (propuesta).
+2. Editorial Rosa · Anterior (paleta del preset actual).
+3. Editorial Premium (preset actual).
+4. Japandi Minimalista (preset actual).
+5. Cyber-Neon (preset actual).
+6. Glass Executive · Anterior (paleta oscura actual).
+7. Glass Executive · Renovado (propuesta de vidrio translúcido).
+8. Editorial Oro · Nuevo (propuesta).
+9. Editorial Terracota · Nuevo (propuesta).
+
+Las variantes “Anterior” reproducen los tokens principales de `tema.py` para facilitar la comparación; la maqueta no es una captura exacta de la interfaz Streamlit. Este inventario no afirma que la vista se haya probado visualmente en un navegador de la aplicación.
 
 ## 3. Dirección visual acordada
 
