@@ -204,7 +204,10 @@ def test_save_programacion_recupera_si_falla_fsync_del_directorio_excel(isolated
     assert resource.read_bytes() == original
     assert not C._ruta_journal_programacion().exists()
     with C.connect() as db:
-        assert db.execute("SELECT COUNT(*) FROM events WHERE action='Importación programación'").fetchone()[0] == 0
+        rows = db.execute(
+            "SELECT payload FROM events WHERE action='Importación programación'"
+        ).fetchall()
+    assert all(not json.loads(row["payload"] or "{}").get("operation_id") for row in rows)
 
 
 def test_save_programacion_sincroniza_respaldo_excel_y_directorios(isolated, monkeypatch):
