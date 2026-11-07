@@ -156,6 +156,34 @@ def test_save_programacion_confirma_importacion_y_limpia_journal(isolated):
     assert json.loads(row["payload"])["operation_id"]
 
 
+def test_save_programacion_conserva_commit_si_falla_una_vez_el_borrado_del_journal(isolated, monkeypatch):
+    resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
+    raw = resource.read_bytes()
+    journal = C._ruta_journal_programacion()
+    unlink_real = Path.unlink
+    calls = {"journal": 0}
+
+    def fail_once(path, *args, **kwargs):
+        if path == journal:
+            calls["journal"] += 1
+            if calls["journal"] == 1:
+                raise OSError("fallo simulado al limpiar journal")
+        return unlink_real(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", fail_once)
+    result = C.save_resource("PROGRAMACION DE CURSOS.xlsx", raw)
+
+    assert result[0] == 1
+    assert calls["journal"] >= 2
+    assert not journal.exists()
+    with C.connect() as db:
+        rows = db.execute(
+            "SELECT payload FROM events WHERE action='Importación programación'"
+        ).fetchall()
+    assert len(rows) >= 2
+    assert any(json.loads(row["payload"]).get("operation_id") for row in rows)
+
+
 def test_save_programacion_revierte_si_falla_importacion(isolated, monkeypatch):
     resource = C.RES / "PROGRAMACION DE CURSOS.xlsx"
     original = resource.read_bytes()
