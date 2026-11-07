@@ -204,7 +204,10 @@ with st.container(border=True):
     with c3:
         st.markdown("**SISAE**")
         st.caption("Sin corte de muestra.")
-    st.info("Vista aislada: ningún botón ejecuta procesos ni guarda cambios.")
+    st.info(
+        "Vista aislada: la agenda guarda únicamente en el SQLite temporal de esta sesión; "
+        "no ejecuta procesos ni modifica datos institucionales."
+    )
 
 st.caption(
     "El calendario conserva las actividades únicamente en un SQLite temporal de esta sesión. "
