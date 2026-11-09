@@ -116,7 +116,11 @@ elif nav=='Preparar documento':
  else:F112.panel(g)
 
 elif nav=='Acciones Móviles':
- ACM.panel_oficios(data,C)  # El encabezado se dibuja arriba, una sola vez.
+ ACM.panel_oficios(data,C)  # Se conserva el generador de oficios existente.
+ st.divider()
+ st.markdown('### Listas de asistencia ACM')
+ import acm_asistencia as ACM_ASIST
+ ACM_ASIST.panel_listas(data,C)
 
 elif nav=='Revisor':
  R112.panel(data)
