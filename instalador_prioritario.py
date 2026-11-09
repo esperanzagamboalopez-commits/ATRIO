@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Instalador seguro de la entrega prioritaria ATRIO. Conserva datos y recursos."""
 from __future__ import annotations
-import sys, zipfile, shutil, subprocess
+import sys, zipfile, shutil
 from pathlib import Path
 from datetime import datetime
 
@@ -55,6 +55,7 @@ def main():
             out.parent.mkdir(parents=True, exist_ok=True)
             with z.open(name) as src, out.open("wb") as dst: shutil.copyfileobj(src, dst)
     files = [p for p in staged.rglob("*") if p.is_file() and p.name not in {".env","secrets.toml"}]
+    overwritten, created = [], []
     try:
         for src in files:
             rel = src.relative_to(staged)
@@ -64,21 +65,28 @@ def main():
                 saved = backup / rel
                 saved.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(dest, saved)
+                overwritten.append((dest, saved))
+            else:
+                created.append(dest)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
         shutil.rmtree(staged, ignore_errors=True)
-        req = target / "requirements.txt"
-        if req.is_file():
-            proc = subprocess.run([sys.executable,"-m","pip","install","-r",str(req)],text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-            if proc.returncode: raise RuntimeError("Falló la instalación de dependencias: "+proc.stdout[-4000:])
-        print("INSTALACIÓN CORRECTA: ATRIO actualizado.")
+        print("INSTALACIÓN CORRECTA: ATRIO actualizado con el código de la rama validada.")
         print("Respaldo del código anterior: "+str(backup))
-        print("SQLite, Programación, SISAE, plantillas, recursos y documentos se conservaron.")
+        print("SQLite, Programación, SISAE, plantillas, recursos, configuración y documentos se conservaron.")
+        print("No se reinstalaron dependencias: se conserva el entorno Python que ya utiliza tu ATRIO.")
         print("Inicia con: cd "+str(target)+" && bash INICIAR.sh")
         return 0
     except Exception as exc:
+        for dest in created:
+            try: dest.unlink(missing_ok=True)
+            except OSError: pass
+        for dest, saved in reversed(overwritten):
+            try: dest.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(saved, dest)
+            except OSError: pass
+        shutil.rmtree(staged, ignore_errors=True)
         print("ERROR DURANTE LA INSTALACIÓN: "+str(exc))
-        print("Respaldo disponible en: "+str(backup))
+        print("Se restauró el código anterior cuando fue posible. Respaldo: "+str(backup))
         print("No se eliminaron datos ni recursos.")
         return 5
 
