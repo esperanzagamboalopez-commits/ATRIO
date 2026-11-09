@@ -36,3 +36,14 @@ jobs:
 
       - name: Ejecutar pruebas automatizadas
         run: python -m pytest -q
+
+      - name: Construir paquete de entrega para Cloud Shell
+        run: python build_entrega_prioritaria.py
+
+      - name: Publicar paquete instalable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATRIO-ENTREGA-PRIORITARIA
+          path: dist/ATRIO_ENTREGA_PRIORITARIA.pyz
+          if-no-files-found: error
+          retention-days: 14
