@@ -18,7 +18,7 @@ def test_fechas_de_sesion_respeta_vigencia_y_dias_inhabiles():
     )
     assert result == [
         date(2026, 11, 2), date(2026, 11, 6),
-        date(2026, 11, 9), date(2026, 11, 13),
+        date(2026, 11, 9), date(2026, 11, 11), date(2026, 11, 13),
     ]
 
 
