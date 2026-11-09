@@ -12,30 +12,75 @@ JAPANDI = 'Japandi Minimalista'
 CYBER = 'Cyber-Neon'
 EDITORIAL = 'Editorial Premium'
 EDITORIAL_ROSA = 'Editorial Rosa'
+ORBITA = 'ATRIO Órbita'
+
+# Valores base de cada identidad. El resto de la aplicación consume estos tokens.
+PALETA_ORBITA = {
+    'fondo': '#F1F0E8',
+    'acento': '#087E83',
+    'secundario': '#D4E36A',
+    'calendario': '#F5E8C8',
+}
 
 PRESETS = {
     EDITORIAL_ROSA: dict(dark=False, bg='#FBF7F2', surface='#FFFFFF', accent='#FF1493', gold='#D4AF37',
                          text='#2A2326', titulo='#2A2326', muted='#6B6063', border='#2A2326', sidebar='#F4EDE4',
-                         sobre='#2A2326'),
+                         sobre='#2A2326', calendar='#F7E8EF', header='#292326',
+                         hero='linear-gradient(115deg,#F8E9EE 0%,#FBF7F2 58%,#F1DCE5 100%)'),
     GLASS_EXECUTIVE: dict(dark=True, bg='#09090B', surface='#18181B', accent='#FF1493', gold='#D4AF37',
-                          text='#F5F1EA', titulo='#FFFFFF', muted='#A1A1AA', border='#FFFFFF', sidebar='#09090B'),
+                          text='#F5F1EA', titulo='#FFFFFF', muted='#A1A1AA', border='#FFFFFF', sidebar='#09090B',
+                          calendar='#F2E9ED', header='#09090B',
+                          hero='linear-gradient(115deg,#242027 0%,#18181B 58%,#34242E 100%)'),
     JAPANDI: dict(dark=False, bg='#FAFAF9', surface='#FFFFFF', accent='#5F7A5E', gold='#8A7F5B',
-                  text='#1C1917', titulo='#1C1917', muted='#57534E', border='#1C1917', sidebar='#F1F1EC'),
+                  text='#1C1917', titulo='#1C1917', muted='#57534E', border='#1C1917', sidebar='#F1F1EC',
+                  calendar='#E8EEE7', header='#263326',
+                  hero='linear-gradient(115deg,#E7EDE5 0%,#FAFAF9 58%,#E2E7D9 100%)'),
     CYBER: dict(dark=True, bg='#0F172A', surface='#1E293B', accent='#22D3EE', gold='#38BDF8',
-                text='#F8FAFC', titulo='#FFFFFF', muted='#94A3B8', border='#FFFFFF', sidebar='#0B1222'),
+                text='#F8FAFC', titulo='#FFFFFF', muted='#94A3B8', border='#FFFFFF', sidebar='#0B1222',
+                calendar='#E3F3F5', header='#0B1222',
+                hero='linear-gradient(115deg,#182A3F 0%,#1E293B 58%,#173748 100%)'),
     EDITORIAL: dict(dark=False, bg='#FBF7F2', surface='#FFFFFF', accent='#6D1F2F', gold='#9A7A45',
-                    text='#2A2326', titulo='#2A2326', muted='#6B6063', border='#2A2326', sidebar='#F4EDE4'),
+                    text='#2A2326', titulo='#2A2326', muted='#6B6063', border='#2A2326', sidebar='#F4EDE4',
+                    calendar='#F1E9E4', header='#2A2326',
+                    hero='linear-gradient(115deg,#F1E6DF 0%,#FBF7F2 58%,#E9DCD1 100%)'),
+    ORBITA: dict(dark=False, bg=PALETA_ORBITA['fondo'], surface='#FBFAF4',
+                 accent=PALETA_ORBITA['acento'], gold=PALETA_ORBITA['secundario'],
+                 text='#172F3B', titulo='#172F3B', muted='#526C70', border='#C5D4CF',
+                 sidebar='#E1E9E3', calendar=PALETA_ORBITA['calendario'],
+                 header='#172F3B', sobre='#FFFFFF',
+                 hero='linear-gradient(115deg,#CFE4DD 0%,#F1F0E8 58%,#DCE8B4 100%)'),
 }
-OPCIONES = [EDITORIAL_ROSA, EDITORIAL, JAPANDI]  # Solo temas claros en Ajustes; los oscuros siguen definidos.
+
+# Órbita se incorpora como opción; el tema predeterminado anterior se conserva.
+OPCIONES = [EDITORIAL_ROSA, ORBITA, EDITORIAL, JAPANDI]
 DEFECTO = EDITORIAL_ROSA
 
 _activo = DEFECTO
+_personalizacion = {}
 
 
-def fijar(nombre):
-    """Fija el preset activo. Nombres desconocidos caen en Glass Executive."""
-    global _activo
+def validar_paleta(paleta):
+    """Devuelve únicamente los cuatro colores admitidos y en formato hexadecimal seguro."""
+    if not isinstance(paleta, dict):
+        return {}
+    return {
+        key: value.upper()
+        for key, value in paleta.items()
+        if key in PALETA_ORBITA and isinstance(value, str)
+        and re.fullmatch(r'#[0-9a-fA-F]{6}', value)
+    }
+
+
+def paleta_predeterminada():
+    """Copia independiente de la paleta base de ATRIO Órbita."""
+    return dict(PALETA_ORBITA)
+
+
+def fijar(nombre, personalizacion=None):
+    """Fija el preset activo y, para Órbita, una paleta personalizada validada."""
+    global _activo, _personalizacion
     _activo = nombre if nombre in PRESETS else DEFECTO
+    _personalizacion = validar_paleta(personalizacion) if _activo == ORBITA else {}
     return _activo
 
 
@@ -49,7 +94,15 @@ def _rgb(hex_):
 
 
 def variables(nombre=None):
-    p = PRESETS[nombre or _activo]
+    objetivo = nombre or _activo
+    p = dict(PRESETS[objetivo])
+    if objetivo == ORBITA and objetivo == _activo:
+        campos = {'fondo': 'bg', 'acento': 'accent', 'secundario': 'gold', 'calendario': 'calendar'}
+        for clave, campo in campos.items():
+            if clave in _personalizacion:
+                p[campo] = _personalizacion[clave]
+    calendario = p.get('calendar', p['surface'])
+    encabezado = p.get('header', p['titulo'])
     return {
         '--atrio-bg': p['bg'], '--atrio-bg-rgb': _rgb(p['bg']),
         '--atrio-surface': p['surface'], '--atrio-cristal-rgb': _rgb(p['surface']),
@@ -58,9 +111,14 @@ def variables(nombre=None):
         '--atrio-oro': p['gold'], '--atrio-oro-rgb': _rgb(p['gold']),
         '--atrio-tinta': p['text'], '--atrio-titulo': p['titulo'], '--atrio-tenue': p['muted'],
         '--atrio-sidebar': p['sidebar'], '--atrio-cristal': f"rgba({_rgb(p['surface'])},0.6)",
-        '--atrio-borde': f"rgba({_rgb(p['border'])},0.08)",
+        '--atrio-borde': f"rgba({_rgb(p['border'])},0.18)",
         '--atrio-acento-suave': f"rgba({_rgb(p['accent'])},0.14)",
         '--atrio-sobre-acento': p.get('sobre') or ('#09090B' if p['accent'] in ('#22D3EE', '#D4AF37') else '#FFFFFF'),
+        '--atrio-calendario': calendario, '--atrio-calendario-rgb': _rgb(calendario),
+        '--atrio-encabezado': encabezado, '--atrio-encabezado-rgb': _rgb(encabezado),
+        '--atrio-encabezado-texto': p.get('header_text', '#FFFFFF'),
+        '--atrio-encabezado-acento': p.get('header_accent', p['gold']),
+        '--atrio-hero-gradient': p.get('hero', 'linear-gradient(115deg,var(--atrio-surface),var(--atrio-bg))'),
         '--atrio-sombra': '0 6px 24px rgba(42,35,38,.08)' if not p['dark'] else '0 0 20px rgba(255,20,147,.25)',
         '--atrio-scheme': 'dark' if p['dark'] else 'light',
         # Estados (verde, rojo, ámbar) legibles en tema claro y oscuro.
