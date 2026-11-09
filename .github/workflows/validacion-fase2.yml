@@ -1,0 +1,38 @@
+name: Validación ATRIO · Fase 2
+
+on:
+  push:
+    branches:
+      - pruebas/fase2-funcional-aislada
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+
+      - name: Comprobar sintaxis de Python
+        run: python -m compileall -q .
+
+      - name: Ejecutar pruebas automatizadas
+        run: python -m pytest -q
